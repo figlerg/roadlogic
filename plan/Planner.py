@@ -22,7 +22,7 @@ from typing import Union, Sequence
 
 class Planner:
     """
-    The API for the planning module. Create a Planner object, either from a OS2 file or an intermediate structure.
+    The API for the plan module. Create a Planner object, either from a OS2 file or an intermediate structure.
     """
 
     def __init__(self, osc_path, verbose=False, out_path=None, animate_plans=False):
@@ -292,8 +292,8 @@ if __name__ == '__main__':
     start = time.time()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--osc2_file", default=r"planning/tests/my_overtake.osc")
-    parser.add_argument("--planner_rules", default=r"planning/asp/road_planner.lp")
+    parser.add_argument("--osc2_file", default=r"plan/tests/my_overtake.osc")
+    parser.add_argument("--planner_rules", default=r"plan/asp/road_planner.lp")
     parser.add_argument("--external_rules", default=None)
     parser.add_argument("--velocity", "-v", default=1)
     parser.add_argument("--nr_samples", "-n", default=1, type=int)
