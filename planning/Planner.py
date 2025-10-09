@@ -63,7 +63,7 @@ class Planner:
             parent_dir = os.path.dirname(this_dir)
 
             # Fallback path: ../generated relative to this file
-            fallback_path = os.path.join(parent_dir, "generated")
+            fallback_path = os.path.join(this_dir, "generated")
 
             # Ensure the folder exists
             os.makedirs(fallback_path, exist_ok=True)
@@ -292,8 +292,8 @@ if __name__ == '__main__':
     start = time.time()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--osc2_file", default=r"tests/my_overtake.osc")
-    parser.add_argument("--planner_rules", default=r"asp/road_planner.lp")
+    parser.add_argument("--osc2_file", default=r"planning/tests/my_overtake.osc")
+    parser.add_argument("--planner_rules", default=r"planning/asp/road_planner.lp")
     parser.add_argument("--external_rules", default=None)
     parser.add_argument("--velocity", "-v", default=1)
     parser.add_argument("--nr_samples", "-n", default=1, type=int)
