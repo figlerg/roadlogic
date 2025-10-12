@@ -139,7 +139,7 @@ def visualize_plans(models, max_num=None, save=False, show=True, save_path=None,
             print(f'Exhausted models: {i} models generated.')
             break
 
-    # print(f"Nr plan strings: {len(plan_strings)}")
+    # print(f"Nr planning strings: {len(plan_strings)}")
 
     fluent_filter_models = filter_holds(models, max_num=max_num)
 

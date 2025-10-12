@@ -12,17 +12,17 @@ from typing import List
 from asp.MyModel import MyModel
 from asp.Planner import generate_plans, visualize_plans
 from intermediate_structure.TranslationGraph import TranslationGraph
-from misc.errors import HardSyntaxErrorStrategy
 from parse.TranslationGraphVisitor import TranslationGraphVisitor
 from parse.generated.openscenario2Lexer import openscenario2Lexer
 from parse.generated.openscenario2Parser import openscenario2Parser
+from misc.errors import HardSyntaxErrorStrategy
 
 from typing import Union, Sequence
 
 
 class Planner:
     """
-    The API for the plan module. Create a Planner object, either from a OS2 file or an intermediate structure.
+    The API for the planning module. Create a Planner object, either from a OS2 file or an intermediate structure.
     """
 
     def __init__(self, osc_path, verbose=False, out_path=None, animate_plans=False):
@@ -37,7 +37,6 @@ class Planner:
         parser = openscenario2Parser(stream)
         parser._errHandler = HardSyntaxErrorStrategy()
         ctx = parser.osc_file()
-        self.__lane_dg = None
 
         visitor = TranslationGraphVisitor()
         self._translation_graph: TranslationGraph = visitor.visit(ctx)
@@ -48,12 +47,6 @@ class Planner:
 
         self.visualize = animate_plans
 
-        self.__pos_override_dict = None
-        # TODO refactor this once it works. I just need a quick way to override the positions from anywhere in this class
-
-        self.__current_model = None  # TODO quick fix, I save the last generated model here too
-
-        self.__additional_single_rules = None
 
         if out_path:
             self.__out_path = out_path
@@ -292,12 +285,12 @@ if __name__ == '__main__':
     start = time.time()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--osc2_file", default=r"plan/tests/my_overtake.osc")
-    parser.add_argument("--planner_rules", default=r"plan/asp/road_planner.lp")
+    parser.add_argument("--osc2_file", default=r"planning/tests/my_overtake.osc")
+    parser.add_argument("--planner_rules", default=r"planning/asp/road_planner.lp")
     parser.add_argument("--external_rules", default=None)
     parser.add_argument("--velocity", "-v", default=1)
     parser.add_argument("--nr_samples", "-n", default=1, type=int)
-    parser.add_argument("--animate_plans", "-a", action="store_true", help="Enable plan animation")
+    parser.add_argument("--animate_plans", "-a", action="store_true", help="Enable planning animation")
     parser.add_argument("--deterministic", "-d", action="store_true", help="Switch off parallelization to make order of models deterministic")
 
     # Add a command-line argument for selecting the mode

@@ -314,8 +314,6 @@ class Constraint:
         # "goal1(T,t) :- time(T,t), query(t), T<=t, holds(state(car1,loc(L1,S1),dyn(Vel1,0)), T), holds(state(ego,loc(L,S),dyn(Vel,0)), T)"
         #  outside and add only some atoms here which encode the relation.
 
-        # So, this method must return the POSITIVE atom that flags the goal as true. TODO TODO TODO call this method correctly from the Translator.behaviors method!
-
         actor1 = str(self.__actor_1)
         actor2 = str(self.__actor_2)
 
@@ -376,41 +374,40 @@ class Constraint:
         #         z3_type = Int
         #     else:
         #         raise NotImplementedError()
-
-        exp1 = z3_type(self.exp1)
-        exp2 = z3_type(self.exp2)
-
-        if self.__c:
-
-            if self.__relation == Relation.EQ:
-                return exp1 == exp2 + self.__c
-            elif self.__relation == Relation.LEQ:
-                return exp1 <= exp2 + self.__c
-            elif self.__relation == Relation.GEQ:
-                return exp1 >= exp2 + self.__c
-            elif self.__relation == Relation.L:
-                return exp1 < exp2 + self.__c
-            elif self.__relation == Relation.G:
-                return exp1 > exp2 + self.__c
-            elif self.__relation == Relation.INEQ:
-                return exp1 != exp2 + self.__c
-            else:
-                raise Exception('Surprising outcome!')
-
-        if self.__relation == Relation.EQ:
-            return exp1 == exp2
-        elif self.__relation == Relation.LEQ:
-            return exp1 <= exp2
-        elif self.__relation == Relation.GEQ:
-            return exp1 >= exp2
-        elif self.__relation == Relation.L:
-            return exp1 < exp2
-        elif self.__relation == Relation.G:
-            return exp1 > exp2
-        elif self.__relation == Relation.INEQ:
-            return exp1 != exp2
-        else:
-            raise Exception('Surprising outcome!')
+        # exp1 = z3_type(self.exp1)
+        # exp2 = z3_type(self.exp2)
+        #
+        # if self.__c:
+        #
+        #     if self.__relation == Relation.EQ:
+        #         return exp1 == exp2 + self.__c
+        #     elif self.__relation == Relation.LEQ:
+        #         return exp1 <= exp2 + self.__c
+        #     elif self.__relation == Relation.GEQ:
+        #         return exp1 >= exp2 + self.__c
+        #     elif self.__relation == Relation.L:
+        #         return exp1 < exp2 + self.__c
+        #     elif self.__relation == Relation.G:
+        #         return exp1 > exp2 + self.__c
+        #     elif self.__relation == Relation.INEQ:
+        #         return exp1 != exp2 + self.__c
+        #     else:
+        #         raise Exception('Surprising outcome!')
+        #
+        # if self.__relation == Relation.EQ:
+        #     return exp1 == exp2
+        # elif self.__relation == Relation.LEQ:
+        #     return exp1 <= exp2
+        # elif self.__relation == Relation.GEQ:
+        #     return exp1 >= exp2
+        # elif self.__relation == Relation.L:
+        #     return exp1 < exp2
+        # elif self.__relation == Relation.G:
+        #     return exp1 > exp2
+        # elif self.__relation == Relation.INEQ:
+        #     return exp1 != exp2
+        # else:
+        #     raise Exception('Surprising outcome!')
 
     def flip(self):
         # rewrite "p(actor2) R p(actor1) + c" as "p(actor) R' p(actor2) -c"

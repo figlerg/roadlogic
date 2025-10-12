@@ -1,0 +1,3 @@
+*.py   text eol=lf
+*.g4   text eol=lf
+*.lp   text eol=lf
