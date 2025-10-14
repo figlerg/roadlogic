@@ -1,0 +1,3 @@
+[submodule "Frenetix-Motion-Planner"]
+	path = Frenetix-Motion-Planner
+	url = git@github.com:TUM-AVS/Frenetix-Motion-Planner.git
