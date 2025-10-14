@@ -1,5 +1,5 @@
 import itertools
-from intermediate_structure.Constraint import Constraint, Relation, Modifier
+from planning.intermediate_structure.Constraint import Constraint, Relation, Modifier
 import networkx as nx
 import matplotlib.pyplot as plt
 import z3

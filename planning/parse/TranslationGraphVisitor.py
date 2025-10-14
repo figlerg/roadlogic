@@ -1,12 +1,12 @@
 import os.path
 import warnings
 
-from intermediate_structure.Actor import Actor
-from intermediate_structure.SamplingHint import SamplingHint
-from parse.generated.openscenario2Visitor import openscenario2Visitor
-from parse.generated.openscenario2Parser import openscenario2Parser
-from intermediate_structure.TranslationGraph import TranslationGraph
-from intermediate_structure.Constraint import Constraint, Relation, Modifier
+from planning.intermediate_structure.Actor import Actor
+from planning.intermediate_structure.SamplingHint import SamplingHint
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.intermediate_structure.Constraint import Constraint, Relation, Modifier
+from planning.parse.generated.openscenario2Visitor import openscenario2Visitor
+from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
 
 class TranslationGraphVisitor(openscenario2Visitor):
@@ -335,8 +335,8 @@ if __name__ == '__main__':
     # Some tests. Refer to parse_script.py in top directory for example usage.
 
     from antlr4 import *
-    from parse.generated.openscenario2Lexer import openscenario2Lexer
-    from parse.generated.openscenario2Parser import openscenario2Parser
+    from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
+    from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
     # from shapex.parse import HardSyntaxErrorStrategy # TODO is the syntax error already 'hard'? otherwise copy code from shapex
 

@@ -7,17 +7,17 @@ import shutil
 import time
 import warnings
 from antlr4 import *
-from typing import List
+from typing import List,Union, Sequence
 
-from asp.MyModel import MyModel
-from asp.Planner import generate_plans, visualize_plans
-from intermediate_structure.TranslationGraph import TranslationGraph
-from parse.TranslationGraphVisitor import TranslationGraphVisitor
-from parse.generated.openscenario2Lexer import openscenario2Lexer
-from parse.generated.openscenario2Parser import openscenario2Parser
-from misc.errors import HardSyntaxErrorStrategy
+from planning.asp.MyModel import MyModel
+from planning.asp.generate_plans import generate_plans, visualize_plans
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
+from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
+from planning.parse.generated.openscenario2Parser import openscenario2Parser
+from planning.misc.errors import HardSyntaxErrorStrategy
 
-from typing import Union, Sequence
+## TODO appending planning/ at the start above should solve things for the makefile, but somehow the parsing craps out?
 
 
 class Planner:
@@ -47,6 +47,7 @@ class Planner:
 
         self.visualize = animate_plans
 
+        self.__additional_single_rules = None
 
         if out_path:
             self.__out_path = out_path

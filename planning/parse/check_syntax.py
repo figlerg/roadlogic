@@ -7,9 +7,9 @@ import os
 from antlr4 import FileStream, CommonTokenStream
 from antlr4.error.Errors import ParseCancellationException
 
-from misc.errors import HardSyntaxErrorStrategy
-from parse.generated.openscenario2Parser import openscenario2Parser
-from parse.generated.openscenario2Lexer import openscenario2Lexer
+from planning.misc.errors import HardSyntaxErrorStrategy
+from planning.parse.generated.openscenario2Parser import openscenario2Parser
+from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
 
 # dir_path = r"C:\Users\giglerf\PycharmProjects\osc2scenic\examples\osc"
 dir_path = r"/home/giglerf/PycharmProjects/osc2scenic/examples/osc"
