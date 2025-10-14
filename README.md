@@ -1,28 +1,69 @@
-# Third-Party Notices
+# RoadLogic
 
-This project includes third-party components under distinct open-source licenses.  
-All other source files are © The RoadLogic Developers and released under the **BSD 3-Clause License**.
-
----
-
-## Vendored Code
-
-### OpenSCENARIO 2.1 Grammar (MPL-2.0)
-- **Files:**  
-  - `planning/parse/openscenario2.g4`  
-  - `planning/parse/generated/` (ANTLR-generated Python files)
-- **License:** Mozilla Public License 2.0  
-- **Notes:** The grammar and any generated files containing embedded actions remain under MPL-2.0.  
-  See `planning/parse/LICENSE.MPL` for details.
+**RoadLogic** is a logic-based planning and simulation framework for road and traffic scenarios.
+It synthesizes high-level driving plans using **Answer Set Programming (ASP)** and supports scenario specifications in **OpenSCENARIO 2.1 DSL**.
+The generated plans can be executed and evaluated through **CommonRoad** and the **Frenetix Motion Planner**.
 
 ---
 
-## External Libraries (runtime dependencies)
+## Overview
 
-These libraries are required but not bundled.  
-Refer to their respective package metadata for full license terms.
+RoadLogic provides:
 
-- **antlr4-python3-runtime** — Apache 2.0  
-- **NetworkX** — BSD  
-- **CommonRoad** — BSD  
-- **Frenetix Motion Planner** — LGPL-3.0 (copied verbatim)
+* Declarative reasoning for scenario-based planning
+* Automatic plan synthesis from OpenSCENARIO 2.1 descriptions
+* Execution interface for CommonRoad simulations
+* Integration with the Frenetix motion-planning library
+
+> **Status:** Active development — interfaces and APIs may change before the first stable release.
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/figlerg/roadlogic.git
+cd roadlogic
+pip install -e .
+```
+
+---
+
+## Quick Start
+
+```bash
+python -m planning.Planner plans --osc2_file examples/my_overtake.osc -n 3 -a
+```
+
+---
+
+## Authors & Acknowledgments
+
+- Felix Gigler
+- Alessio Gambi
+- Dejan Ničković
+- Cristinel Mateis
+- Ezio Bartocci
+
+This repository is maintained by Felix Gigler and Alessio Gambi.
+
+---
+
+## Citation
+
+If you use RoadLogic in academic work, please cite our forthcoming paper:
+
+> *To be added after acceptance.*
+
+---
+
+## License
+
+* **RoadLogic core:** BSD 3-Clause License
+* **OpenSCENARIO 2 grammar and generated parser:** MPL-2.0
+* **Frenetix integration:** uses components under LGPL-3.0
+* See `THIRD_PARTY_NOTICES.md` for detailed attributions.
+
+---
+
+*© 2025 The RoadLogic Developers. Under construction.*
