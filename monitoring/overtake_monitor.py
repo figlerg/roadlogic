@@ -1,25 +1,25 @@
-from intermediate_structure.TranslationGraph import TranslationGraph
+
+
+from collections import deque
+from typing import Set, Union, List
+from antlr4 import FileStream, CommonTokenStream
+import os
+
 from syma.automaton.automaton import Location, SymbolicAutomaton
 from syma.constraint.constraint import Constraint
 from syma.constraint.node.node import *
-
 from syma_arv.monitor.boolean import BooleanMonitor
 from syma_arv.monitor.minmax import MinMaxMonitor
 from syma_arv.monitor.tropical import TropicalMonitor
 
-from collections import deque
-from typing import Set, Union, List
-from intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
-    
-
-from parse.TranslationGraphVisitor import TranslationGraphVisitor
-from intermediate_structure.TranslationGraph import TranslationGraph
-from misc.errors import HardSyntaxErrorStrategy
-from parse.TranslationGraphVisitor import TranslationGraphVisitor
-from parse.generated.openscenario2Lexer import openscenario2Lexer
-from parse.generated.openscenario2Parser import openscenario2Parser
-from antlr4 import FileStream, CommonTokenStream
-import os
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.misc.errors import HardSyntaxErrorStrategy
+from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
+from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
+from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
+from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
 from monitoring.Monitor import Monitor  # my class
 
