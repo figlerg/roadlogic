@@ -7,7 +7,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Check which venv exist
 THE_PYTHON := $(shell if [ -f "venv/bin/python" ]; then echo venv/bin/python; else echo .venv/bin/python; fi )
 # Define all the additional modules to import
-ADDITIONAL_PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/monitoring/syma-arv
+ADDITIONAL_PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/monitoring/syma-arv:$(ROOT_DIR):$(ROOT_DIR)/monitoring/syma
 # Ensure that python has always the required path
 PYTHON := export PYTHONPATH=$${PYTHONPATH}:$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
 
