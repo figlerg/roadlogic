@@ -217,7 +217,7 @@ class Planner:
             idx = {}
             for j, actor in enumerate(actor_ids):
                 idx[actor] = j + 1
-                rule += f'holds(state({actor},loc(S{j + 1},L{j + 1}),dyn(_,_)), T)'
+                rule += f'holds(state({actor},loc(S{j + 1},L{j + 1}),dyn(_,_)), t)'
                 if j + 1 == len(actor_ids):
                     break
                 else:
