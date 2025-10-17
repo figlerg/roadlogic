@@ -24,7 +24,21 @@ RoadLogic provides:
 ```bash
 git clone https://github.com/figlerg/roadlogic.git
 cd roadlogic
-pip install -e .
+
+# using pyenv
+pyenv install 3.10.16
+pyenv local 3.10.16
+python -m venv venv
+source venv/bin/activate
+
+# check
+python --version
+which python
+
+# pip install
+pip install -U pip wheel setuptools
+pip install -e ./Frenetix-Motion-Planner   # local submodule
+pip install -e .                           # roadlogic itself
 ```
 
 ---
@@ -32,7 +46,8 @@ pip install -e .
 ## Quick Start
 
 ```bash
-python -m planning.Planner plans --osc2_file examples/my_overtake.osc -n 3 -a
+python -m planning.Planner plans --osc2_file examples/my_overtake.osc -n 3 -a # run planning engine standalone
+bash experiments_src/exp_001/run.sh # run the experiments with their shell script. see shell script for some make examples
 ```
 
 ---

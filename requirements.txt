@@ -1,0 +1,18 @@
+antlr-denter==1.3.1
+antlr4-python3-runtime==4.9.3
+click==8.1.8
+clingo==5.8.0
+commonroad-crime==0.4.2
+commonroad-drivability-checker==2024.1
+commonroad-io==2024.2
+commonroad-reach==2024.1.2
+commonroad-route-planner==2024.2.1
+commonroad-vehicle-models==3.0.2
+ffmpeg==1.4
+frenetix==0.4.0
+-e git+ssh://git@github.com/TUM-AVS/Frenetix-Motion-Planner.git@fc6e7708ba384f991c2a0a07b7300ab52276c70f#egg=frenetix_motion_planner&subdirectory=../../Frenetix-Motion-Planner
+matplotlib==3.8.4
+networkx==3.4.2
+numpy==1.26.1
+omegaconf==2.3.0
+# syma @ file:///home/figlerg/dev/cr-dynamic-traffic-generation/monitoring/syma
