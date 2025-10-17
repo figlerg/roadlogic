@@ -2,7 +2,9 @@
 generated/
 planning/generated/
 results/
-
+venv_bckp
+.osc-generated
+.python-version
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
