@@ -1,0 +1,1 @@
+make animate-all-scenarios SCENARIOS_FOLDER="experiments_src/exp_001/out/osc2/cr_scenarios" OUTPUT_FOLDER="experiments_src/exp_001/out/osc2/cr_simulations" 
