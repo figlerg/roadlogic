@@ -6,6 +6,15 @@ venv_bckp
 .osc-generated
 .python-version
 
+
+# unignore the generated parser files
+# allow the parser-generated Python files
+!planning/parse/generated/
+!planning/parse/generated/*.py
+# keep ANTLR artifacts ignored
+planning/parse/generated/*.interp
+planning/parse/generated/*.tokens
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
