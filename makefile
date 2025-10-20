@@ -125,6 +125,8 @@ clean-osc-scenarios:
 
 # empty by default
 CONSTANTS_OVERRIDE ?=
+STEP_LENGTH ?=
+RULE_INJECTION ?=
 
 # NOTE I put the missing packages directly insider the create plan stuff
 $(OSC_SCENARIOS): $(OSC_FILE)
@@ -133,6 +135,8 @@ $(OSC_SCENARIOS): $(OSC_FILE)
 		--n $(OSC_N) \
 		--output-folder $(SCENARIOS_FOLDER)/osc2 \
 		--cr-scenario $(CR_SCENARIO_FILE) \
+		$(if $(RULE_INJECTION),--rule-injection $(RULE_INJECTION)) \
+		$(if $(STEP_LENGTH),--step-length $(STEP_LENGTH)) \
 		$(if $(CONSTANTS_OVERRIDE),--constants-override $(CONSTANTS_OVERRIDE))
 
 

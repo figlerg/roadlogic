@@ -24,11 +24,12 @@ from planning.Planner import Planner
 @click.option('--n', type=int, default=10)
 @click.option('--output-folder', type=click.Path(), required=True)
 @click.option('--cr-scenario', type=click.Path(exists=True), required=True)
-@click.option('--step-length', type=int, default=100)
 @click.option('--constants-override', type=click.Path(exists=True), required=False)
+@click.option('--step-length', type=int, default=100)
+@click.option('--rule-injection', type=click.Path(exists=True), required=False)
 
 
-def main(osc_file, n, output_folder, cr_scenario, step_length, constants_override=None):
+def main(osc_file, n, output_folder, cr_scenario, step_length, constants_override=None, rule_injection=None):
     
     # print(translate.__file__)
     # print(os.listdir(os.curdir))
@@ -48,6 +49,9 @@ def main(osc_file, n, output_folder, cr_scenario, step_length, constants_overrid
     controller_file = os.path.join(parent_folder,'controller.lp')
     
     external_rule_files = [controller_file]
+
+    if rule_injection:
+        external_rule_files.append(rule_injection)
     
     # a bit messy: I want to easily load new constants into this program so we can easily generate models for a partition. simply supply the new file 
     if constants_override:

@@ -210,15 +210,20 @@ class Planner:
             edge = (aut_path[i], aut_path[i + 1])
             gamma = G.edges[edge]['object']
 
+            edge_actor_ids = set()
+            for con in gamma:
+                edge_actor_ids.add(con.actor_1)
+                edge_actor_ids.add(con.actor_2)
+
             # the base is the part which needs to be in each of the goal rules
             rule = f'goal{i}(t) :- time(t), '
 
             # TODO this is probably not good yet. I just place all actors in the order of their appearance
             idx = {}
-            for j, actor in enumerate(actor_ids):
+            for j, actor in enumerate(edge_actor_ids):
                 idx[actor] = j + 1
                 rule += f'holds(state({actor},loc(S{j + 1},L{j + 1}),dyn(_,_)), t)'
-                if j + 1 == len(actor_ids):
+                if j + 1 == len(edge_actor_ids):
                     break
                 else:
                     rule += ','  # not elegant

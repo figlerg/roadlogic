@@ -5,6 +5,10 @@ results/
 venv_bckp
 .osc-generated
 .python-version
+archive/
+# ignore all experiment output folders
+experiments_src/**/out/
+
 
 
 # unignore the generated parser files
