@@ -3,8 +3,8 @@ EXP=experiments_src/exp_001
 gio trash $EXP/out/; # reset things
 mkdir $EXP/out/
 
-N=30
-STEP_LENGTH=20
+N=3
+STEP_LENGTH=200
 
 make generate-osc-scenarios \
     OSC_N=$N \

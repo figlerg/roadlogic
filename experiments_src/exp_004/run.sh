@@ -24,9 +24,6 @@ time_step() {
   printf "%s\t%d\n" "$label" "$dur" >> "$LOG"
 }
 
-# --- steps
-time_step "generate-osc-scenarios (dry-run)" \
-make generate-osc-scenarios OSC_N="$N" OSC_FILE="$EXP/in/spec.osc" OUTPUT_FOLDER="$EXP/out/cr_simulations" SCENARIOS_FOLDER="$EXP/out" STEP_LENGTH="$STEP_LENGTH" RULE_INJECTION="$EXP/in/rule_injection.lp"
 
 time_step "generate-osc-scenarios" \
 make generate-osc-scenarios OSC_N="$N" OSC_FILE="$EXP/in/spec.osc" OUTPUT_FOLDER="$EXP/out/cr_simulations" SCENARIOS_FOLDER="$EXP/out" STEP_LENGTH="$STEP_LENGTH" RULE_INJECTION="$EXP/in/rule_injection.lp"
