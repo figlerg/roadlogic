@@ -129,11 +129,11 @@ STEP_LENGTH ?=
 RULE_INJECTION ?=
 
 # NOTE I put the missing packages directly insider the create plan stuff
-$(OSC_SCENARIOS): $(OSC_FILE)
+$(OSC_SCENARIOS)&: $(OSC_FILE)
 	$(PYTHON) create_scenarios/create_plan_scenarios.py \
 		--osc-file $(OSC_FILE) \
 		--n $(OSC_N) \
-		--output-folder $(SCENARIOS_FOLDER)/osc2 \
+		--output-folder $(SCENARIOS_FOLDER) \
 		--cr-scenario $(CR_SCENARIO_FILE) \
 		$(if $(RULE_INJECTION),--rule-injection $(RULE_INJECTION)) \
 		$(if $(STEP_LENGTH),--step-length $(STEP_LENGTH)) \
@@ -248,7 +248,9 @@ define make-scenario-analysis
 
 
 $(OUTPUT_FOLDER)/$1/monitoring_results.csv: $(OUTPUT_FOLDER)/$1/LANE.csv $(OUTPUT_FOLDER)/$1/LONGPOS.csv
-		$(PYTHON) monitoring/gen_monitoring_results.py $(OUTPUT_FOLDER)/$1/
+		$(PYTHON) monitoring/gen_monitoring_results.py \
+			--output-folder $(OUTPUT_FOLDER)/$1/ \
+			--osc-file $(OSC_FILE)
 
 endef
 
