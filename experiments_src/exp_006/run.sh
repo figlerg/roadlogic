@@ -1,4 +1,4 @@
-EXP=experiments_src/exp_001
+EXP=experiments_src/exp_006
 
 gio trash $EXP/out/; # reset things
 mkdir $EXP/out/

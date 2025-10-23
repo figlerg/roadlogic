@@ -1,25 +1,43 @@
-EXP=experiments_src/exp_001
+#!/usr/bin/env bash
+set -euo pipefail
 
-gio trash $EXP/out/; # reset things
-mkdir $EXP/out/
+EXP=experiments_src/exp_007
+LOG="$EXP/out/times.log"
 
-N=3
-STEP_LENGTH=200
+gio trash "$EXP/out/" || true
+mkdir -p "$EXP/out/"
+: > "$LOG"
 
-make generate-osc-scenarios \
-    OSC_N=$N \
-	OSC_FILE=$EXP/in/spec.osc \
-	OUTPUT_FOLDER=$EXP/out/cr_simulations \
-	SCENARIOS_FOLDER=$EXP/out \
-	STEP_LENGTH=$STEP_LENGTH \
-    RULE_INJECTION=$EXP/in/rule_injection.lp
+N=200
 
+time_step () {
+  local label="$1"; shift
+  local start end dur
+  start=$(date +%s)
+  echo "[START] $label" | tee -a "$LOG"
+  "$@"
+  end=$(date +%s)
+  dur=$((end - start))
+  printf "[DONE ] %-30s %3dm%02ds\n" "$label" $((dur/60)) $((dur%60)) | tee -a "$LOG"
+}
 
+time_step "dynamic_feedback.py" \
+python create_scenarios/dynamic_feedback.py \
+  --output-folder "$EXP/out" \
+  --heuristic BASIC \
+  --osc-file "$EXP/in/spec.osc" \
+  --n "$N" \
+  --cr-scenario cr_scenarios/threelanes.xml \
+  --rule-injection "$EXP/in/rule_injection.lp"
+
+time_step "execute-all-scenarios" \
 make execute-all-scenarios \
-	SCENARIOS_FOLDER=$EXP/out/osc2/cr_scenarios \
-	OUTPUT_FOLDER=$EXP/out/osc2/cr_simulations
+  SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
+  OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
-
+time_step "generate-summary" \
 make generate-summary \
-	SCENARIOS_FOLDER=$EXP/out/osc2/cr_scenarios \
-	OUTPUT_FOLDER=$EXP/out/osc2/cr_simulations
+  SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
+  OUTPUT_FOLDER="$EXP/out/cr_simulations"
+
+echo "Timing summary written to $LOG"

@@ -1,0 +1,24 @@
+# overtake, but car1 remains on the same lane (added on ASP level in rule_injection)
+
+scenario overtake:
+    p: path
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive(p)
+
+        c1: serial:
+            A: ego.drive(p) with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)
+
+            C: ego.drive() with:
+                lane(same_as: car1, at: end)
+                position([5m..10m], ahead_of: car1, at: end)
+    
