@@ -1,17 +1,51 @@
 import click
 # from monitoring.overtake_monitor import manual_monitor as mon  # fixed automaton without self-loops
-from monitoring.overtake_monitor import gen_monitor as mon       # generated monitoring with full setup
+from monitoring.overtake_monitor import gen_monitor as default_mon       # generated monitoring with full setup
 from monitoring.Monitor import Monitor
+from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
+from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
+from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
+from planning.parse.generated.openscenario2Parser import openscenario2Parser
+from antlr4 import FileStream, CommonTokenStream
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.misc.errors import HardSyntaxErrorStrategy
+
+from syma.automaton.automaton import Location, SymbolicAutomaton
+from syma.constraint.constraint import Constraint
+from syma.constraint.node.node import *
+from syma_arv.monitor.boolean import BooleanMonitor
+from syma_arv.monitor.minmax import MinMaxMonitor
+from syma_arv.monitor.tropical import TropicalMonitor
+
+
 
 @click.command()
-@click.argument("gen_path", type=click.Path(exists=True, file_okay=False))
-def gen_monitoring_results(gen_path):
+@click.option("--output-folder", type=click.Path(file_okay=False, dir_okay=True, writable=True, resolve_path=True), required=True, help="Output directory for monitoring results.")
+@click.option("--osc-file", type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True), required=True, help="Input OpenSCENARIO file.")
+def gen_monitoring_results(output_folder, osc_file=None):
     """
     Runs the monitor on a simulation result folder (GEN_PATH).
     Prints the resulting state from the monitor.
     """
 
-    mon_result = mon.eval_trace(gen_path)
+    if not osc_file:
+        mon = default_mon # the overtake
+    else:
+        input_stream = FileStream(osc_file)
+        lexer = openscenario2Lexer(input_stream)
+        stream = CommonTokenStream(lexer)
+        parser = openscenario2Parser(stream)
+        parser._errHandler = HardSyntaxErrorStrategy()
+        ctx = parser.osc_file()
+
+        visitor = TranslationGraphVisitor()
+        T: TranslationGraph = visitor.visit(ctx)
+        mon = Monitor.from_translation_graph(T,ring=MinMaxMonitor)
+
+
+    mon_result = mon.eval_trace(output_folder)
 
 
     # TODO TODO the correct plans unpickled here. Probably I should move the files to the gen_path via makefile
