@@ -3,22 +3,29 @@
 import os
 from partition import partition, default_dict
 from itertools import product
-
+import click
 
 import random
 
 random.seed(42)
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+default_out_folder = os.path.join(script_dir, "variability_experiments_instances")
 
-def vary_params(out_path: str, n:int):
+
+@click.command()
+@click.option('--output-folder', type=click.Path(), required=True, default=default_out_folder)
+@click.option('--n', type=int, default=10)
+def vary_params(output_folder: str, n:int):
     """
     Main experiment:
     - Varies interval constants by partitioning their min/max range.
     - Varies certain scalar constants by ±2.
     - Keeps some constants fixed.
     """
-    if not os.path.exists(out_path):
-        os.makedirs(out_path)
+    print(output_folder)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     # === Define constant categories ===
 
@@ -70,7 +77,7 @@ def vary_params(out_path: str, n:int):
         # Set the fixed lane flag to true
         config['fix_car_lane'] = ('car1',)
 
-        partition(config, out_path)
+        partition(config, output_folder)
 
 
 def split_interval(min_val, max_val, parts=2):
@@ -86,7 +93,8 @@ def split_interval(min_val, max_val, parts=2):
 
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(script_dir, "variability_experiments_instances")
-    vary_params(output_dir, 10)
+    # script_dir = os.path.dirname(os.path.abspath(__file__))
+    # output_dir = os.path.join(script_dir, "variability_experiments_instances")
+    # vary_params(output_dir, 10)
+    vary_params()
 

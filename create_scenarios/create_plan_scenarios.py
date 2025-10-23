@@ -55,8 +55,8 @@ def main(osc_file, n, output_folder, cr_scenario, step_length, constants_overrid
     
     # a bit messy: I want to easily load new constants into this program so we can easily generate models for a partition. simply supply the new file 
     if constants_override:
-        external_rule_files.append(os.path.join(top_folder,'planning', 'osc2scenic', 'behavior_inference', 'encoding', 'dynamics.lp'))
-        external_rule_files.append(os.path.join(top_folder,'planning', 'osc2scenic', 'behavior_inference', 'encoding', 'facts.lp'))
+        external_rule_files.append(os.path.join(top_folder,'planning', 'asp', 'encoding', 'dynamics.lp'))
+        external_rule_files.append(os.path.join(top_folder,'planning', 'asp', 'encoding', 'facts.lp'))
         external_rule_files.append(constants_override) # this is the actual input. constants.lp is swapped out by it
 
 

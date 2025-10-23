@@ -26,7 +26,6 @@ from create_scenarios.heuristics import GenerationHeuristicEnum
 
 @click.command()
 @click.option('--osc-file', type=click.Path(exists=True), required=True)
-@click.option('--n', type=int, default=10)  # not quite sure whether I should produce multiple per partition
 @click.option('--input-folder', type=click.Path(), required=True)  # should be folder which is the WD of the heuristic. forced by outside
 @click.option('--output-folder', type=click.Path(), required=True)  # should be folder which is the WD of the heuristic. forced by outside
 @click.option('--cr-scenario', type=click.Path(exists=True), required=True)
@@ -34,7 +33,7 @@ from create_scenarios.heuristics import GenerationHeuristicEnum
 @click.option("--override/--no-override", default=True, help="Enable or disable override.")
 
 
-def main(osc_file, n, input_folder, output_folder, cr_scenario, time_limit, override):
+def main(osc_file, input_folder, output_folder, cr_scenario, time_limit, override):
     """
     Assume there are some .lp files with additional constraints in input_folder. 
     Simply create n plans for the automatic ASP rules + each of the .lp files. 
@@ -42,7 +41,7 @@ def main(osc_file, n, input_folder, output_folder, cr_scenario, time_limit, over
     """
 
 
-    os.makedirs(output_folder, exist_ok=False)
+    os.makedirs(output_folder, exist_ok=True)
 
     top_level_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     controller_file = os.path.join(top_level_dir, 'planning','controller.lp')
@@ -65,8 +64,8 @@ def main(osc_file, n, input_folder, output_folder, cr_scenario, time_limit, over
 
             rule_sets = [os.path.abspath(controller_file), os.path.abspath(entry.path)]
 
-            rule_sets.append(os.path.abspath('planning/osc2scenic/behavior_inference/encoding/dynamics.lp'))
-            rule_sets.append(os.path.abspath('planning/osc2scenic/behavior_inference/encoding/facts.lp'))
+            rule_sets.append(os.path.abspath('planning/asp/encoding/dynamics.lp'))
+            rule_sets.append(os.path.abspath('planning/asp/encoding/facts.lp'))
 
             sub_folder = os.path.join(output_folder,"aux_asp", name)
             os.makedirs(sub_folder, exist_ok=True)
