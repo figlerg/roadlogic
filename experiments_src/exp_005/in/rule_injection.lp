@@ -1,6 +1,7 @@
 #program step(t).
 
-:- occurs(change_dynamics(V,_,VLAT),t), V=car1, VLAT != 0.
+:- holds(state(car2, loc(_,_), dyn(VLON,_)),t), VLON !=0.
+
 
 
 

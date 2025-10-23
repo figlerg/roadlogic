@@ -1,7 +1,6 @@
 # our typical overtake, but this time with a third actor in parallel
 
 scenario overtake:
-    p: path
     car1: car
     ego: car
     car2: car
@@ -9,10 +8,10 @@ scenario overtake:
     do parallel(duration:  [3s..20s]):
 
         parallel:
-            c0: car1.drive(p)
+            c0: car1.drive()
 
             c1: serial:
-                A: ego.drive(p) with:
+                A: ego.drive() with:
                     lane(same_as:car1, at:start)
                     lane(left_of:car1, at:end)
                     position([10m..20m], behind:car1, at:start)
@@ -24,4 +23,4 @@ scenario overtake:
                     lane(same_as: car1, at: end)
                     position([5m..10m], ahead_of: car1, at: end)
         
-        c2: car2.drive(p)
+        c2: car2.drive()

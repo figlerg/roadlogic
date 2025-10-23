@@ -37,6 +37,7 @@ make execute-all-scenarios \
 time_step "generate-summary" \
 make generate-summary \
 	SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
-	OUTPUT_FOLDER=$EXP/out/cr_simulations
+	OUTPUT_FOLDER=$EXP/out/cr_simulations \
+	OSC_FILE=$EXP/in/spec.osc
 
 echo "Timing summary written to $LOG"
