@@ -10,9 +10,8 @@ scenario follow:
 
         c0: car1.drive(p)
 
-        c1: serial:
-            c1_0: ego.drive(p) with:
-                position([10m..20m], behind:car1, at:start)
-                lane(same_as:car1, at:start)
-                lane(left_of:car1, at:end)
+        c1: ego.drive(p) with:
+            position([10m..20m], behind:car1, at:start)
+            lane(same_as:car1, at:start)
+            lane(left_of:car1, at:end)
 

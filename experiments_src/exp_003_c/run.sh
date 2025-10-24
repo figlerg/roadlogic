@@ -1,10 +1,10 @@
-EXP=experiments_src/exp_008
+EXP=experiments_src/exp_003_b
 LOG="$EXP/out/times.log"
 
 gio trash $EXP/out/; # reset things
 mkdir $EXP/out/
 
-N=140
+N=100
 
 time_step () {
   local label="$1"; shift
@@ -37,7 +37,6 @@ make execute-all-scenarios \
 time_step "generate-summary" \
 make generate-summary \
 	SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
-	OUTPUT_FOLDER=$EXP/out/cr_simulations \
-	OSC_FILE=$EXP/in/spec.osc
+	OUTPUT_FOLDER=$EXP/out/cr_simulations
 
 echo "Timing summary written to $LOG"
