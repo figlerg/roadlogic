@@ -75,7 +75,7 @@ def vary_params(output_folder: str, n:int):
             config[const] = default_dict[const]
 
         # Set the fixed lane flag to true
-        config['fix_car_lane'] = ('car1',)
+        # config['fix_car_lane'] = ('car1',)
 
         partition(config, output_folder)
 
