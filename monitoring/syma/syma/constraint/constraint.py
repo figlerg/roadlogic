@@ -32,6 +32,10 @@ class Constraint(object):
     def alphabet(self, alphabet):
         self.__alphabet = alphabet
 
+    # felix 10/2025: 
+    def __bool__(self):
+        return bool(self.formula)
+
 
 class RealConstraint(Constraint):
 

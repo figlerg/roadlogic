@@ -315,7 +315,12 @@ class Monitor:
                     else:
                         cons_syma_node = AndNode(cons_syma_node, new_con)
 
+                if cons_syma_node is None:
+                    cons_syma_node = TrueNode()
+
                 cons_syma = Constraint(formula=cons_syma_node)  # TODO not sure if the alphabet param is ecpected
+
+                
 
                 syma_aut.add_transition(location_by_id[v],location_by_id[w], constraint=cons_syma)
 

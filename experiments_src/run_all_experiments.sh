@@ -21,3 +21,6 @@ for dir in experiments_src/exp*/; do
     echo "Skipping $dir (no run.sh)"
   fi
 done
+
+
+bash experiments_src/extract_summaries.sh # get the summaries out and gather them in the logs folder

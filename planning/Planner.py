@@ -156,6 +156,12 @@ class Planner:
         grounded = {'ego'}
         remaining = set(actor_ids) - grounded
 
+        try:
+            remaining.remove('obstacle')
+            warnings.warn("'obstacle' is a special variable name and is used to encode static obstacles. Make sure this is what you want.")
+        except KeyError:
+            pass
+
         pair_subconstraints = defaultdict(set)  # each pair of actors may have a relational constraint
 
         idx = {actor_str: i + 1 for i, actor_str in enumerate(actor_ids)}

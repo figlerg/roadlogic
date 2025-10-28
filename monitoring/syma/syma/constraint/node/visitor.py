@@ -41,7 +41,7 @@ class NodeVisitor:
         elif isinstance(node, TrueNode):
             out = self.visitTrue(node, args)
         else:
-            raise Exception('Node Visitor: unexpected method called.')
+            raise Exception(f'Node Visitor: unexpected method called:{node}')
         return out
 
     @abstractmethod

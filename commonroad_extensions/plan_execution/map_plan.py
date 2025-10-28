@@ -135,6 +135,9 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
 
             row = frame.loc[agent_id]
             lon_pos, lat_pos = row["lon_pos"], row["lat_pos"]
+            assert np.isscalar(lon_pos) and np.isscalar(lat_pos), f"Non-scalar positions: lon={type(lon_pos)}, lat={type(lat_pos)}"
+
+                    
 
             # # if it is out of map by a bit everything fails
             # if lon_pos ==0:

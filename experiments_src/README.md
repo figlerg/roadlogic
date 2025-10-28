@@ -6,7 +6,7 @@ different specs are in
 - 5 overtake, but there is a static obstacle on the road
 - 6 two cares, one changes to left lane
 - 7 follow but I use the basic heuristic
-- 8 follow with partitioning. obsolete, quasi equivalent with 1_b. 
+- 8 drive past static obstacle
 
 explanations to the naming:
 - no suffix means that we run the vanilla pipeline. I take low N because the plans don't vary at all here 

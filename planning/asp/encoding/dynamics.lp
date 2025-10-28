@@ -39,7 +39,7 @@ holds(state(V,loc(S,L),dyn(Vel_lon,Vel_lat)), t) :-
 		velocity_lon(Vel_lon).
 
 %% one major assumption: cars are moving
-% :- holds(state(_, loc(_,_), dyn(Vel_lon,_)), t), Vel_lon=0, t!=0.
+:- holds(state(V, loc(_,_), dyn(Vel_lon,_)), t), Vel_lon=0, t!=0, V!=obstacle.
 %% TODO lifted this experimentally for the static obstacle experiment!
 
 
