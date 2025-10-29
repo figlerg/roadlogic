@@ -22,7 +22,7 @@ RoadLogic provides:
 ## Installation
 
 ```bash
-git clone --recurse-submodules https://github.com/figlerg/roadlogic.git
+git clone https://github.com/figlerg/roadlogic.git
 cd roadlogic
 
 # using pyenv
