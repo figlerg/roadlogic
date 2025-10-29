@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/../common.sh"   # import shared helpers
 
 EXP=experiments_src/exp_007
 LOG="$EXP/out/times.log"
 
 gio trash "$EXP/out/" || true
 mkdir -p "$EXP/out/"
-: > "$LOG"
 
 N=200
 
@@ -40,4 +40,3 @@ make generate-summary \
   SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
   OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
-echo "Timing summary written to $LOG"

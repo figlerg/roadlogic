@@ -1,21 +1,12 @@
-EXP=experiments_src/exp_002_b
-LOG="$EXP/out/times.log"
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "$0")/../common.sh"   # import shared helpers
 
 gio trash $EXP/out/; # reset things
 mkdir $EXP/out/
 
 N=100
 
-time_step () {
-  local label="$1"; shift
-  local start end dur
-  start=$(date +%s)
-  echo "[START] $label" | tee -a "$LOG"
-  "$@"
-  end=$(date +%s)
-  dur=$((end - start))
-  printf "[DONE ] %-35s %3dm%02ds\n" "$label" $((dur/60)) $((dur%60)) | tee -a "$LOG"
-}
 
 time_step "create_variability_instances" \
 python create_scenarios/create_variability_instances.py \
@@ -39,4 +30,3 @@ make generate-summary \
 	SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
 	OUTPUT_FOLDER=$EXP/out/cr_simulations
 
-echo "Timing summary written to $LOG"

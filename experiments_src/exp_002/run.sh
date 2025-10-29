@@ -1,26 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/../common.sh"   # import shared helpers
 
 EXP=experiments_src/exp_002
 LOG="$EXP/out/times.log"
 
 gio trash "$EXP/out/" || true
 mkdir -p "$EXP/out/"
-: > "$LOG"
 
 N=3
 STEP_LENGTH=200
 
-time_step () {
-  local label="$1"; shift
-  local start end dur
-  start=$(date +%s)
-  echo "[START] $label" | tee -a "$LOG"
-  "$@"
-  end=$(date +%s)
-  dur=$((end - start))
-  printf "[DONE ] %-35s %3dm%02ds\n" "$label" $((dur/60)) $((dur%60)) | tee -a "$LOG"
-}
 
 time_step "generate-osc-scenarios" \
 make generate-osc-scenarios \
@@ -42,4 +32,3 @@ make generate-summary \
   OUTPUT_FOLDER=$EXP/out/cr_simulations \
   OSC_FILE=$EXP/in/spec.osc
 
-echo "Timing summary written to $LOG"

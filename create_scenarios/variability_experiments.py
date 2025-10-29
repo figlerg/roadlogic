@@ -31,9 +31,10 @@ from create_scenarios.heuristics import GenerationHeuristicEnum
 @click.option('--cr-scenario', type=click.Path(exists=True), required=True)
 @click.option('--time-limit', default=30)
 @click.option("--override/--no-override", default=True, help="Enable or disable override.")
+@click.option('--rule-injection', type=click.Path(exists=True), required=False)
 
 
-def main(osc_file, input_folder, output_folder, cr_scenario, time_limit, override):
+def main(osc_file, input_folder, output_folder, cr_scenario, time_limit, override, rule_injection):
     """
     Assume there are some .lp files with additional constraints in input_folder. 
     Simply create n plans for the automatic ASP rules + each of the .lp files. 
@@ -64,6 +65,9 @@ def main(osc_file, input_folder, output_folder, cr_scenario, time_limit, overrid
 
             rule_sets = [os.path.abspath(controller_file), os.path.abspath(entry.path)]
 
+            if rule_injection:
+                rule_sets.append(rule_injection)
+                
             rule_sets.append(os.path.abspath('planning/asp/encoding/dynamics.lp'))
             rule_sets.append(os.path.abspath('planning/asp/encoding/facts.lp'))
 
