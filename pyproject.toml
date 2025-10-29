@@ -64,7 +64,6 @@ packages = [
     "commonroad_extensions",
     "create_scenarios",
     "experiments_src",
-    "monitoring",
-    "frenetix_motion_planner"
+    "monitoring"
 ]
 include-package-data = true

@@ -4,7 +4,6 @@ commonroad_drivability_checker==2024.1
 commonroad_route_planner==2025.1.0
 commonroad_vehicle_models==3.0.2
 enlighten==1.14.1
-frenetix_motion_planner==2024.1.1
 geopandas==1.1.1
 imageio==2.37.0
 matplotlib==3.8.4
