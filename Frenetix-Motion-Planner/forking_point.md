@@ -1,0 +1,1 @@
+The forking point of the shipped code is commit fc6e7708ba384f991c2a0a07b7300ab52276c70f of the repository https://github.com/TUM-AVS/Frenetix-Motion-Planner.git.

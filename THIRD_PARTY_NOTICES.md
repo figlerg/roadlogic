@@ -21,6 +21,7 @@ All other source files are © The RoadLogic Developers and released under the **
 - **License:** GNU Lesser General Public License v3.0
 - **Notes:** 
   - This code is included in modified form and remains under LGPL-3.0.
+  - The forking point of the shipped code is commit fc6e7708ba384f991c2a0a07b7300ab52276c70f of the repository https://github.com/TUM-AVS/Frenetix-Motion-Planner.git.
   - Source and modification history are provided in this repository as required by the license.
   - You may link or use these components from BSD-3 code, but any further modifications to the Frenetix files must also remain under LGPL-3.0.
   - See `Frenetix-Motion-Planner/LICENSE` for full text.
