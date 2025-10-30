@@ -17,4 +17,4 @@ scenario follow:
                 lane(left_of:car1, at:end)
             c1_1: ego.drive(p) with:
                 lane(same_as:car1, at:end)
-                position([10m..20m], behind:car1, at:end)
+                position([1m..30m], behind:car1, at:end)
