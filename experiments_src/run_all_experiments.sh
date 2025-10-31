@@ -7,7 +7,7 @@ if [[ "${1:-}" == "--animate" ]]; then
   shift
 fi
 
-STATUS_LOG="experiments_src/run_status.jsonl"
+STATUS_LOG="experiments_src/logs/run_status.jsonl"
 : > "$STATUS_LOG"
 
 for dir in experiments_src/exp*/; do
