@@ -33,17 +33,7 @@ def gen_monitoring_results(output_folder, osc_file=None):
     if not osc_file:
         mon = default_mon # the overtake
     else:
-        input_stream = FileStream(osc_file)
-        lexer = openscenario2Lexer(input_stream)
-        stream = CommonTokenStream(lexer)
-        parser = openscenario2Parser(stream)
-        parser._errHandler = HardSyntaxErrorStrategy()
-        ctx = parser.osc_file()
-
-        visitor = TranslationGraphVisitor()
-        T: TranslationGraph = visitor.visit(ctx)
-        mon = Monitor.from_translation_graph(T,ring=MinMaxMonitor)
-
+        mon = Monitor.from_osc2_file(osc_file,ring=MinMaxMonitor)
 
     mon_result = mon.eval_trace(output_folder)
 

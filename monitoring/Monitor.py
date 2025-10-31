@@ -1,4 +1,12 @@
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
+from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
+from planning.parse.generated.openscenario2Parser import openscenario2Parser
+from antlr4 import FileStream, CommonTokenStream
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.misc.errors import HardSyntaxErrorStrategy
 from syma.automaton.automaton import Location, SymbolicAutomaton
 from syma.constraint.constraint import Constraint
 from syma.constraint.node.node import *
@@ -19,6 +27,9 @@ import os
 from planning.asp.MyModel import MyModel, MyPred
 
 from commonroad_extensions.plan_execution.map_plan import no_lanes
+
+from functools import lru_cache
+
 
 class Monitor:
     
@@ -67,6 +78,21 @@ class Monitor:
         mon.syma_aut = syma_aut
 
         return mon
+    
+    @classmethod
+    @lru_cache(maxsize=None)
+    def from_osc2_file(cls, osc_file, ring : Union[BooleanMonitor, MinMaxMonitor, TropicalMonitor] = BooleanMonitor):
+        input_stream = FileStream(osc_file)
+        lexer = openscenario2Lexer(input_stream)
+        stream = CommonTokenStream(lexer)
+        parser = openscenario2Parser(stream)
+        parser._errHandler = HardSyntaxErrorStrategy()
+        ctx = parser.osc_file()
+
+        visitor = TranslationGraphVisitor()
+        T: TranslationGraph = visitor.visit(ctx)
+
+        return cls.from_translation_graph(T,ring=MinMaxMonitor)
     
     @classmethod
     def invariant_from_plan(cls, plan:MyModel, ring : Union[BooleanMonitor, MinMaxMonitor, TropicalMonitor] = MinMaxMonitor, tolerance = 1, plan_config=None):
