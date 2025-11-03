@@ -53,7 +53,7 @@ def _load_names(names_arg):
 @click.command()
 @click.option("--names", default=None, help='Optional mapping (path to JSON or inline JSON, e.g. \'{"exp_001_b":"overtake"}\').')
 @click.option("--out", default="experiments_src/vis/experiments_summary.png", show_default=True, help="Output image filename.")
-@click.option("--pattern", multiple=True, default=["logs/*.json"], show_default=True,
+@click.option("--pattern", multiple=True, default=["experiments_src/logs/*.json"], show_default=True,
               help="One or more glob patterns of experiment json files.")
 def main(pattern, names, out):
     # --- load and merge names ---
@@ -95,7 +95,7 @@ def main(pattern, names, out):
     # === Combined plots for success rates + timing ===
     fig, (ax1, ax2) = plt.subplots(
         2, 1,
-        figsize=(max(6, len(labels) * 1.3), 7.5),  # slightly taller to avoid label overlap
+        figsize=(max(6, len(labels) * 1.3), 7.5),
         sharex=True,
         gridspec_kw={'height_ratios': [2.5, 1]}
     )
@@ -114,10 +114,13 @@ def main(pattern, names, out):
         "variability_experiments": "plan",
         "generate-osc-scenarios": "plan",
         "execute-all-scenarios": "execute",
+        "compute-metrics": "instrument",
         "generate-summary": "monitor",
     }
 
+    order_bases = [os.path.splitext(os.path.basename(p))[0] for p in files]
     step_durations = defaultdict(dict)
+
     for p in files:
         base = os.path.splitext(os.path.basename(p))[0]
         exp_dir = os.path.join("experiments_src", base)
@@ -134,24 +137,28 @@ def main(pattern, names, out):
                     continue
 
     if step_durations:
-        df = pd.DataFrame(step_durations).fillna(0).T
-        df = df[[c for c in ["partition", "plan", "execute", "monitor"] if c in df.columns]]
+        df = pd.DataFrame(step_durations).T.fillna(0)
+        cols = [c for c in ["partition", "plan", "execute", "instrument", "monitor"] if c in df.columns]
+        df = df.reindex(order_bases).fillna(0)
+        df = df[cols]
 
         colors = {
             "partition": "#A8D5BA",  # calm pastel green
             "plan": "#F7B7A3",       # soft red/orange
             "execute": "#A7C7E7",    # pastel blue
+            "instrument": "#C6B8E3", # light lavender
             "monitor": "#FDDFA9",    # light orange/yellow
         }
 
         bottom = np.zeros(len(df))
         for step in df.columns:
-            ax2.bar(df.index, df[step], bottom=bottom, color=colors.get(step, "gray"), label=step)
-            bottom += df[step].values
+            heights = df[step].values
+            ax2.bar(x, heights, bottom=bottom, color=colors.get(step, "gray"), label=step)
+            bottom += heights
 
         total_times = df.sum(axis=1).astype(int)
         max_total = max(total_times) if len(total_times) else 0
-        ax2.set_ylim(0, max_total * 1.15)  # taller frame for labels
+        ax2.set_ylim(0, max_total * 1.15)
 
         for i, t in enumerate(total_times):
             hrs, rem = divmod(t, 3600)
@@ -162,8 +169,7 @@ def main(pattern, names, out):
                 f"{secs}s"
             )
             ax2.text(i, t + max_total * 0.02, label_time,
-                    ha="center", va="bottom", fontsize=8, color="#333")
-
+                     ha="center", va="bottom", fontsize=8, color="#333")
 
         ax2.set_ylabel("Time (s)")
         ax2.grid(axis="y", linestyle="--", alpha=0.3)
@@ -177,16 +183,14 @@ def main(pattern, names, out):
     else:
         ax2.text(0.5, 0.5, "No timing data found", ha="center", va="center")
 
-    # === Shared x-axis labels only at bottom ===
+    # === Shared x-axis labels with experiment numbers ===
     ax2.set_xticks(x)
-    ax2.set_xticklabels(
-        [name_map.get(os.path.splitext(os.path.basename(p))[0], os.path.splitext(os.path.basename(p))[0]) for p in files],
-        rotation=45, ha="right"
-    )
+    ax2.set_xticklabels(labels, rotation=45, ha="right")
 
     plt.tight_layout()
     plt.savefig(out.replace(".png", "_combined.png"), dpi=150, bbox_inches="tight")
     print(f"Wrote {out.replace('.png', '_combined.png')}")
+
 
 if __name__ == "__main__":
     main()
