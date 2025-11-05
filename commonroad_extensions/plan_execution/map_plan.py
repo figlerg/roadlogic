@@ -94,6 +94,8 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
     df = pd.DataFrame(structured)
     df_by_time = {t: group.drop(columns='t').set_index('agent') for t, group in df.groupby('t')}
 
+
+    agent_ids = df_by_time.get(0).index
     max_t = max(df_by_time.keys())
 
 
@@ -103,11 +105,64 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
 
     coordinate_system = CoordinateSystem(reference=anchor_lane, config_sim=config_sim)
     
+    goals_sat_set = [pred for pred in plan_model if pred.name == 'goal']  # check at which times the goals are satisfied. this predicate holds the times where each of the subgoals is satisfied. 
 
-    goals_sat = [pred for pred in plan_model if pred.name == 'goal'][0]  # check at which times the goals are satisfied. this predicate holds the times where each of the subgoals is satisfied. 
-    goal_times = list(dict.fromkeys(goals_sat[:]))
-    if not (0 in goal_times):
-        goal_times.insert(0,0)
+    mode = 'optimize_longitudinal_distance'
+
+    match mode:
+        case 'first':
+            # this is the barebones, just pick the first goals predicate that we find
+    
+            goals_sat = goals_sat_set[0]  # the original trivial way of doing it
+            
+            goal_times = list(dict.fromkeys(goals_sat[:]))
+            if not (0 in goal_times):
+                goal_times.insert(0,0)
+
+        case 'optimize_longitudinal_distance':
+            # now trying to find the optimal set of times by comparing all the goals predicates
+            goals_sat = goals_sat_set[0] 
+
+
+            get_goal_times = lambda goal : list(dict.fromkeys([0]+goal[:]))
+
+            goal_times_set = [get_goal_times(x) for x in goals_sat_set]
+
+            def compute_min_longitudinal_change_distance(goal_times):
+                # we want to select one of the goal predicates that makes things easier to drive for the controller. 
+                # this function takes a candidate and returns the minimum lane change distance, i.e. the sharpest turn
+
+                lane_change_distance = float('inf')
+
+                last_t = 0
+
+                for t in goal_times:
+
+                    if not t:
+                        continue
+                    
+                    # current_pos_all = df_by_time[t]
+                    # last_pos_all = df_by_time[last_t]
+
+                    # compare for all actors
+                    for actor in agent_ids:
+                        last_lon, last_lat = df_by_time[last_t].loc[actor, ["lon_pos", "lat_pos"]]
+                        lon, lat = df_by_time[t].loc[actor, ["lon_pos", "lat_pos"]]
+                        
+                        # print(lat-last_lat)
+                        # print(lon-last_lon)
+
+                        # we only care for lane changes (first condition) and then we update only if we find a sharper turn
+                        dist = abs(lon-last_lon)
+                        if lat-last_lat and dist < lane_change_distance:
+                            lane_change_distance = dist
+                    
+                    last_t = t
+
+                return lane_change_distance
+
+            # now we select the goals predicate with the least sharp turn (maximum such distance) from among all candidates
+            goal_times = max(goal_times_set, key=compute_min_longitudinal_change_distance)
 
 
     time_steps = goal_times  # just for clarity: one could also use different time steps
@@ -125,7 +180,7 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
     # Collect planning problems by agent
     new_planning_problems = []
 
-    for agent_id in df_by_time.get(0).index:
+    for agent_id in agent_ids:
         goal_states = []
         initial_state = None
         for t in time_steps:
