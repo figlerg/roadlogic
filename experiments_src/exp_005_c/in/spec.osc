@@ -1,9 +1,9 @@
-# our typical overtake, but this time with a third actor in parallel
+# our typical overtake, but there is a static obstacle
 
 scenario overtake:
     car1: car
     ego: car
-    car2: car
+    obstacle: car
 
     do parallel(duration:  [3s..20s]):
 
@@ -21,6 +21,6 @@ scenario overtake:
 
                 C: ego.drive() with:
                     lane(same_as: car1, at: end)
-                    position([5m..10m], ahead_of: car1, at: end)
+                    position([30m..40m], ahead_of: car1, at: end)
         
-        c2: car2.drive()
+        c2: obstacle.drive() # right now we load these as cars
