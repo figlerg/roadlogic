@@ -1,6 +1,5 @@
 import os
 import csv
-from monitoring.gen_monitoring_results import gen_monitoring_results
 import json
 import click
 import math

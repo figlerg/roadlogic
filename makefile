@@ -247,10 +247,19 @@ $(foreach metric_name,$(selected_metrics),$(foreach scenario_id,$(scenario_id_li
 define make-scenario-analysis 
 
 
-$(OUTPUT_FOLDER)/$1/monitoring_results.csv: $(OUTPUT_FOLDER)/$1/LANE.csv $(OUTPUT_FOLDER)/$1/LONGPOS.csv
-		$(PYTHON) monitoring/gen_monitoring_results.py \
-			--output-folder $(OUTPUT_FOLDER)/$1/ \
-			--osc-file $(OSC_FILE)
+# $(OUTPUT_FOLDER)/$1/monitoring_results.csv: $(OUTPUT_FOLDER)/$1/LANE.csv $(OUTPUT_FOLDER)/$1/LONGPOS.csv
+# 		$(PYTHON) monitoring/gen_monitoring_results.py \
+# 			--output-folder $(OUTPUT_FOLDER)/$1/ \
+# 			--osc-file $(OSC_FILE) \
+
+# new version where I load the pickled plan as well for the invariant monitor
+$(OUTPUT_FOLDER)/$1/monitoring_results.csv: \
+  $(OUTPUT_FOLDER)/$1/LANE.csv \
+  $(OUTPUT_FOLDER)/$1/LONGPOS.csv
+	$(PYTHON) monitoring/gen_monitoring_results.py \
+		--output-folder $(OUTPUT_FOLDER)/$1/ \
+		--osc-file $(OSC_FILE) \
+		--check-plan $(OUTPUT_FOLDER)/../serialized_models/$(patsubst scenario_%,%,$1).pkl
 
 endef
 

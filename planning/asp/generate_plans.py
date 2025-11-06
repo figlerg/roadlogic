@@ -201,7 +201,8 @@ def visualize_plans(models, max_num=None, save=False, show=True, save_path=None,
         if custom_names:
             pkl_file = os.path.join(save_dir_pkl, f'{custom_names[i]}.pkl')
         else:
-            pkl_file = os.path.join(save_dir_pkl, f'model{i + 1:04d}.pkl')
+            pkl_file = os.path.join(save_dir_pkl, f'scenario_{i + 1:04d}.pkl')
+            # pkl_file = os.path.join(save_dir_pkl, f'model_{i + 1:04d}.pkl')
 
         with open(pkl_file, "wb") as f:
             pickle.dump(models[i], f)
