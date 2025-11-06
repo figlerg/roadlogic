@@ -68,13 +68,27 @@ run_vanilla_experiment() {
 
 # --- PARTITIONING PIPELINE --------------------------------------------------
 run_variability_experiment() {
-  EXP="$1"; N="$2"; CR_SCENARIO="${3:-cr_scenarios/threelanes.xml}"
+  EXP="$1"
+  N="$2"
+
+  # Optional 3rd positional: CR_SCENARIO
+  if [[ $# -ge 3 && "$3" != --* ]]; then
+    CR_SCENARIO="$3"
+    shift 3
+  else
+    CR_SCENARIO="cr_scenarios/threelanes.xml"
+    shift 2
+  fi
+
+  EXTRA_ARGS=("$@")   # e.g. --init-interval 10 20
+
   exp_reset_out "$EXP"
 
   time_step "create_variability_instances" \
   python create_scenarios/create_variability_instances.py \
     --output-folder "$EXP/out/partitions/" \
-    --n "$N"
+    --n "$N" \
+    "${EXTRA_ARGS[@]}"
 
   time_step "variability_experiments" \
   python create_scenarios/variability_experiments.py \
@@ -89,7 +103,6 @@ run_variability_experiment() {
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
-  time_step "compute-metrics" \
   make -j 8 \
     SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
     OUTPUT_FOLDER=$EXP/out/cr_simulations \

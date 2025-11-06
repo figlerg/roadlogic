@@ -11,13 +11,13 @@ default_dict = {
     'max_velocity_lon': 12,
     'max_velocity_lat': 1,
     'safety_distance': 1,
-    'change_dur': 1,
+    'change_dur': 6,
     'max_lane': 1,
-    'min_change_speed': 2,
-    'max_change_speed': 8,
-    'max_braking_speed_while_turning': 5,
+    'min_change_speed': 5,
+    'max_change_speed': 9,
+    'max_braking_speed_while_turning': 4,
     'max_acceleration_while_turning': 1,
-    'safety_distance_back': 3,
+    'safety_distance_back': 7,
     'init_distance': None,
     'fix_car_lane': None
 }

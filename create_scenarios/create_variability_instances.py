@@ -4,6 +4,8 @@ import os
 from partition import partition, default_dict
 from itertools import product
 import click
+import numpy as np
+from typing import Tuple
 
 import random
 
@@ -14,9 +16,10 @@ default_out_folder = os.path.join(script_dir, "variability_experiments_instances
 
 
 @click.command()
-@click.option('--output-folder', type=click.Path(), required=True, default=default_out_folder)
+@click.option('--output-folder', type=click.Path(), required=False, default=default_out_folder)
 @click.option('--n', type=int, default=10)
-def vary_params(output_folder: str, n:int):
+@click.option('--init-interval', nargs=2, type=int, default=(10, 20), help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
+def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int]):
     """
     Main experiment:
     - Varies interval constants by partitioning their min/max range.
@@ -29,10 +32,18 @@ def vary_params(output_folder: str, n:int):
 
     # === Define constant categories ===
 
+    # interval_constants = [("min_change_speed", "max_change_speed")]
+    # scalar_constants = ["max_acceleration_while_turning","max_braking_speed_while_turning","safety_distance"]
+    # fixed_constants = ["max_lane", "max_segment","change_dur"]
+    # list_constants = [("init_distance", [11,18])]
+
+    # try something else: simply try out several initial distances, keep model params the same
     interval_constants = [("min_change_speed", "max_change_speed")]
-    scalar_constants = ["max_acceleration_while_turning","max_braking_speed_while_turning","safety_distance"]
-    fixed_constants = ["max_lane", "max_segment","change_dur"]
-    list_constants = [("init_distance", [11,18])]
+    scalar_constants = ["safety_distance"]
+    fixed_constants = ["max_lane", "max_segment","change_dur","max_acceleration_while_turning","max_braking_speed_while_turning"]
+    
+    a,b = init_interval
+    list_constants = [("init_distance", list(range(a,b)))]  # some of these will lead to empty models...
 
     # === Prepare values to iterate ===
 
@@ -48,14 +59,26 @@ def vary_params(output_folder: str, n:int):
     scalar_variants = []
     for key in scalar_constants:
         default = default_dict[key]
-        scalar_variants.append([(key, val) for val in [default - 2, default, default + 2]])
+        
+        width = 3
+        r = np.arange(start=max(0,default-width), stop=width)
+        vals = default - r
+        scalar_variants.append([(key, val) for val in vals])
 
     list_variants = []
     for key, vals in list_constants:
         list_variants.append((key, x) for x in vals)
 
 
-    combos = product(*interval_variants, *scalar_variants, *list_variants)
+    safe_groups = [
+        group if group else [None]
+        for group in (interval_variants + scalar_variants + list_variants)
+    ]
+    
+    combos = list(product(*safe_groups))
+
+    print(f"\n{len(combos)}\n")
+    # print(f"\n{list(combos)}\n")
 
     # === Combine all variants ===
     for combo in random.sample(list(combos),n):

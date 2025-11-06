@@ -28,6 +28,11 @@ holds(F,0) :- init(F).
 % force each vehicle to have a position at each time TODO it felt like this decreased solve speed by about 70%
 :- vehicle(V), holds(state(V,_,_), t-1), not holds(state(V,_,_), t). % the t-1 part is just for optimization - smaller search space maybe
 
+% % disallow multiple positions for one actor
+% :- holds(state(V, loc(S1,L1), dyn(_, _)), T),
+%    holds(state(V, loc(S2,L2), dyn(_, _)), T),
+%    (S1,L1) != (S2,L2).
+
 
 %% Define
 holds(state(V,loc(S,L),dyn(Vel_lon,Vel_lat)), t) :-

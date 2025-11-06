@@ -2,7 +2,7 @@
 set -euo pipefail
 source "$(dirname "$0")/../common.sh"
 
-EXP=experiments_src/exp_007
+EXP=experiments_src/exp_001_d
 N=200
 HEURISTIC=BASIC
 CR_SCENARIO=cr_scenarios/threelanes.xml
