@@ -49,7 +49,7 @@ run_vanilla_experiment() {
     RULE_INJECTION="$EXP/in/rule_injection.lp"
 
   time_step "execute-all-scenarios" \
-  make execute-all-scenarios \
+  make -j 8 execute-all-scenarios \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
@@ -85,7 +85,7 @@ run_variability_experiment() {
     --rule-injection "$EXP/in/rule_injection.lp"
 
   time_step "execute-all-scenarios" \
-  make execute-all-scenarios \
+  make -j 8 execute-all-scenarios \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
