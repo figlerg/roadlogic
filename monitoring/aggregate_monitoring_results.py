@@ -60,7 +60,7 @@ def aggregate_monitoring_results(parent_folder: str):
                 costs.append(cost)
 
                 total_cost += cost
-                if cost == 0.0:
+                if math.isclose(cost, 0.0, abs_tol=1e-3):
                     num_perfect += 1
 
         num_runs += 1 # also count incomplete runs

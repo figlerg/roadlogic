@@ -2,16 +2,28 @@
 set -euo pipefail
 
 ANIMATE=false
-if [[ "${1:-}" == "--animate" ]]; then
-  ANIMATE=true
-  shift
-fi
+VANILLA_ONLY=false
+
+# parse flags
+for arg in "$@"; do
+  case "$arg" in
+    --animate) ANIMATE=true ;;
+    --vanilla-only) VANILLA_ONLY=true ;;
+  esac
+done
 
 STATUS_LOG="experiments_src/logs/run_status.jsonl"
 : > "$STATUS_LOG"
 
 for dir in experiments_src/exp*/; do
   exp_name=$(basename "$dir")
+
+  # Skip non-vanilla if flag is active
+  if $VANILLA_ONLY && [[ "$exp_name" =~ _[a-z]+$ ]]; then
+    echo "Skipping $exp_name (not vanilla)"
+    continue
+  fi
+
   start_iso=$(date -Iseconds)
   echo "=== Running $dir/run.sh ==="
 
