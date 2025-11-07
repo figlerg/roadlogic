@@ -1,19 +1,18 @@
 {
-  "average_cost": 0.03582435349564624,
-  "num_positive_traces": 2,
-  "percent_positive_traces": 66.66666666666666,
+  "average_cost": 8.80881128106272,
+  "num_positive_traces": 0,
+  "percent_positive_traces": 0.0,
   "total_runs": 3,
-  "positive traces": [
-    "scenario_0001",
-    "scenario_0002"
-  ],
+  "positive traces": [],
   "negative traces": [
+    "scenario_0001",
+    "scenario_0002",
     "scenario_0003"
   ],
   "no monitoring results": [],
   "costs": {
-    "scenario_0001": 0.0,
-    "scenario_0002": 0.0,
-    "scenario_0003": 0.10747306048693872
+    "scenario_0001": 8.80881128106272,
+    "scenario_0002": 8.80881128106272,
+    "scenario_0003": 8.80881128106272
   }
 }

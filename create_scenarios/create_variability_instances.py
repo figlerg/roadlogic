@@ -23,7 +23,7 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int]):
     """
     Main experiment:
     - Varies interval constants by partitioning their min/max range.
-    - Varies certain scalar constants by ±2.
+    - Varies certain scalar constants by ±width and everything in between.
     - Keeps some constants fixed.
     """
     print(output_folder)
@@ -38,9 +38,9 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int]):
     # list_constants = [("init_distance", [11,18])]
 
     # try something else: simply try out several initial distances, keep model params the same
-    interval_constants = [("min_change_speed", "max_change_speed")]
-    scalar_constants = ["safety_distance"]
-    fixed_constants = ["max_lane", "max_segment","change_dur","max_acceleration_while_turning","max_braking_speed_while_turning"]
+    interval_constants = []
+    scalar_constants = ["safety_distance","max_acceleration_while_turning","max_braking_speed_while_turning"]
+    fixed_constants = ["max_lane", "max_segment","change_dur",]
     
     a,b = init_interval
     list_constants = [("init_distance", list(range(a,b)))]  # some of these will lead to empty models...
