@@ -96,13 +96,15 @@ run_variability_experiment() {
     --input-folder "$EXP/out/partitions/" \
     --osc-file "$EXP/in/spec.osc" \
     --cr-scenario "$CR_SCENARIO" \
-    --rule-injection "$EXP/in/rule_injection.lp"
+    --rule-injection "$EXP/in/rule_injection.lp" \
+    --time-limit 90
 
   time_step "execute-all-scenarios" \
   make execute-all-scenarios \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
+  time_step "compute-metrics" \
   make -j 8 \
     SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
     OUTPUT_FOLDER=$EXP/out/cr_simulations \
@@ -111,7 +113,8 @@ run_variability_experiment() {
   time_step "generate-summary" \
   make generate-summary \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
-    OUTPUT_FOLDER="$EXP/out/cr_simulations"
+    OUTPUT_FOLDER="$EXP/out/cr_simulations" \
+    OSC_FILE="$EXP/in/spec.osc"
 }
 
 # --- HEURISTIC PIPELINE -----------------------------------------------------
@@ -153,6 +156,7 @@ time_step "compute-metrics" \
 
 time_step "generate-summary" \
 make generate-summary \
-SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
-OUTPUT_FOLDER="$EXP/out/cr_simulations"
+  SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
+  OUTPUT_FOLDER="$EXP/out/cr_simulations" \
+  OSC_FILE="$EXP/in/spec.osc"
 }

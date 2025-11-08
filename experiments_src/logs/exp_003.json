@@ -1,5 +1,5 @@
 {
-  "average_cost": 0.0,
+  "average_cost": 9.999999999976694e-05,
   "num_positive_traces": 3,
   "percent_positive_traces": 100.0,
   "total_runs": 3,
@@ -11,8 +11,8 @@
   "negative traces": [],
   "no monitoring results": [],
   "costs": {
-    "scenario_0001": 0.0,
-    "scenario_0002": 0.0,
-    "scenario_0003": 0.0
+    "scenario_0001": 9.999999999976694e-05,
+    "scenario_0002": 9.999999999976694e-05,
+    "scenario_0003": 9.999999999976694e-05
   }
 }

@@ -36,7 +36,7 @@ def _param_value_repr(k, v):
     else:
         return f"{k}_{_truncate(v)}"
 
-def partition(constants: dict, out_path: str) -> str:
+def partition(constants: dict, out_path: str, init_distance_actor='car1') -> str:
     """
     Create an .lp file with specified constant overrides and comments for default/varied values.
     """
@@ -78,7 +78,7 @@ def partition(constants: dict, out_path: str) -> str:
                 added.append(k)
 
             if val and k == 'init_distance':
-                f.write(f"init(state(car1, loc(init_distance,0), dyn(1, 0))).\n\n")
+                f.write(f"init(state({init_distance_actor}, loc(init_distance,0), dyn(1, 0))).\n\n")
         f.write("\n")
 
         # Default parameters section

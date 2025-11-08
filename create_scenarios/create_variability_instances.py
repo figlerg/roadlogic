@@ -19,7 +19,8 @@ default_out_folder = os.path.join(script_dir, "variability_experiments_instances
 @click.option('--output-folder', type=click.Path(), required=False, default=default_out_folder)
 @click.option('--n', type=int, default=10)
 @click.option('--init-interval', nargs=2, type=int, default=(10, 20), help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
-def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int]):
+@click.option('--init-distance-actor', nargs=1, type=str, default='car1', help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
+def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_distance_actor):
     """
     Main experiment:
     - Varies interval constants by partitioning their min/max range.
@@ -40,7 +41,7 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int]):
     # try something else: simply try out several initial distances, keep model params the same
     interval_constants = []
     scalar_constants = ["safety_distance","max_acceleration_while_turning","max_braking_speed_while_turning"]
-    fixed_constants = ["max_lane", "max_segment","change_dur",]
+    fixed_constants = ["max_lane", "max_segment","change_dur"]
     
     a,b = init_interval
     list_constants = [("init_distance", list(range(a,b)))]  # some of these will lead to empty models...
@@ -100,7 +101,7 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int]):
         # Set the fixed lane flag to true
         # config['fix_car_lane'] = ('car1',)
 
-        partition(config, output_folder)
+        partition(config, output_folder, init_distance_actor=init_distance_actor)
 
 
 def split_interval(min_val, max_val, parts=2):
