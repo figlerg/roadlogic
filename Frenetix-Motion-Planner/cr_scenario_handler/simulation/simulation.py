@@ -430,7 +430,7 @@ class Simulation:
                 # catch if agents can be created eg check if valid ref-path is available
                 error_traceback = traceback.format_exc()
                 to_be_removed.append(agent_id)
-                self.msg_logger.critical(f"Ignore Agent {agent_id} because of error: \n {str(e)}: {error_traceback}")
+                self.msg_logger.critical(f"Agent {agent_id} error: \n {str(e)}: {error_traceback}")
                 logfile = os.path.join(os.path.dirname(self.log_path), "log_failures_agents.csv")
                 with open(logfile, 'a', newline='') as f:
                     writer = csv.writer(f)
@@ -683,7 +683,7 @@ class Simulation:
         :return: predictions, colliding agents
         """
         preproc_time = time.perf_counter()
-        self.msg_logger.critical(f"Scenario {self.scenario.scenario_id} in timestep {self.global_timestep}")
+        self.msg_logger.info(f"Scenario {self.scenario.scenario_id} in timestep {self.global_timestep}")
         # check for collisions
         colliding_agents = self.check_collision()
         # update scenario

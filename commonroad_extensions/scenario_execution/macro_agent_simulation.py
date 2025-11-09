@@ -278,113 +278,109 @@ class MacroAgent(Agent):
         """ Execute one planning step.
 
         """
-        # Check for collisions in previous timestep
+        # Check for collisions in previous timestep. This includes collision with other vehicles and road boundaries
         if self.agent_state.status == AgentStatus.COLLISION:
             self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} collided")
             self.planning_times.append(0)
             if self.config.evaluation.collision_report:
                 coll_report(self.vehicle_history, self.planner_interface.planner, self.scenario, self.planning_problem,
                             self.agent_state.last_timestep, self.config, self.log_path)
+            # Move to TEAR DOWN PHASE: the agent becomes a static obstacle
             self.postprocessing()
 
         elif time_step > self.max_time_steps_scenario:
             self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} reached max_time_steps {self.max_time_steps_scenario}")
             self.planning_times.append(0)
             self.agent_state.log_timelimit(time_step)
+            # Move to TEAR DOWN PHASE: the simulation will stop for all agents
             self.postprocessing()
-
         elif (self.planner_interface.planner.x_cl[0][0] -
-              self.planner_interface.planner.x_0.velocity * self.scenario.dt >
-              self.agent_state.goal_checker.last_goal_position):
+            self.planner_interface.planner.x_0.velocity * self.scenario.dt >
+            self.agent_state.goal_checker.last_goal_position):
             self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} has passed the goal position {self.agent_state.goal_checker.last_goal_position}")
             self.agent_state.log_max_s_position(time_step)
             self.planning_times.append(0)
+            # Move to TEAR DOWN PHASE: the agent will "follow the road" (driving on the lane, but without a goal to reach)
             self.postprocessing()
-
         else:
-            # check for completion of this agent current goal !
+            # Check if agent completed the current goal !
             # TODO: This sets the agent_state properties: self.running, self.status, self.goal_checker_status, self.message 
             #   and possibly other properties of other objects!
             self.agent_state.check_goal_reached(self.record_state_list, self.planner_interface.planner.x_cl)
 
-            if self.agent_state.status is not AgentStatus.RUNNING:
-                self.msg_logger.critical(f"Completed goal {self.current_goal_index} out of {len(self.original_planning_problem.goal.state_list) - 1} ")
-
-            # Was this the last goal, then exit
-            if self.agent_state.status is not AgentStatus.RUNNING and self.current_goal_index == len(self.original_planning_problem.goal.state_list) - 1:
-                # This was the LAST goal to reach, we finished the job!
-                self.msg_logger.critical(f"Completed all goals!")
-                self.planning_times.append(0)
-                self.agent_state.log_finished(time_step)
-                self.postprocessing()
-                # Exit this method
-                return
-            else:
-                if self.agent_state.status is not AgentStatus.RUNNING and self.current_goal_index < len(self.original_planning_problem.goal.state_list) - 1:
+            # Log the goal completion if happened
+            if self.agent_state.status in [AgentStatus.COMPLETED_SUCCESS, AgentStatus.COMPLETED_OUT_OF_TIME, AgentStatus.COMPLETED_FASTER]:
+                self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} completed goal {self.current_goal_index} out of {len(self.original_planning_problem.goal.state_list) - 1} with status {self.agent_state.status}")
+                # If this was the last goal, do not plan further
+                if self.agent_state.status is not AgentStatus.RUNNING and self.current_goal_index == len(self.original_planning_problem.goal.state_list) - 1:
+                    # This was the LAST goal to reach, we finished the job!
+                    self.msg_logger.critical(f"*** Timestep {time_step} Agent {self.id} completed all goals! ***")
+                    self.planning_times.append(0)
+                    self.agent_state.log_finished(time_step)
+                    # Move to TEAR DOWN PHASE: the agent will "follow the road" (driving on the lane, but without a goal to reach)
+                    self.postprocessing()
+                    # NOTE: Force exit this method
+                    return
+                else:
                     # We reconfigure the agent to follow the next goal insted  and planning again
                     # This is what matters, all the other states are stored withing the planner, planner interface, and agent
                     self.current_goal_index += 1
-                    self.msg_logger.critical(f"Moving on to the next goal {self.current_goal_index}")
+                    self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} moving on to the next goal {self.current_goal_index}")
                     self._setup_planning_problem()
-                # else:
-                #  usual behavior
 
-                self.msg_logger.info(f"Agent {self.id} current time step: {time_step}")
+            #  Regular behavior: Try to achieve the goal
 
-                # **************************
-                # Cycle Occlusion Module
-                # **************************
-                # if config.occlusion.use_occlusion_module:
-                #     occlusion_module.step(predictions=predictions, x_0=planner.x_0, x_cl=planner.x_cl)
-                #     predictions = occlusion_module.predictions
+            self.msg_logger.info(f"Timestep {time_step} Agent {self.id} planning at current time step: {time_step}")
+            
+            # **************************
+            # Set Planner Subscriptions
+            # **************************
+            self.planner_interface.update_planner(self.scenario, self.predictions)
 
-                # **************************
-                # Set Planner Subscriptions
-                # **************************
-                self.planner_interface.update_planner(self.scenario, self.predictions)
+            # **************************
+            # Execute Planner
+            # **************************
+            comp_time_start = time.time()
+            trajectory, replanning_counter = self.planner_interface.step_interface(time_step)
+            comp_time_end = time.time()
+            # END TIMER
+            self.planning_times.append(comp_time_end - comp_time_start)
+            self.msg_logger.info(f"Agent {self.id}: Total Planning Time: \t\t{self.planning_times[-1]:.5f} s")
 
-                # **************************
-                # Execute Planner
-                # **************************
-                comp_time_start = time.time()
-                trajectory, replanning_counter = self.planner_interface.step_interface(time_step)
-                comp_time_end = time.time()
-                # END TIMER
-                self.planning_times.append(comp_time_end - comp_time_start)
-                self.msg_logger.info(f"Agent {self.id}: Total Planning Time: \t\t{self.planning_times[-1]:.5f} s")
+            if trajectory:
 
-                if trajectory:
+                self._create_collision_object(self.vehicle_history[-1].initial_state,
+                                                self.vehicle_history[-1].initial_state.time_step)
+                self.agent_state.log_running(time_step)
 
-                    self._create_collision_object(self.vehicle_history[-1].initial_state,
-                                                  self.vehicle_history[-1].initial_state.time_step)
-                    self.agent_state.log_running(time_step)
+                # plot own view on scenario
+                if (self.save_plot or self.show_plot or self.gif or ((self.config_visu.save_plots or
+                                                                        self.config_visu.show_plots) and
+                                                                        not self.config.simulation.use_multiagent)):
+                    visualize_agent_at_timestep(self.scenario, self.planning_problem,
+                                                self.vehicle_history[-1], time_step,
+                                                self.config, self.log_path,
+                                                traj_set=self.all_trajectories,
+                                                optimal_traj=self.planner_interface.trajectory_pair[0],
+                                                ref_path=self.planner_interface.reference_path,
+                                                predictions=self.predictions,
+                                                visible_area=self.visible_area,
+                                                plot_window=self.config_visu.plot_window_dyn,
+                                                behavior_module_state=self.planner_interface.behavior_module_state,
+                                                save=self.save_plot,
+                                                show=self.show_plot, gif=self.gif,
+                                                replanning_counter=replanning_counter)
 
-                    # plot own view on scenario
-                    if (self.save_plot or self.show_plot or self.gif or ((self.config_visu.save_plots or
-                                                                          self.config_visu.show_plots) and
-                                                                         not self.config.simulation.use_multiagent)):
-                        visualize_agent_at_timestep(self.scenario, self.planning_problem,
-                                                    self.vehicle_history[-1], time_step,
-                                                    self.config, self.log_path,
-                                                    traj_set=self.all_trajectories,
-                                                    optimal_traj=self.planner_interface.trajectory_pair[0],
-                                                    ref_path=self.planner_interface.reference_path,
-                                                    predictions=self.predictions,
-                                                    visible_area=self.visible_area,
-                                                    plot_window=self.config_visu.plot_window_dyn,
-                                                    behavior_module_state=self.planner_interface.behavior_module_state,
-                                                    save=self.save_plot,
-                                                    show=self.show_plot, gif=self.gif,
-                                                    replanning_counter=replanning_counter)
-
-                else:
-                    self.msg_logger.critical(
-                        f"Agent {self.id}: No Kinematic Feasible and Optimal Trajectory Available!")
-                    self.agent_state.log_error(time_step)
-                    self.postprocessing()
+            else:
+                self.msg_logger.critical(
+                    f"Agent {self.id}: No Kinematic Feasible and Optimal Trajectory Available!")
+                self.agent_state.log_error(time_step)
+                self.postprocessing()
 
 
 class MacroAgentBatch(AgentBatch):
+
+    # TODO Ensure we correctly manage the TEARDOWN phase !!!
 
     def _update_batch(self):
         # We do not track scores here
@@ -392,11 +388,6 @@ class MacroAgentBatch(AgentBatch):
             if agent.status > AgentStatus.RUNNING:
                 self.terminated_agent_list.append(agent)
                 self.running_agent_list.remove(agent)
-                # with (open(os.path.join(self.mod_path, "logs", "score_overview.csv"), 'a') as file):
-                #     msg = "Success" if agent.status == AgentStatus.COMPLETED_SUCCESS else "Failed"
-                #     line = str(agent.scenario.scenario_id) + ";" + str(agent.id) + ";" + str(agent.current_timestep) + ";" + \
-                #            str(agent.status) + ";" + str(agent.agent_state.message) + ";" + msg + "\n"
-                #     file.write(line)
 
             self.out_queue_dict[agent.id] = {"agent_state": agent.agent_state,
                                              "collision_objects": agent.collision_objects[-1],

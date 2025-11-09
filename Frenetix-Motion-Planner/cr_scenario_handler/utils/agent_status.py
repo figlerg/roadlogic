@@ -13,6 +13,10 @@ TIMEOUT = 20
 
 
 class AgentStatus(IntEnum):
+    
+    def __str__(self):
+        return str(self.name)
+    
     IDLE = -1
     RUNNING = 0
     COMPLETED_SUCCESS = 1
