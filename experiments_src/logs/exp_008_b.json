@@ -1,0 +1,17 @@
+{
+  "average_cost": 6.659210758227175,
+  "num_positive_traces": 1,
+  "percent_positive_traces": 50.0,
+  "total_runs": 2,
+  "positive traces": [
+    "scenario_change_dur_6__init_distance_18__max_acceleration_while_turning_0__max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_1"
+  ],
+  "negative traces": [
+    "scenario_change_dur_6__init_distance_13__max_acceleration_while_turning_-1__max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_-1"
+  ],
+  "no monitoring results": [],
+  "costs": {
+    "scenario_change_dur_6__init_distance_13__max_acceleration_while_turning_-1__max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_-1": 13.31842151645435,
+    "scenario_change_dur_6__init_distance_18__max_acceleration_while_turning_0__max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_1": 0.0
+  }
+}

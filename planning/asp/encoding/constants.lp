@@ -17,7 +17,7 @@
 
 
 % controller specific constants
-#const change_dur = 6. % for CARLA this was around 4s, in CR I just keep it low for now
+#const change_dur = 6. 
 #const min_change_speed = 6.
 #const max_change_speed = 9.
 #const max_braking_speed_while_turning = 4. 

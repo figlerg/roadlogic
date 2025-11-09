@@ -97,7 +97,7 @@ run_variability_experiment() {
     --osc-file "$EXP/in/spec.osc" \
     --cr-scenario "$CR_SCENARIO" \
     --rule-injection "$EXP/in/rule_injection.lp" \
-    --time-limit 90
+    --time-limit 150
 
   time_step "execute-all-scenarios" \
   make execute-all-scenarios \

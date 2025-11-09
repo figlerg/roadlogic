@@ -19,7 +19,7 @@ default_out_folder = os.path.join(script_dir, "variability_experiments_instances
 @click.option('--output-folder', type=click.Path(), required=False, default=default_out_folder)
 @click.option('--n', type=int, default=10)
 @click.option('--init-interval', nargs=2, type=int, default=(10, 20), help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
-@click.option('--init-distance-actor', nargs=1, type=str, default='car1', help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
+@click.option('--init-distance-actor', nargs=1, type=str, default='car1', help='The actor for which the --init-interval is meant.')
 def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_distance_actor):
     """
     Main experiment:

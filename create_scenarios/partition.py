@@ -11,7 +11,7 @@ default_dict = {
     'max_velocity_lon': 12,
     'max_velocity_lat': 1,
     'safety_distance': 1,
-    'change_dur': 6,
+    'change_dur': 5,
     'max_lane': 1,
     'min_change_speed': 5,
     'max_change_speed': 9,
