@@ -40,11 +40,11 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_di
 
     # try something else: simply try out several initial distances, keep model params the same
     interval_constants = []
-    scalar_constants = ["safety_distance","max_acceleration_while_turning","max_braking_speed_while_turning"]
-    fixed_constants = ["max_lane", "max_segment","change_dur"]
+    scalar_constants = ["max_acceleration_while_turning","max_braking_speed_while_turning"]
+    fixed_constants = ["max_lane", "max_segment","change_dur","safety_distance"]
     
     a,b = init_interval
-    list_constants = [("init_distance", list(range(a,b)))]  # some of these will lead to empty models...
+    list_constants = [("init_distance", list(range(a+1,b-1)))]  # some of these will lead to empty models...
 
     # === Prepare values to iterate ===
 
@@ -61,9 +61,9 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_di
     for key in scalar_constants:
         default = default_dict[key]
         
-        width = 3
-        r = np.arange(start=max(0,default-width), stop=width)
-        vals = default - r
+        width = 1
+        vals = np.arange(start=max(0,default-width), stop=default+width)
+        print(vals)
         scalar_variants.append([(key, val) for val in vals])
 
     list_variants = []

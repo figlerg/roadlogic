@@ -10,5 +10,5 @@ bash experiments_src/extract_summaries.sh # get the summaries out and gather the
 
 
 python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_0[0-9].json" \
+  --pattern "experiments_src/logs/exp_00[0-9].json" \
   --out "experiments_src/vis/experiments_summary_vanilla.png"
