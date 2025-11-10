@@ -10,4 +10,4 @@ bash experiments_src/extract_summaries.sh # get the summaries out and gather the
 
 python experiments_src/vis_success_rates.py \
   --pattern "experiments_src/logs/exp_*_c.json" \
-  --out "experiments_src/vis/experiments_summary_b.png"
+  --out "experiments_src/vis/experiments_summary_c.png"

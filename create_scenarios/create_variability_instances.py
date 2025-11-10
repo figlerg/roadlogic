@@ -61,7 +61,7 @@ def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_di
     for key in scalar_constants:
         default = default_dict[key]
         
-        width = 1
+        width = 2
         vals = np.arange(start=max(0,default-width), stop=default+width)
         print(vals)
         scalar_variants.append([(key, val) for val in vals])
