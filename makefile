@@ -12,7 +12,8 @@ ADDITIONAL_PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/monitoring/syma-arv:$(ROOT_DIR)
 PYTHON := export PYTHONPATH=$${PYTHONPATH}:$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
 
 # Host the options for the various commands
-CLI_OPTS ?=
+# Use default options for execution... Hopefully, they do not break anything
+CLI_OPTS ?= --co config_planner.cost.cost_weights.velocity_offset 10.0 --co config_sim.simulation.max_steps 3.0
 EXEC_OPTS ?=
 PLOT_OPTS ?=
 

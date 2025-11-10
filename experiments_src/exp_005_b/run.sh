@@ -3,6 +3,6 @@ set -euo pipefail
 source "$(dirname "$0")/../common.sh"
 
 EXP=experiments_src/exp_005_b
-N=20
+N=3
 
-run_variability_experiment "$EXP" "$N"
+run_variability_experiment "$EXP" "$N" "--random-seed" "2"
