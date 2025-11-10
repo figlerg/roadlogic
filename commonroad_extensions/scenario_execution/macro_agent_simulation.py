@@ -86,6 +86,8 @@ from cr_scenario_handler.utils.visualization import visualize_agent_at_timestep
 
 from commonroad_extensions.scenario_execution.stitched_execution import custom_visualize_multiagent_scenario_at_timestep
 
+from shapely.geometry import Point
+
 class MacroAgent(Agent):
     """
     This agent can replan and change its goal during the simulation
@@ -135,13 +137,20 @@ class MacroAgent(Agent):
         self.planning_problem = PlanningProblem(self.original_planning_problem.planning_problem_id, initial_state, sub_goal_region)
 
         # Base initialization of the planner interface and planner
-        try:
+        if self.is_static_object:
+            self.msg_logger.critical(f"Agent {self.id} will play STATIC OBSTACLE")
             planner_interface = [cls for _, module in inspect.getmembers(planner_interfaces, inspect.ismodule)
-                                 for name, cls in inspect.getmembers(module, inspect.isclass) if
-                                 issubclass(cls, PlannerInterface)
-                                 and name == used_planner][0]
-        except:
-            raise ModuleNotFoundError(f"No such planner class found in planner_interfaces: {used_planner}")
+                                    for name, cls in inspect.getmembers(module, inspect.isclass) if
+                                    issubclass(cls, PlannerInterface)
+                                    and name == "StaticObstaclePlannerInterface"][0]
+        else:
+            try:
+                planner_interface = [cls for _, module in inspect.getmembers(planner_interfaces, inspect.ismodule)
+                                    for name, cls in inspect.getmembers(module, inspect.isclass) if
+                                    issubclass(cls, PlannerInterface)
+                                    and name == used_planner][0]
+            except:
+                raise ModuleNotFoundError(f"No such planner class found in planner_interfaces: {used_planner}")
         
         # This updates the reference path (as the refernce path is linked to the planner_interface.reference path!)
         self.planner_interface = planner_interface(self.id, self.config_planner, self.config, self.scenario,
@@ -187,8 +196,14 @@ class MacroAgent(Agent):
 
         self.msg_logger = msg_logger
 
+        self.is_static_object = False
+
         for index, goal_state in enumerate(self.original_planning_problem.goal.state_list):
-            self.msg_logger.critical(f"Agent {self.id} must reach goal {index} within time {goal_state.time_step.start} and {goal_state.time_step.end}")
+            distance_to_goal = Point(planning_problem.initial_state.position).distance(Point(goal_state.position.center))
+            self.msg_logger.critical(f"Agent {self.id} must reach goal {index} within time {goal_state.time_step.start} and {goal_state.time_step.end} at distance {distance_to_goal}")
+            # TODO An vehicle can be static only for a period/goal. But for the moment, it's ALL OR NOTHING!
+            self.is_static_object = distance_to_goal <= 1e-2
+
 
 
         self.config = deepcopy(config_sim)
