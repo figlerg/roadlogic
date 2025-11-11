@@ -271,9 +271,15 @@ generate-summary:$(OUTPUT_FOLDER)/summary_log.json
 
 # generate-summary:$(OUTPUT_FOLDER)/summary_log.json
 
+BLUEPRINT_FOLDER ?=
+
+# $(OUTPUT_FOLDER)/summary_log.json: $(addprefix $(OUTPUT_FOLDER)/, $(addsuffix /monitoring_results.csv, $(scenario_id_list)))
+# 	rm -f $(OUTPUT_FOLDER)/summary_log.json
+# 	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER) $
 $(OUTPUT_FOLDER)/summary_log.json: $(addprefix $(OUTPUT_FOLDER)/, $(addsuffix /monitoring_results.csv, $(scenario_id_list)))
 	rm -f $(OUTPUT_FOLDER)/summary_log.json
-	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER)
+	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER) $(BLUEPRINT_FOLDER)
+
 
 
 
