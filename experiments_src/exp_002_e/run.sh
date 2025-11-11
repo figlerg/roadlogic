@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/../common.sh"
 
 EXP=experiments_src/exp_002_e
-N=20
-STEP_LENGTH=200
+N=50
+STEP_LENGTH=20
 
 run_vanilla_experiment "$EXP" "$N" "$STEP_LENGTH"

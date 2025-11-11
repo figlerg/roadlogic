@@ -5,8 +5,7 @@ different specs are in
 - 4 overtake with fixed lane
 - 5 overtake, but there is a static obstacle on the road
 - 6 two cares, one changes to left lane
-- 7 deprecated, moved to 1d
-- 8 drive past static obstacle
+- 7 drive past static obstacle
 
 explanations to the naming:
 - no suffix means that we run the vanilla pipeline. I take low N because the plans don't vary at all here 

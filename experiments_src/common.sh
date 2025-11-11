@@ -64,6 +64,11 @@ run_vanilla_experiment() {
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations" \
     OSC_FILE="$EXP/in/spec.osc"
+
+  time_step "compute similarity" \
+  python commonroad_extensions/simulation_analysis/similarity.py \
+    --plans-folder $EXP/out/serialized_models \
+    --output-folder $EXP/out/similarity
 }
 
 # --- PARTITIONING PIPELINE --------------------------------------------------
@@ -97,7 +102,7 @@ run_variability_experiment() {
     --osc-file "$EXP/in/spec.osc" \
     --cr-scenario "$CR_SCENARIO" \
     --rule-injection "$EXP/in/rule_injection.lp" \
-    --time-limit 250
+    --time-limit 100
 
   time_step "execute-all-scenarios" \
   make execute-all-scenarios \
@@ -114,7 +119,14 @@ run_variability_experiment() {
   make generate-summary \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations" \
-    OSC_FILE="$EXP/in/spec.osc"
+    OSC_FILE="$EXP/in/spec.osc" \
+    BLUEPRINT_FOLDER=$EXP/out/aux_asp
+
+  time_step "compute similarity" \
+  python commonroad_extensions/simulation_analysis/similarity.py \
+    --plans-folder $EXP/out/serialized_models \
+    --output-folder $EXP/out/similarity
+
 }
 
 # --- HEURISTIC PIPELINE -----------------------------------------------------

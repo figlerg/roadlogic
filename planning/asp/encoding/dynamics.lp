@@ -22,7 +22,7 @@ holds(F,0) :- init(F).
 % NOTE: Delta_Velocity_lon is relative to Velocity_lon from the previous step
 
 % exactly one action per car per time
-{ occurs(change_dynamics(V, Delta_Vel_lon, Vel_lat), t) : acceleration_lon(Delta_Vel_lon), velocity_lat(Vel_lat)}
+{occurs(change_dynamics(V, Delta_Vel_lon, Vel_lat), t) : acceleration_lon(Delta_Vel_lon), velocity_lat(Vel_lat)}
 			= 1 :- vehicle(V).
 
 % force each vehicle to have a position at each time TODO it felt like this decreased solve speed by about 70%
