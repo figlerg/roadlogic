@@ -83,7 +83,7 @@ run_variability_experiment() {
   EXTRA_ARGS=("$@")   # e.g. --init-interval 10 20
 
   exp_reset_out "$EXP"
-
+  
   time_step "create_variability_instances" \
   python create_scenarios/create_variability_instances.py \
     --output-folder "$EXP/out/partitions/" \

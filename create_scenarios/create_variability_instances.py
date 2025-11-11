@@ -9,8 +9,6 @@ from typing import Tuple
 
 import random
 
-random.seed(42)
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
 default_out_folder = os.path.join(script_dir, "variability_experiments_instances")
 
@@ -20,13 +18,17 @@ default_out_folder = os.path.join(script_dir, "variability_experiments_instances
 @click.option('--n', type=int, default=10)
 @click.option('--init-interval', nargs=2, type=int, default=(10, 20), help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
 @click.option('--init-distance-actor', nargs=1, type=str, default='car1', help='The actor for which the --init-interval is meant.')
-def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_distance_actor):
+@click.option('--random-seed', type=int, required=False, default=42, help='The random seed') 
+def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_distance_actor, random_seed: int):
     """
     Main experiment:
     - Varies interval constants by partitioning their min/max range.
     - Varies certain scalar constants by ±width and everything in between.
     - Keeps some constants fixed.
     """
+    print(f"Setting random seed {random_seed}")
+    random.seed(random_seed)
+
     print(output_folder)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
