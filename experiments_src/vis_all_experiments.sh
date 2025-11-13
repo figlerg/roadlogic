@@ -1,17 +1,17 @@
 # vanilla pics
-python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_00[0-9].json" \
-  --out "experiments_src/vis/vis_vanilla_combined.pdf"
+# python experiments_src/vis_success_rates.py \
+#   --pattern "experiments_src/logs/exp_00[0-9].json" \
+#   --out "experiments_src/vis/vis_vanilla_combined.pdf"
 
-python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_00[0-9].json" \
-  --out "experiments_src/vis/vis_vanilla_timing.pdf" \
-  --mode timing \
+# python experiments_src/vis_success_rates.py \
+#   --pattern "experiments_src/logs/exp_00[0-9].json" \
+#   --out "experiments_src/vis/vis_vanilla_timing.pdf" \
+#   --mode timing \
 
-python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_00[0-9].json" \
-  --out "experiments_src/vis/vis_vanilla_success.pdf" \
-  --mode success \
+# python experiments_src/vis_success_rates.py \
+#   --pattern "experiments_src/logs/exp_00[0-9].json" \
+#   --out "experiments_src/vis/vis_vanilla_success.pdf" \
+#   --mode success \
 
 
 # parameter variation pics
@@ -28,6 +28,17 @@ python experiments_src/vis_success_rates.py \
 python experiments_src/vis_success_rates.py \
   --pattern "experiments_src/logs/exp_*_b.json" \
   --out "experiments_src/vis/vis_partitioning_combined.pdf"
+
+python experiments_src/vis_success_rates.py \
+  --pattern "experiments_src/logs/exp_*_b.json" \
+  --out "experiments_src/vis/vis_partitioning_outcome.pdf" \
+  --mode outcome
+
+python experiments_src/vis_success_rates.py \
+  --pattern "experiments_src/logs/exp_*_b.json" \
+  --out "experiments_src/vis/vis_partitioning_combined_outcome.pdf" \
+  --mode combined_outcome \
+
 
 
 # parameter variation plus fixed car1

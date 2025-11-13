@@ -41,7 +41,7 @@ names_default= {
   "exp_003_c": "Overtake + 3rd actor (car1 fixed)",
 
   "exp_004":   "Overtake + fixed lane",
-  "exp_004_b":   "Overtake + fixed lane (var.)",
+  "exp_004_b": "Overtake + fixed lane (var.)",
 
   "exp_005":   "Overtake + obstacle",
   "exp_005_b": "Overtake + obstacle (var.)",
@@ -58,7 +58,7 @@ names_default= {
 def _load_names(names_arg):
     if not names_arg:
         return {}
-    if isinstance(names_arg, dict):  # just in case
+    if isinstance(names_arg, dict):
         return names_arg
     if os.path.exists(names_arg):
         with open(names_arg, "r", encoding="utf-8") as f:
@@ -66,20 +66,17 @@ def _load_names(names_arg):
     return json.loads(names_arg)
 
 @click.command()
-@click.option("--names", default=None,
-              help='Optional mapping (path to JSON or inline JSON, e.g. \'{"exp_001_b":"overtake"}\').')
-@click.option("--out", default="experiments_src/vis/experiments_summary.pdf", show_default=True,
-              help="Output figure filename (PDF recommended).")
-@click.option("--pattern", multiple=True, default=["experiments_src/logs/*.json"], show_default=True,
-              help="One or more glob patterns of experiment json files.")
-@click.option("--mode", type=click.Choice(["combined", "success", "timing"]),
-              default="combined", show_default=True,
-              help="What to plot: combined (default), only success rates, or only timing.")
+@click.option("--names", default=None)
+@click.option("--out", default="experiments_src/vis/experiments_summary.pdf", show_default=True)
+@click.option("--pattern", multiple=True, default=["experiments_src/logs/*.json"])
+@click.option("--mode", type=click.Choice(["combined", "success", "timing",
+                                           "outcome", "combined_outcome"]),
+              default="combined", show_default=True)
 def main(pattern, names, out, mode):
-    # --- load and merge names ---
+
+    # --- load names ---
     name_map = names_default.copy()
-    user_map = _load_names(names)
-    name_map.update(user_map)
+    name_map.update(_load_names(names))
 
     files = sorted(set(itertools.chain.from_iterable(glob.glob(p) for p in pattern)))
     if not files:
@@ -87,34 +84,46 @@ def main(pattern, names, out, mode):
 
     labels, percents, totals = [], [], []
     order_bases = []
+    outcome_triplets = []  # (positive, nonzero_cost, timeout)
+
+    # --- load summary files ---
     for p in files:
         base = os.path.splitext(os.path.basename(p))[0]
         order_bases.append(base)
 
         with open(p, "r", encoding="utf-8") as f:
             data = json.load(f)
-        pct = data.get("percent_positive_traces", 0)
-        tot = data.get("total_runs", 0)
 
-        # compact, professional x-labels: ID + short name
+        tot = data.get("total_runs", 0)
+        pos = data.get("num_positive_traces", 0)
+        succ = data.get("successful_runs", 0)
+        tout = data.get("num_timeout", 0)
+
+        if tot > 0:
+            outcome_triplets.append((
+                pos / tot,                        # positive traces
+                max(succ - pos, 0) / tot,         # non-zero cost successes
+                tout / tot                        # timeouts
+            ))
+        else:
+            outcome_triplets.append((0, 0, 0))
+
+        pct = pos / tot * 100 if tot else 0
+
         m = re.match(r"exp_(\d+)(_[a-z])?$", base)
         exp_id = (m.group(1) + (m.group(2) or "")) if m else base
-        disp   = name_map.get(base, base)
 
+        disp = name_map.get(base, base)
         labels.append(f"{exp_id} • {disp}")
         percents.append(pct)
         totals.append(tot)
 
-    # if values in [0,1], convert to %
-    if max(percents, default=0) <= 1.0:
-        percents = [v * 100 for v in percents]
-
     x = np.arange(len(labels))
 
-    # --- timing data (only if needed) ---
+    # --- load timing data ---
     step_durations = defaultdict(dict)
     df = None
-    if mode in ("combined", "timing"):
+    if mode in ("combined", "timing", "combined_outcome"):
         step_alias = {
             "create_variability_instances": "sampling",
             "variability_experiments":     "plan",
@@ -125,66 +134,91 @@ def main(pattern, names, out, mode):
         }
         for p in files:
             base = os.path.splitext(os.path.basename(p))[0]
-            exp_dir = os.path.join("experiments_src", base)
-            times_path = os.path.join(exp_dir, "out", "times.jsonl")
+            times_path = os.path.join("experiments_src", base, "out", "times.jsonl")
             if not os.path.exists(times_path):
                 continue
             with open(times_path, "r", encoding="utf-8") as tf:
                 for line in tf:
                     try:
                         entry = json.loads(line)
-                        step = step_alias.get(entry.get("step"), entry.get("step", "unknown"))
-                        step_durations[base][step] = step_durations[base].get(step, 0) + entry.get("seconds", 0)
-                    except json.JSONDecodeError:
+                        step = step_alias.get(entry["step"], entry["step"])
+                        step_durations[base][step] = step_durations[base].get(step, 0) + entry["seconds"]
+                    except:
                         continue
 
         if step_durations:
             df = pd.DataFrame(step_durations).T.fillna(0)
-            # cols = [c for c in ["sampling", "plan", "execute", "instrument", "monitor"] if c in df.columns]
-            cols = [c for c in ["plan", "execute", "instrument", "monitor"] if c in df.columns]
-            # keep order of input files
+            cols = [c for c in ["plan","execute","instrument","monitor"] if c in df.columns]
             df = df.reindex(order_bases).fillna(0)
             df = df[cols]
 
-    # Target ~double-column width ~6.9in; cap width so plots don't bloat
-    base_w = min(6.9, max(3.2, 0.18*len(labels) + 2.2))  # scales a bit with N, capped
+    # --- layout size ---
+    base_w = min(6.9, max(3.2, 0.18*len(labels) + 2.2))
     COMBINED_H = 3.4
     SINGLE_H   = 2.1
 
-
-    if "exp_*_b" in pattern[0]:
-        figtitle = "Parameter Variation Results"
-    if "exp_00[0-9]" in pattern[0]:
-        figtitle = "Vanilla Pipeline "
-
-
-    # --- figure setup depending on mode ---
-    if mode == "combined":
+    # --- figure setup ---
+    if mode in ("combined", "combined_outcome"):
         fig, (ax1, ax2) = plt.subplots(
             2, 1, figsize=(base_w, COMBINED_H),
-            sharex=True, gridspec_kw={'height_ratios':[2.2, 1]} # was 2.2
+            sharex=True, gridspec_kw={'height_ratios':[2.2,1]}
         )
-    elif mode == "success":
+    elif mode in ("success", "outcome"):
         fig, ax1 = plt.subplots(1, 1, figsize=(base_w, SINGLE_H))
         ax2 = None
     else:  # timing
         fig, ax2 = plt.subplots(1, 1, figsize=(base_w, SINGLE_H))
         ax1 = None
 
-    # --- Top: success plot ---
+    # ============================================================
+    # === TOP PLOT: SUCCESS BAR ==================================
+    # ============================================================
     if mode in ("combined", "success"):
         ax1.bar(x, percents, width=0.7, color="tab:blue", alpha=0.9)
         ax1.set_ylabel(r"\% positive traces")
-        # ax1.set_title(figtitle)
         ax1.set_ylim(0, max(percents) * 1.25 if percents else 100)
         ax1.grid(axis="y", linestyle="--", alpha=0.3)
-
         if mode == "success":
             ax1.set_xticks(x)
             ax1.set_xticklabels(labels, rotation=35, ha="right", fontsize=6.5)
 
-    # --- Bottom: timing plot ---
-    if mode in ("combined", "timing"):
+    # ============================================================
+    # === TOP PLOT: OUTCOME STACK ===============================
+    # ============================================================
+    if mode in ("outcome", "combined_outcome"):
+        pos_vals  = [t[0] for t in outcome_triplets]
+        cost_vals = [t[1] for t in outcome_triplets]
+        tout_vals = [t[2] for t in outcome_triplets]
+
+        bottom = np.zeros(len(labels))
+
+        ax1.bar(x, pos_vals, 0.7, bottom=bottom,
+                color="#4C72B0", label="Positive")
+        bottom += pos_vals
+
+        ax1.bar(x, cost_vals, 0.7, bottom=bottom,
+                color="#DD8452", label="Non-zero cost")
+        bottom += cost_vals
+
+        ax1.bar(x, tout_vals, 0.7, bottom=bottom,
+                color="#888888", label="Timeout")
+
+        ax1.set_ylabel("Outcome fractions")
+        ax1.set_ylim(0, 1.05)
+        ax1.grid(axis="y", linestyle="--", alpha=0.3)
+
+        ax1.legend(loc="upper center",
+                   bbox_to_anchor=(0.5, 1.25),
+                   ncol=3, frameon=True, fontsize=6.5)
+
+        if mode == "outcome":
+            ax1.set_xticks(x)
+            ax1.set_xticklabels(labels, rotation=35, ha="right", fontsize=6.5)
+
+    # ============================================================
+    # === LOWER: TIMING ==========================================
+    # ============================================================
+    if mode in ("combined", "timing", "combined_outcome"):
         if df is not None and not df.empty:
             colors = {
                 "sampling":  "#A8D5BA",
@@ -196,62 +230,52 @@ def main(pattern, names, out, mode):
 
             bottom = np.zeros(len(df))
             for step in df.columns:
-                heights = df[step].values
-                ax2.bar(x, heights, width=0.7, bottom=bottom,
-                        color=colors.get(step, "gray"), label=step)
-                bottom += heights
+                ax2.bar(x, df[step].values, 0.7, bottom=bottom,
+                        color=colors.get(step,"gray"), label=step)
+                bottom += df[step].values
 
             total_times = df.sum(axis=1).astype(int)
             max_total = max(total_times) if len(total_times) else 0
-            ax2.set_ylim(0, max_total * 1.25)
+            ax2.set_ylim(0, max_total * 1.35)
+            ax2.set_yticks([10000])
 
-            for i, t in enumerate(total_times):
-                hrs, rem = divmod(t, 3600)
-                mins, secs = divmod(rem, 60)
-                label_time = (f"{hrs}h{mins:02d}m" if hrs else f"{mins}m{secs:02d}s" if mins else f"{secs}s")
-                ax2.text(i, t + max_total * 0.02, label_time,
-                         ha="center", va="bottom", fontsize=6.5, color="#333")
+            for i,t in enumerate(total_times):
+                hrs,rem = divmod(t,3600)
+                mins,secs = divmod(rem,60)
+                label = f"{hrs}h{mins:02d}m" if hrs else f"{mins}m{secs:02d}s" if mins else f"{secs}s"
+                ax2.text(i, t + max_total * 0.02, label,
+                         ha="center", va="bottom", fontsize=6.5)
 
             ax2.set_ylabel("Time (s)")
             ax2.grid(axis="y", linestyle="--", alpha=0.3)
 
-            # compact legend with short labels, outside
-            alias_short = {"sampling":"Var.", "plan":"Plan", "execute":"Exec.", "instrument":"Instr.", "monitor":"Mon."}
-            h, lab = ax2.get_legend_handles_labels()
-            lab = [alias_short.get(s, s) for s in lab]
-            leg = ax2.legend(h, lab,
-                 loc="upper center",
-                 bbox_to_anchor=(0.5, 1.35),   # was 1.32
-                 ncol=len(lab),
-                 frameon=True,
-                 handlelength=1.0,
-                 columnspacing=0.9,
-                 borderaxespad=0.0,
-                 fontsize=6.5)
-            # reserve space for legend row
-            if mode == "combined":
+            alias = {"sampling":"Var.","plan":"Plan","execute":"Exec.","instrument":"Instr.","monitor":"Mon."}
+            h,lab = ax2.get_legend_handles_labels()
+            lab = [alias.get(s,s) for s in lab]
+
+            ax2.legend(h, lab,
+                       loc="upper center",
+                       bbox_to_anchor=(0.5, 1.55),
+                       ncol=len(lab), frameon=True,
+                       fontsize=6.5, handlelength=1.0)
+            if mode == "combined" or mode == "combined_outcome":
                 fig.subplots_adjust(top=0.86)
             else:
                 fig.subplots_adjust(top=0.83)
 
         else:
-            ax2.text(0.5, 0.5, "No timing data found", ha="center", va="center")
+            ax2.text(0.5,0.5,"No timing data",ha="center",va="center")
 
         if mode == "timing":
             ax2.set_xticks(x)
             ax2.set_xticklabels(labels, rotation=35, ha="right", fontsize=6.5)
 
-    # shared x for combined
-    if mode == "combined":
+    # shared x for combined modes
+    if mode in ("combined", "combined_outcome"):
         ax2.set_xticks(x)
         ax2.set_xticklabels(labels, rotation=35, ha="right", fontsize=6.5)
 
-    # if mode == "timing":
-        # ax2.set_title(figtitle)
-
-
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    # tighter padding; legend space handled via subplots_adjust
     plt.tight_layout(pad=0.6)
     plt.savefig(out, bbox_inches="tight")
     print(f"Wrote {out}")

@@ -52,6 +52,7 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
                     cost = float(last_row[fin])
         else:
             if not has_folder:
+
                 print(f"Missing folder for experiment '{name}' under {parent_folder}")
             elif not has_csv:
                 print(f"Missing monitoring_results.csv in {os.path.abspath(gen_folder)}")
@@ -68,6 +69,7 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
         for r in runs.values()
         if r["cost"] is not None and math.isclose(r["cost"], 0.0, abs_tol=1e-3)
     )
+    num_timeout = num_runs-num_successful
 
     positive_traces = sorted(
         name for name, r in runs.items()
@@ -82,12 +84,17 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
         if r["cost"] is None
     )
 
+    assert(len(positive_traces) == num_perfect)
+    assert(len(negative_traces) == num_successful-num_perfect)
+    assert(len(no_monitoring_results) == num_timeout)
+
     summary = {
-        "average_cost": total_cost / num_successful if num_successful else float("nan"),
-        "num_positive_traces": num_perfect,
-        "percent_positive_traces": (num_perfect / num_runs * 100) if num_runs else float("nan"),
         "total_runs": num_runs,
+        "num_positive_traces": num_perfect,
         "successful_runs": num_successful,
+        "num_timeout":num_timeout,
+        "percent_positive_traces": (num_perfect / num_runs * 100) if num_runs else float("nan"),
+        "average_cost": total_cost / num_successful if num_successful else float("nan"),
         "positive traces": positive_traces,
         "negative traces": negative_traces,
         "no monitoring results": no_monitoring_results,

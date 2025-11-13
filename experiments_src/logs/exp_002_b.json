@@ -1,9 +1,10 @@
 {
-  "average_cost": 1.002145967933382,
-  "num_positive_traces": 35,
-  "percent_positive_traces": 70.0,
   "total_runs": 50,
+  "num_positive_traces": 35,
   "successful_runs": 50,
+  "num_timeout": 0,
+  "percent_positive_traces": 70.0,
+  "average_cost": 1.002145967933382,
   "positive traces": [
     "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5",
     "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__max_braking_speed_while_turning_4__max_lane_1__max_segment_300__safety_distance_5",
