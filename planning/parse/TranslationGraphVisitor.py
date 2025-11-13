@@ -340,11 +340,8 @@ if __name__ == '__main__':
 
     # from shapex.parse import HardSyntaxErrorStrategy # TODO is the syntax error already 'hard'? otherwise copy code from shapex
 
-    testin_file = os.path.join(os.curdir, '../examples/osc/my_overtake.osc')
-    # testin_file = os.path.join(os.curdir, '../examples/osc/testin.osc')
-    # testin_file = os.path.join(os.curdir, '../examples/osc/example_2.osc')
-    # testin_file = os.path.join(os.curdir, '../examples/osc/test_example_1.osc')
-    testout_file = os.path.join(os.curdir, '../internal_scene/testout.scenic')
+    testin_file = os.path.join(os.curdir, 'experiments_src/exp_003_b/in/spec.osc')
+    testout_file = os.path.join(os.curdir, 'testout.scenic')
 
     input_stream = FileStream(testin_file)
     lexer = openscenario2Lexer(input_stream)
@@ -362,14 +359,4 @@ if __name__ == '__main__':
 
     translation_graph.draw()
 
-    # with open(testout_file, 'w') as f:
-    #     f.write(str(translation_graph))
 
-    # run scenic on the output
-    from scenic import scenarioFromFile
-
-    # from scenic.simulators.newtonian import NewtonianSimulator
-
-    ## TODO reenable this last part once actual scenic code is generated.
-    # scenario = scenarioFromFile(testout_file)
-    # scene, _ = scenario.generate()

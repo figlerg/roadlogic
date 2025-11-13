@@ -31,7 +31,9 @@ for dir in experiments_src/exp*/; do
   err_tail_dir="experiments_src/logs/error_tails"
   mkdir -p "$err_tail_dir"
 
-  if [[ -x "$dir/run.sh" ]]; then
+  runfile="${dir%/}/run.sh"
+
+  if [[ -f "$runfile" ]]; then
     echo "   (logging to $log_file)"
     : > "$log_file"
     if bash "$dir/run.sh" 2>&1 | tee "$log_file"; then

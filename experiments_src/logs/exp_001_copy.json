@@ -3,6 +3,7 @@
   "num_positive_traces": 2,
   "percent_positive_traces": 100.0,
   "total_runs": 2,
+  "successful_runs": 2,
   "positive traces": [
     "scenario_0001",
     "scenario_0002"

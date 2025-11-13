@@ -1,5 +1,5 @@
 {
-  "average_cost": 9.999999999976694e-05,
+  "average_cost": 0.0,
   "num_positive_traces": 10,
   "percent_positive_traces": 100.0,
   "total_runs": 10,
@@ -19,15 +19,15 @@
   "negative traces": [],
   "no monitoring results": [],
   "costs": {
-    "scenario_0001": 9.999999999976694e-05,
-    "scenario_0002": 9.999999999976694e-05,
-    "scenario_0003": 9.999999999976694e-05,
-    "scenario_0004": 9.999999999976694e-05,
-    "scenario_0005": 9.999999999976694e-05,
-    "scenario_0006": 9.999999999976694e-05,
-    "scenario_0007": 9.999999999976694e-05,
-    "scenario_0008": 9.999999999976694e-05,
-    "scenario_0009": 9.999999999976694e-05,
-    "scenario_0010": 9.999999999976694e-05
+    "scenario_0001": 0.0,
+    "scenario_0002": 0.0,
+    "scenario_0003": 0.0,
+    "scenario_0004": 0.0,
+    "scenario_0005": 0.0,
+    "scenario_0006": 0.0,
+    "scenario_0007": 0.0,
+    "scenario_0008": 0.0,
+    "scenario_0009": 0.0,
+    "scenario_0010": 0.0
   }
 }
