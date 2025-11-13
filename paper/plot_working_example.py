@@ -22,6 +22,17 @@ from commonroad.prediction.prediction import Trajectory, TrajectoryPrediction
 
 from commonroad.visualization.mp_renderer import MPDrawParams, MPRenderer
 
+from matplotlib import rcParams
+
+# LaTeX-friendly settings (vector fonts, serif)
+rcParams.update({
+    "text.usetex": True,
+    "font.family": "serif",
+    "font.serif": ["Computer Modern Roman"],
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+})
+
 
 # Plot the scenario as follow:
 # - Given a timestep plot the past time steps using a transparent color
@@ -197,18 +208,24 @@ def visualize_the_scenario(executed_scenario: Scenario,
 if __name__ == "__main__":
 
     current_folder = os.path.dirname(os.path.realpath(__file__))
+    # original_scenario_file = os.path.join(current_folder, "scenario_old.xml")
+    # executed_scenario_file = os.path.join(current_folder, "executed_scenario_old.xml")
+    # original_scenario_file = os.path.join(current_folder, "exp_002_e","out","cr_simulations","scenario_0001","simulation_00001","scenario.xml")
+    # executed_scenario_file = os.path.join(current_folder, "exp_002_e","out","cr_simulations","scenario_0001","simulation_00001","executed_scenario.xml")
+    
+    # I then copied the new ones over these (with the old original names)
     original_scenario_file = os.path.join(current_folder, "scenario.xml")
     executed_scenario_file = os.path.join(current_folder, "executed_scenario.xml")
 
     _, planning_problem_set = XMLFileReader(original_scenario_file).open()
     executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
 
-    output_file = os.path.join(current_folder, "working-example.png")
+    output_file = os.path.join(current_folder, "working-example-new.png")
 
-    target_time_step = -1 # Last timestep
+    target_time_step = 90 # Last timestep
     
     # Plot the past shaded boxes at those timesteps
-    plot_at_times = [10, 20, 30, 40, 50, 60, 65]
+    plot_at_times = [10, 20, 30, 40, 50, 60,70, 80]
 
     # Plot the figure to file
     visualize_the_scenario(executed_scenario, planning_problem_set, output_file, target_time_step, plot_at_times)

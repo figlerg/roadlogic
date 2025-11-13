@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Felix Gigler" affiliation="AIT" source="CommonRoad Scenario Designer" benchmarkID="ZAM_simple-2_1_T-1" date="2025-11-09">
+<commonRoad timeStepSize="0.1" commonRoadVersion="2020a" author="Felix Gigler" affiliation="AIT" source="CommonRoad Scenario Designer" benchmarkID="ZAM_simple-2_1_T-1" date="2025-11-12">
   <location>
     <geoNameId>-999</geoNameId>
     <gpsLatitude>999.0</gpsLatitude>
     <gpsLongitude>999.0</gpsLongitude>
   </location>
   <scenarioTags/>
-  <lanelet id="1003">
+  <lanelet id="13">
     <leftBound>
       <point>
         <x>-10.0</x>
@@ -211,10 +211,10 @@
         <y>-1.5</y>
       </point>
     </rightBound>
-    <adjacentLeft ref="1002" drivingDir="same"/>
+    <adjacentLeft ref="2" drivingDir="same"/>
     <laneletType>unknown</laneletType>
   </lanelet>
-  <lanelet id="1002">
+  <lanelet id="12">
     <leftBound>
       <point>
         <x>-10.0</x>
@@ -419,11 +419,11 @@
         <y>1.5</y>
       </point>
     </rightBound>
-    <adjacentLeft ref="1001" drivingDir="same"/>
-    <adjacentRight ref="1003" drivingDir="same"/>
+    <adjacentLeft ref="1" drivingDir="same"/>
+    <adjacentRight ref="3" drivingDir="same"/>
     <laneletType>unknown</laneletType>
   </lanelet>
-  <lanelet id="1001">
+  <lanelet id="11">
     <leftBound>
       <point>
         <x>-10.0</x>
@@ -630,7 +630,7 @@
       </point>
       <lineMarking>no_marking</lineMarking>
     </rightBound>
-    <adjacentRight ref="1002" drivingDir="same"/>
+    <adjacentRight ref="2" drivingDir="same"/>
     <laneletType>urban</laneletType>
   </lanelet>
   <dynamicObstacle id="1">
@@ -674,24 +674,24 @@
         </time>
         <position>
           <point>
-            <x>0.0037683857278345556</x>
-            <y>2.9999913241525302</y>
+            <x>0.0037691143834208685</x>
+            <y>2.9999979281046936</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.01473978176016923</exact>
+          <exact>0.0033926857043627477</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.11716391378978762</exact>
+          <exact>0.11718348151926081</exact>
         </velocity>
         <orientation>
-          <exact>0.00002057718421257632</exact>
+          <exact>0.00000463239968649014</exact>
         </orientation>
         <acceleration>
-          <exact>1.1338422723893553</exact>
+          <exact>1.1340335890731557</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00020304581416094808</exact>
+          <exact>0.00004628579737525900</exact>
         </yawRate>
       </state>
       <state>
@@ -700,24 +700,24 @@
         </time>
         <position>
           <point>
-            <x>0.03003529788260928</x>
-            <y>2.9999282650583243</y>
+            <x>0.030040870678416765</x>
+            <y>2.999983511724813</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.015573992583019097</exact>
+          <exact>0.003601471761098936</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.43841809956447547</exact>
+          <exact>0.43849294505414166</exact>
         </velocity>
         <orientation>
-          <exact>0.00015509757683490892</exact>
+          <exact>0.00003551624959021566</exact>
         </orientation>
         <acceleration>
-          <exact>2.040884080507377</exact>
+          <exact>2.041258871647691</exact>
         </acceleration>
         <yawRate>
-          <exact>0.001345203926223326</exact>
+          <exact>0.0003088384990372552</exact>
         </yawRate>
       </state>
       <state>
@@ -726,24 +726,24 @@
         </time>
         <position>
           <point>
-            <x>0.09674180132446852</x>
-            <y>2.999738361307122</y>
+            <x>0.09675978649927952</x>
+            <y>2.9999423954380693</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.017801315071624392</exact>
+          <exact>0.004152275393166354</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.9184021275267876</exact>
+          <exact>0.9185667244950473</exact>
         </velocity>
         <orientation>
-          <exact>0.0005004428924199255</exact>
+          <exact>0.00011639908970299102</exact>
         </orientation>
         <acceleration>
-          <exact>2.7210817909227933</exact>
+          <exact>2.7216737159082665</exact>
         </acceleration>
         <yawRate>
-          <exact>0.003453453155850166</exact>
+          <exact>0.0008088284011277536</exact>
         </yawRate>
       </state>
       <state>
@@ -752,24 +752,24 @@
         </time>
         <position>
           <point>
-            <x>0.20381332398245156</x>
-            <y>3.0002351232907745</y>
+            <x>0.20451000698085697</x>
+            <y>3.0000675359029074</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.02854383978632389</exact>
+          <exact>0.006702511524787857</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.2383545209435167</exact>
+          <exact>1.2580070030073034</exact>
         </velocity>
         <orientation>
-          <exact>0.001668856760456242</exact>
+          <exact>0.00039309216711349106</exact>
         </orientation>
         <acceleration>
-          <exact>1.819457627302206</exact>
+          <exact>2.007868649231624</exact>
         </acceleration>
         <yawRate>
-          <exact>0.011684138680363191</exact>
+          <exact>0.002766930774104741</exact>
         </yawRate>
       </state>
       <state>
@@ -778,24 +778,24 @@
         </time>
         <position>
           <point>
-            <x>0.3470811941691023</x>
-            <y>3.00084896583815</y>
+            <x>0.3521607310592805</x>
+            <y>3.0002475430476507</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.0334188665068122</exact>
+          <exact>0.007962946281618245</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.6384536741948748</exact>
+          <exact>1.7114395197249768</exact>
         </velocity>
         <orientation>
-          <exact>0.003264977456688623</exact>
+          <exact>0.0007932068209088798</exact>
         </orientation>
         <acceleration>
-          <exact>2.1618548755795053</exact>
+          <exact>2.500750522301522</exact>
         </acceleration>
         <yawRate>
-          <exact>0.01596120696232381</exact>
+          <exact>0.004001146537953887</exact>
         </yawRate>
       </state>
       <state>
@@ -804,24 +804,24 @@
         </time>
         <position>
           <point>
-            <x>0.5333610915566784</x>
-            <y>3.005466668138415</y>
+            <x>0.5495675423462547</x>
+            <y>3.0015187068512637</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.04013639435480002</exact>
+          <exact>0.009729650551333827</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.095388813050047</exact>
+          <exact>2.2480339036275345</exact>
         </velocity>
         <orientation>
-          <exact>0.00685395274325714</exact>
+          <exact>0.0017391755893441622</exact>
         </orientation>
         <acceleration>
-          <exact>2.387759279231438</exact>
+          <exact>2.839483373716738</exact>
         </acceleration>
         <yawRate>
-          <exact>0.035889752865685166</exact>
+          <exact>0.009459687684352822</exact>
         </yawRate>
       </state>
       <state>
@@ -830,24 +830,24 @@
         </time>
         <position>
           <point>
-            <x>0.7562740848981405</x>
-            <y>3.0188988074836116</y>
+            <x>0.7906438876608155</x>
+            <y>3.004919713110394</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.04730281905956664</exact>
+          <exact>0.011584319075491538</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.38088208704263</exact>
+          <exact>2.593336072341928</exact>
         </velocity>
         <orientation>
-          <exact>0.015361366313819142</exact>
+          <exact>0.003878947424691478</exact>
         </orientation>
         <acceleration>
-          <exact>1.6425564603834901</exact>
+          <exact>2.009325483011082</exact>
         </acceleration>
         <yawRate>
-          <exact>0.05947898523318057</exact>
+          <exact>0.01513823884731931</exact>
         </yawRate>
       </state>
       <state>
@@ -856,24 +856,24 @@
         </time>
         <position>
           <point>
-            <x>1.0118391433394462</x>
-            <y>3.029160259732097</y>
+            <x>1.0716657623079122</x>
+            <y>3.007659278852664</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.056090602407024</exact>
+          <exact>0.01389789827535588</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.74506639842938</exact>
+          <exact>3.042188550235815</exact>
         </velocity>
         <orientation>
-          <exact>0.021682536597306054</exact>
+          <exact>0.005548493490419608</exact>
         </orientation>
         <acceleration>
-          <exact>1.9803083174472245</exact>
+          <exact>2.4552064525155153</exact>
         </acceleration>
         <yawRate>
-          <exact>0.06321170283486911</exact>
+          <exact>0.016695460657281305</exact>
         </yawRate>
       </state>
       <state>
@@ -882,24 +882,24 @@
         </time>
         <position>
           <point>
-            <x>1.306735420400552</x>
-            <y>3.0413020601392544</y>
+            <x>1.401545953303757</x>
+            <y>3.0109418755318442</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.06824059070924714</exact>
+          <exact>0.016936013465155383</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.165637043302662</exact>
+          <exact>3.565844060400308</exact>
         </velocity>
         <orientation>
-          <exact>0.029415831296311656</exact>
+          <exact>0.00760109079696952</exact>
         </orientation>
         <acceleration>
-          <exact>2.2067952913480946</exact>
+          <exact>2.7573655710042506</exact>
         </acceleration>
         <yawRate>
-          <exact>0.07733294699005601</exact>
+          <exact>0.02052597306549912</exact>
         </yawRate>
       </state>
       <state>
@@ -908,24 +908,24 @@
         </time>
         <position>
           <point>
-            <x>1.6342107613901489</x>
-            <y>3.065768230815225</y>
+            <x>1.7729416321146811</x>
+            <y>3.0188321277460153</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.08108857228790799</exact>
+          <exact>0.020798243809790857</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.4040687955185387</exact>
+          <exact>3.8734079962831234</exact>
         </velocity>
         <orientation>
-          <exact>0.04144398593591813</exact>
+          <exact>0.01122748529523656</exact>
         </orientation>
         <acceleration>
-          <exact>1.2723001443589743</exact>
+          <exact>1.6826571092805336</exact>
         </acceleration>
         <yawRate>
-          <exact>0.12028154639606263</exact>
+          <exact>0.036263944982670375</exact>
         </yawRate>
       </state>
       <state>
@@ -934,24 +934,24 @@
         </time>
         <position>
           <point>
-            <x>1.9865378404168181</x>
-            <y>3.098424937576079</y>
+            <x>2.1778183530857973</x>
+            <y>3.027828949164303</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.09172998685535237</exact>
+          <exact>0.02459634535718155</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.6708442963630135</exact>
+          <exact>4.2331806240350245</exact>
         </velocity>
         <orientation>
-          <exact>0.056246840647783514</exact>
+          <exact>0.01533719645503946</exact>
         </orientation>
         <acceleration>
-          <exact>1.3874533075895934</exact>
+          <exact>1.9007849966145207</exact>
         </acceleration>
         <yawRate>
-          <exact>0.14802854711865382</exact>
+          <exact>0.041097111598029</exact>
         </yawRate>
       </state>
       <state>
@@ -960,24 +960,24 @@
         </time>
         <position>
           <point>
-            <x>2.3660716148019274</x>
-            <y>3.134110575603275</y>
+            <x>2.620478532914931</x>
+            <y>3.0410019060478204</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.10246310655194034</exact>
+          <exact>0.0290251421907278</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.9552143238362265</exact>
+          <exact>4.627990112530399</exact>
         </velocity>
         <orientation>
-          <exact>0.07242367995711267</exact>
+          <exact>0.020757072439350363</exact>
         </orientation>
         <acceleration>
-          <exact>1.4488506258234561</exact>
+          <exact>2.033059954401916</exact>
         </acceleration>
         <yawRate>
-          <exact>0.16176839309329158</exact>
+          <exact>0.054198759843109026</exact>
         </yawRate>
       </state>
       <state>
@@ -986,24 +986,24 @@
         </time>
         <position>
           <point>
-            <x>2.766380663714223</x>
-            <y>3.1894339822600144</y>
+            <x>3.0944263411127997</x>
+            <y>3.0593957193789496</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.11031131771682134</exact>
+          <exact>0.03421617172019194</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.124143175215885</exact>
+          <exact>4.869512162622159</exact>
         </velocity>
         <orientation>
-          <exact>0.0916662499674302</exact>
+          <exact>0.02770616991179528</exact>
         </orientation>
         <acceleration>
-          <exact>0.955922462652124</exact>
+          <exact>1.3834427302551207</exact>
         </acceleration>
         <yawRate>
-          <exact>0.1924257001031722</exact>
+          <exact>0.06949097472444817</exact>
         </yawRate>
       </state>
       <state>
@@ -1012,24 +1012,24 @@
         </time>
         <position>
           <point>
-            <x>3.184770561767728</x>
-            <y>3.250555481504999</y>
+            <x>3.595686485375314</x>
+            <y>3.0826996306374976</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.11843847545864918</exact>
+          <exact>0.040017015044164675</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.3332330832420105</exact>
+          <exact>5.175220310678628</exact>
         </velocity>
         <orientation>
-          <exact>0.11235361608998451</exact>
+          <exact>0.0359494578898143</exact>
         </orientation>
         <acceleration>
-          <exact>1.1271259392810848</exact>
+          <exact>1.6584591867897922</exact>
         </acceleration>
         <yawRate>
-          <exact>0.20687366122554313</exact>
+          <exact>0.08243287978019022</exact>
         </yawRate>
       </state>
       <state>
@@ -1038,24 +1038,24 @@
         </time>
         <position>
           <point>
-            <x>3.623428323569901</x>
-            <y>3.327088633401183</y>
+            <x>4.129579084380101</x>
+            <y>3.1150829093920986</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.1255083554970996</exact>
+          <exact>0.046603331417106</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.570625070584495</exact>
+          <exact>5.526743515579249</exact>
         </velocity>
         <orientation>
-          <exact>0.13526013300128456</exact>
+          <exact>0.04644735419223427</exact>
         </orientation>
         <acceleration>
-          <exact>1.2388790246657795</exact>
+          <exact>1.8416141933569508</exact>
         </acceleration>
         <yawRate>
-          <exact>0.2290651691130005</exact>
+          <exact>0.1049789630241997</exact>
         </yawRate>
       </state>
       <state>
@@ -1064,24 +1064,24 @@
         </time>
         <position>
           <point>
-            <x>4.078709637600885</x>
-            <y>3.419245657931536</y>
+            <x>4.690140030592055</x>
+            <y>3.1562058883224053</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.1312031775619275</exact>
+          <exact>0.05330976850588378</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.716819893316251</exact>
+          <exact>5.714385015662539</exact>
         </velocity>
         <orientation>
-          <exact>0.15996921866347338</exact>
+          <exact>0.058744054670305405</exact>
         </orientation>
         <acceleration>
-          <exact>0.8343457379974273</exact>
+          <exact>0.9518706195450258</exact>
         </acceleration>
         <yawRate>
-          <exact>0.24709085662188074</exact>
+          <exact>0.12296700478070993</exact>
         </yawRate>
       </state>
       <state>
@@ -1090,24 +1090,24 @@
         </time>
         <position>
           <point>
-            <x>4.547788107117419</x>
-            <y>3.5246201325322435</y>
+            <x>5.269021213258047</x>
+            <y>3.2066898938724133</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.13738292405512603</exact>
+          <exact>0.060233430146210874</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.900406737933476</exact>
+          <exact>5.905927146404465</exact>
         </velocity>
         <orientation>
-          <exact>0.18651465604469936</exact>
+          <exact>0.07294904236528564</exact>
         </orientation>
         <acceleration>
-          <exact>0.9940728996442937</exact>
+          <exact>0.9598933227037</exact>
         </acceleration>
         <yawRate>
-          <exact>0.2654543738122597</exact>
+          <exact>0.14204987694980234</exact>
         </yawRate>
       </state>
       <state>
@@ -1116,24 +1116,24 @@
         </time>
         <position>
           <point>
-            <x>5.031957630961205</x>
-            <y>3.6538362413338903</y>
+            <x>5.8657666852503585</x>
+            <y>3.2722269270595183</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.1426496484718151</exact>
+          <exact>0.06520663489090325</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.110558763597071</exact>
+          <exact>6.096780088459032</exact>
         </velocity>
         <orientation>
-          <exact>0.21591859409888514</exact>
+          <exact>0.08931204461170864</exact>
         </orientation>
         <acceleration>
-          <exact>1.099590785917211</exact>
+          <exact>0.9449485824044918</exact>
         </acceleration>
         <yawRate>
-          <exact>0.29403938054185785</exact>
+          <exact>0.16363002246422995</exact>
         </yawRate>
       </state>
       <state>
@@ -1142,24 +1142,24 @@
         </time>
         <position>
           <point>
-            <x>5.529009317419275</x>
-            <y>3.797547401955044</y>
+            <x>6.47628030836657</x>
+            <y>3.3455394619986474</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.14453170419486075</exact>
+          <exact>0.06897083775858015</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.240513784803122</exact>
+          <exact>6.205336460894636</exact>
         </velocity>
         <orientation>
-          <exact>0.24626229624435556</exact>
+          <exact>0.10651154159075299</exact>
         </orientation>
         <acceleration>
-          <exact>0.7419684930619179</exact>
+          <exact>0.6072040489220396</exact>
         </acceleration>
         <yawRate>
-          <exact>0.30343702145470025</exact>
+          <exact>0.17199496979044354</exact>
         </yawRate>
       </state>
       <state>
@@ -1168,24 +1168,24 @@
         </time>
         <position>
           <point>
-            <x>6.0346481512722185</x>
-            <y>3.9651662330592656</y>
+            <x>7.097067537899859</x>
+            <y>3.4348444703986845</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.14080363800405776</exact>
+          <exact>0.06824437419549066</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.403997089110021</exact>
+          <exact>6.337276180800074</exact>
         </velocity>
         <orientation>
-          <exact>0.2778657447287129</exact>
+          <exact>0.12332227349514352</exact>
         </orientation>
         <acceleration>
-          <exact>0.885159055559565</exact>
+          <exact>0.7063296016449907</exact>
         </acceleration>
         <yawRate>
-          <exact>0.3160344848435734</exact>
+          <exact>0.1681073190439053</exact>
         </yawRate>
       </state>
       <state>
@@ -1194,24 +1194,24 @@
         </time>
         <position>
           <point>
-            <x>6.553651673395967</x>
-            <y>4.146272575435074</y>
+            <x>7.73050833884834</x>
+            <y>3.533632063137584</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.12841085707354002</exact>
+          <exact>0.0657066416936345</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.591321403659192</exact>
+          <exact>6.485493179526428</exact>
         </velocity>
         <orientation>
-          <exact>0.3055072638982478</exact>
+          <exact>0.13951864657691582</exact>
         </orientation>
         <acceleration>
-          <exact>0.9799535760630107</exact>
+          <exact>0.769927955734676</exact>
         </acceleration>
         <yawRate>
-          <exact>0.2764151916953489</exact>
+          <exact>0.16196373081772297</exact>
         </yawRate>
       </state>
       <state>
@@ -1220,24 +1220,24 @@
         </time>
         <position>
           <point>
-            <x>7.08382127472679</x>
-            <y>4.341169869979779</y>
+            <x>8.374484179739353</x>
+            <y>3.641160972341704</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.10604666518490437</exact>
+          <exact>0.061440150929025716</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.707171458221345</exact>
+          <exact>6.576188241022551</exact>
         </velocity>
         <orientation>
-          <exact>0.3282672839869246</exact>
+          <exact>0.15507699340949097</exact>
         </orientation>
         <acceleration>
-          <exact>0.6610864276386982</exact>
+          <exact>0.5164213257805181</exact>
         </acceleration>
         <yawRate>
-          <exact>0.22760020088676558</exact>
+          <exact>0.15558346832574982</exact>
         </yawRate>
       </state>
       <state>
@@ -1246,24 +1246,24 @@
         </time>
         <position>
           <point>
-            <x>7.6254975598489665</x>
-            <y>4.542210613946048</y>
+            <x>9.026484751609805</x>
+            <y>3.763015003888427</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.07479646268164743</exact>
+          <exact>0.05634920107668135</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.8529786455067825</exact>
+          <exact>6.689849187169761</exact>
         </velocity>
         <orientation>
-          <exact>0.341308990856676</exact>
+          <exact>0.16897912486734132</exact>
         </orientation>
         <acceleration>
-          <exact>0.7892752194856835</exact>
+          <exact>0.6145995288355077</exact>
         </acceleration>
         <yawRate>
-          <exact>0.13041706869751368</exact>
+          <exact>0.13902131457850353</exact>
         </yawRate>
       </state>
       <state>
@@ -1272,24 +1272,24 @@
         </time>
         <position>
           <point>
-            <x>8.18166228113244</x>
-            <y>4.749437802978045</y>
+            <x>9.689349807387726</x>
+            <y>3.8925744702543503</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.03887662454579293</exact>
+          <exact>0.05074451991829292</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.0201181580904395</exact>
+          <exact>6.819817469512328</exact>
         </velocity>
         <orientation>
-          <exact>0.35025562486497186</exact>
+          <exact>0.1820525791473025</exact>
         </orientation>
         <acceleration>
-          <exact>0.8743735847043104</exact>
+          <exact>0.6794872104996575</exact>
         </acceleration>
         <yawRate>
-          <exact>0.08946634008295873</exact>
+          <exact>0.13073454279961177</exact>
         </yawRate>
       </state>
       <state>
@@ -1298,24 +1298,24 @@
         </time>
         <position>
           <point>
-            <x>8.754656871974532</x>
-            <y>4.949631941990379</y>
+            <x>10.361268167217302</x>
+            <y>4.029935279989099</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.000820807188909228</exact>
+          <exact>0.04458349718655999</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.123509333591307</exact>
+          <exact>6.900118624334523</exact>
         </velocity>
         <orientation>
-          <exact>0.3442260191162567</exact>
+          <exact>0.19413134466825088</exact>
         </orientation>
         <acceleration>
-          <exact>0.5901308407761451</exact>
+          <exact>0.4582640283362451</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.06029605748715028</exact>
+          <exact>0.12078765520947998</exact>
         </yawRate>
       </state>
       <state>
@@ -1324,24 +1324,24 @@
         </time>
         <position>
           <point>
-            <x>9.341793751939615</x>
-            <y>5.144843314503192</y>
+            <x>11.040590091934005</x>
+            <y>4.176605183370589</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0354864155064321</exact>
+          <exact>0.036815498341581675</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.253670503876499</exact>
+          <exact>7.001139784493539</exact>
         </velocity>
         <orientation>
-          <exact>0.33307460265853345</exact>
+          <exact>0.2032536237265814</exact>
         </orientation>
         <acceleration>
-          <exact>0.7047890841101497</exact>
+          <exact>0.5469268397233814</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.11151416457723273</exact>
+          <exact>0.09122279058330518</exact>
         </yawRate>
       </state>
       <state>
@@ -1350,24 +1350,24 @@
         </time>
         <position>
           <point>
-            <x>9.947377991454875</x>
-            <y>5.328632135543001</y>
+            <x>11.729978810181608</x>
+            <y>4.327970759232827</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0681605669151738</exact>
+          <exact>0.028312047722937248</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.402887994930814</exact>
+          <exact>7.116904284244407</exact>
         </velocity>
         <orientation>
-          <exact>0.31277645885286753</exact>
+          <exact>0.2104397092725125</exact>
         </orientation>
         <acceleration>
-          <exact>0.7808606279630645</exact>
+          <exact>0.6057057650818346</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.20298143805665914</exact>
+          <exact>0.07186085545931087</exact>
         </yawRate>
       </state>
       <state>
@@ -1376,24 +1376,24 @@
         </time>
         <position>
           <point>
-            <x>10.571257767318347</x>
-            <y>5.492805596556908</y>
+            <x>12.428028665737282</x>
+            <y>4.483174385950592</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.09231538646832756</exact>
+          <exact>0.01921962018024422</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.4952137757311865</exact>
+          <exact>7.188513311289207</exact>
         </velocity>
         <orientation>
-          <exact>0.2865093777033271</exact>
+          <exact>0.2155848324938994</exact>
         </orientation>
         <acceleration>
-          <exact>0.5271181486050484</exact>
+          <exact>0.40878003317677836</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.26267081149540017</exact>
+          <exact>0.0514512322138691</exact>
         </yawRate>
       </state>
       <state>
@@ -1402,24 +1402,24 @@
         </time>
         <position>
           <point>
-            <x>11.20877119328473</x>
-            <y>5.644467100275207</y>
+            <x>13.133896529903602</x>
+            <y>4.64068289764238</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.11252250536813019</exact>
+          <exact>0.00984558810156055</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.611423704740684</exact>
+          <exact>7.2786401924690844</exact>
         </velocity>
         <orientation>
-          <exact>0.2569358579163173</exact>
+          <exact>0.2177992317656036</exact>
         </orientation>
         <acceleration>
-          <exact>0.6293419572940263</exact>
+          <exact>0.48802683090440724</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.29573519787009783</exact>
+          <exact>0.022143992717041927</exact>
         </yawRate>
       </state>
       <state>
@@ -1428,24 +1428,24 @@
         </time>
         <position>
           <point>
-            <x>11.864710275383505</x>
-            <y>5.7720791189161895</y>
+            <x>13.849758731092214</x>
+            <y>4.797987667363112</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.12763327307251052</exact>
+          <exact>0.00040139303777783956</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.744629570964221</exact>
+          <exact>7.381946177196894</exact>
         </velocity>
         <orientation>
-          <exact>0.2227215869347669</exact>
+          <exact>0.21711579478032533</exact>
         </orientation>
         <acceleration>
-          <exact>0.6970978023634437</exact>
+          <exact>0.5405783571198242</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.3421427098155039</exact>
+          <exact>-0.006834369852782574</exact>
         </yawRate>
       </state>
       <state>
@@ -1454,24 +1454,24 @@
         </time>
         <position>
           <point>
-            <x>12.537953950901718</x>
-            <y>5.870485132645226</y>
+            <x>14.57446899919993</x>
+            <y>4.953639333722823</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.14090192005379523</exact>
+          <exact>-0.009076746397416319</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.863417987184805</exact>
+          <exact>7.445857969749561</exact>
         </velocity>
         <orientation>
-          <exact>0.18364717076380135</exact>
+          <exact>0.2140772923591308</exact>
         </orientation>
         <acceleration>
-          <exact>0.8225370109105723</exact>
+          <exact>0.36485806716781655</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.39074416170965215</exact>
+          <exact>-0.030385024211945222</exact>
         </yawRate>
       </state>
       <state>
@@ -1480,24 +1480,24 @@
         </time>
         <position>
           <point>
-            <x>13.229957523329851</x>
-            <y>5.94680143302969</y>
+            <x>15.307262260941341</x>
+            <y>5.106150986399657</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.1505103568088589</exact>
+          <exact>-0.01857020929503783</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.06687924818748</exact>
+          <exact>7.526300543917314</exact>
         </velocity>
         <orientation>
-          <exact>0.14126066625995348</exact>
+          <exact>0.20858889636987024</exact>
         </orientation>
         <acceleration>
-          <exact>1.1953190935365008</exact>
+          <exact>0.43559876466077</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.4238650450384787</exact>
+          <exact>-0.054883959892605694</exact>
         </yawRate>
       </state>
       <state>
@@ -1506,24 +1506,24 @@
         </time>
         <position>
           <point>
-            <x>13.948780778966256</x>
-            <y>5.99225521592409</y>
+            <x>16.050436347902878</x>
+            <y>5.251219839067276</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.15224502042544177</exact>
+          <exact>-0.0280961451480773</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.334786695433804</exact>
+          <exact>7.618508191531513</exact>
         </velocity>
         <orientation>
-          <exact>0.09521513340534264</exact>
+          <exact>0.19971230931913603</exact>
         </orientation>
         <acceleration>
-          <exact>1.4669568783046525</exact>
+          <exact>0.48250999297134006</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.4604553285461084</exact>
+          <exact>-0.08876587050734214</exact>
         </yawRate>
       </state>
       <state>
@@ -1532,24 +1532,24 @@
         </time>
         <position>
           <point>
-            <x>14.693812553449947</x>
-            <y>6.0092968386742545</y>
+            <x>16.802951700384327</x>
+            <y>5.386788037306397</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.13514689580157777</exact>
+          <exact>-0.03749912380220071</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.589943509739901</exact>
+          <exact>7.675554715572749</exact>
         </velocity>
         <orientation>
-          <exact>0.05644787027358188</exact>
+          <exact>0.18784688185801252</exact>
         </orientation>
         <acceleration>
-          <exact>1.7809498069116885</exact>
+          <exact>0.3256671172541223</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.3876726313176032</exact>
+          <exact>-0.11865427461123346</exact>
         </yawRate>
       </state>
       <state>
@@ -1558,24 +1558,24 @@
         </time>
         <position>
           <point>
-            <x>15.47365694573267</x>
-            <y>6.012699779994328</y>
+            <x>17.563793834134877</x>
+            <y>5.512131065545265</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.10681555143483296</exact>
+          <exact>-0.046178549344050294</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.032312044353594</exact>
+          <exact>7.747356412143891</exact>
         </velocity>
         <orientation>
-          <exact>0.025293961301545004</exact>
+          <exact>0.1734519313078822</exact>
         </orientation>
         <acceleration>
-          <exact>2.605573815279884</exact>
+          <exact>0.3888078151674561</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.3115390897203687</exact>
+          <exact>-0.1439495055013032</exact>
         </yawRate>
       </state>
       <state>
@@ -1584,24 +1584,24 @@
         </time>
         <position>
           <point>
-            <x>16.30513949211676</x>
-            <y>6.006224758137647</y>
+            <x>18.334245064650652</x>
+            <y>5.626057379922369</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.06971225903173958</exact>
+          <exact>-0.05361235931958305</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.617326160649878</exact>
+          <exact>7.829659495290954</exact>
         </velocity>
         <orientation>
-          <exact>0.0038692692590293625</exact>
+          <exact>0.15680415020663252</exact>
         </orientation>
         <acceleration>
-          <exact>3.207380522384391</exact>
+          <exact>0.4306793858653106</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.21424692042515642</exact>
+          <exact>-0.16647781101249676</exact>
         </yawRate>
       </state>
       <state>
@@ -1610,24 +1610,24 @@
         </time>
         <position>
           <point>
-            <x>17.180090661660547</x>
-            <y>5.948225457413048</y>
+            <x>19.113392621404415</x>
+            <y>5.725677852821371</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.11477489855447262</exact>
+          <exact>-0.058895693939102954</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.88564853176299</exact>
+          <exact>7.880578186550002</exact>
         </velocity>
         <orientation>
-          <exact>-0.03850765544567596</exact>
+          <exact>0.13857634445949282</exact>
         </orientation>
         <acceleration>
-          <exact>1.1420698854252682</exact>
+          <exact>0.29068276652708785</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.4237224516526064</exact>
+          <exact>-0.18227805747139864</exact>
         </yawRate>
       </state>
       <state>
@@ -1636,24 +1636,24 @@
         </time>
         <position>
           <point>
-            <x>18.071369843897617</x>
-            <y>5.827284543163578</y>
+            <x>19.900480585668795</x>
+            <y>5.80775602514614</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.14728550790898315</exact>
+          <exact>-0.06264538574803617</exact>
         </steeringAngle>
         <velocity>
-          <exact>9.057189578720763</exact>
+          <exact>7.944667200149412</exact>
         </velocity>
         <orientation>
-          <exact>-0.0975652675572451</exact>
+          <exact>0.1190595474391573</exact>
         </orientation>
         <acceleration>
-          <exact>0.6825239814995177</exact>
+          <exact>0.3470420344667936</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.5905761211156912</exact>
+          <exact>-0.19516797020335527</exact>
         </yawRate>
       </state>
       <state>
@@ -1662,24 +1662,24 @@
         </time>
         <position>
           <point>
-            <x>18.965352410812578</x>
-            <y>5.646089175063955</y>
+            <x>20.695874549135503</x>
+            <y>5.8747226063025995</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.15890750203348497</exact>
+          <exact>-0.06570217252172901</exact>
         </steeringAngle>
         <velocity>
-          <exact>9.141943343883058</exact>
+          <exact>8.018129762278809</exact>
         </velocity>
         <orientation>
-          <exact>-0.16130658554733934</exact>
+          <exact>0.09841202213744682</exact>
         </orientation>
         <acceleration>
-          <exact>0.2472234734363687</exact>
+          <exact>0.3844174187691056</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.6374131799009425</exact>
+          <exact>-0.20647525301710476</exact>
         </yawRate>
       </state>
       <state>
@@ -1688,24 +1688,24 @@
         </time>
         <position>
           <point>
-            <x>19.852845376862735</x>
-            <y>5.422451905557509</y>
+            <x>21.499030436753948</x>
+            <y>5.925858225270685</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.14652733876532834</exact>
+          <exact>-0.06699121251401109</exact>
         </steeringAngle>
         <velocity>
-          <exact>9.13679068717458</exact>
+          <exact>8.084923416922754</exact>
         </velocity>
         <orientation>
-          <exact>-0.21638354800884568</exact>
+          <exact>0.07697235666088202</exact>
         </orientation>
         <acceleration>
-          <exact>-0.16687543086714815</exact>
+          <exact>0.46829517227610135</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.5507696246150636</exact>
+          <exact>-0.21439665476564979</exact>
         </yawRate>
       </state>
       <state>
@@ -1714,24 +1714,24 @@
         </time>
         <position>
           <point>
-            <x>20.725968322407873</x>
-            <y>5.159764921433987</y>
+            <x>22.31230567528611</x>
+            <y>5.961550973110427</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.1323768779879859</exact>
+          <exact>-0.06496265688233742</exact>
         </steeringAngle>
         <velocity>
-          <exact>9.078868176985964</exact>
+          <exact>8.202475931305274</exact>
         </velocity>
         <orientation>
-          <exact>-0.2654851768181803</exact>
+          <exact>0.055650610004996645</exact>
         </orientation>
         <acceleration>
-          <exact>-0.4238619306309799</exact>
+          <exact>0.6997959173909096</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.4910162880933461</exact>
+          <exact>-0.21321746655885376</exact>
         </yawRate>
       </state>
       <state>
@@ -1740,24 +1740,24 @@
         </time>
         <position>
           <point>
-            <x>21.58059536373309</x>
-            <y>4.8663320232938885</y>
+            <x>23.140011229955192</x>
+            <y>5.9836534272064705</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.11302314279455807</exact>
+          <exact>-0.05737868781976808</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.977530319680143</exact>
+          <exact>8.361869880809303</exact>
         </velocity>
         <orientation>
-          <exact>-0.3078955866478364</exact>
+          <exact>0.036974184600201195</exact>
         </orientation>
         <acceleration>
-          <exact>-0.6321358730969576</exact>
+          <exact>0.8867098660180442</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.42410409829656104</exact>
+          <exact>-0.1867642540479545</exact>
         </yawRate>
       </state>
       <state>
@@ -1766,24 +1766,24 @@
         </time>
         <position>
           <point>
-            <x>22.419168197003128</x>
-            <y>4.555502404404157</y>
+            <x>23.981879650823938</x>
+            <y>5.994777232709047</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.08230440364392183</exact>
+          <exact>-0.0454489613550782</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.89844517121062</exact>
+          <exact>8.486910334575107</exact>
         </velocity>
         <orientation>
-          <exact>-0.3391480126461977</exact>
+          <exact>0.022830755025259462</exact>
         </orientation>
         <acceleration>
-          <exact>-0.509013734748323</exact>
+          <exact>0.7940166569889359</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.3125242599836159</exact>
+          <exact>-0.14143429574941252</exact>
         </yawRate>
       </state>
       <state>
@@ -1792,24 +1792,24 @@
         </time>
         <position>
           <point>
-            <x>23.246968461681767</x>
-            <y>4.242970497788415</y>
+            <x>24.839487604274556</x>
+            <y>6.000269262752002</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0387651329646869</exact>
+          <exact>-0.0327342268988269</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.790850066715949</exact>
+          <exact>8.674263950234852</exact>
         </velocity>
         <orientation>
-          <exact>-0.3536192270075532</exact>
+          <exact>0.012612022167322025</exact>
         </orientation>
         <acceleration>
-          <exact>-0.6351416143632955</exact>
+          <exact>1.0664861230315985</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.1447121436135551</exact>
+          <exact>-0.10218732857937438</exact>
         </yawRate>
       </state>
       <state>
@@ -1818,24 +1818,24 @@
         </time>
         <position>
           <point>
-            <x>24.068544615226354</x>
-            <y>3.9482934604923368</y>
+            <x>25.7182905784033</x>
+            <y>6.002635563423443</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.01512811795774896</exact>
+          <exact>-0.02114075023997676</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.661735031169513</exact>
+          <exact>8.908292024581407</exact>
         </velocity>
         <orientation>
-          <exact>-0.3474930016121415</exact>
+          <exact>0.006184295025930317</exact>
         </orientation>
         <acceleration>
-          <exact>-0.7162977504916225</exact>
+          <exact>1.260761896608876</exact>
         </acceleration>
         <yawRate>
-          <exact>0.061262253954116885</exact>
+          <exact>-0.06427727141391708</exact>
         </yawRate>
       </state>
       <state>
@@ -1844,24 +1844,24 @@
         </time>
         <position>
           <point>
-            <x>24.89110324175469</x>
-            <y>3.6900541992949862</y>
+            <x>26.614686667075322</x>
+            <y>6.003083623178813</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.06850218262671297</exact>
+          <exact>-0.012460451675446623</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.56862814104928</exact>
+          <exact>9.012487231304881</exact>
         </velocity>
         <orientation>
-          <exact>-0.3211777780285535</exact>
+          <exact>0.0024267318015947555</exact>
         </orientation>
         <acceleration>
-          <exact>-0.5783977022187035</exact>
+          <exact>0.41678087496514965</exact>
         </acceleration>
         <yawRate>
-          <exact>0.263152235835879</exact>
+          <exact>-0.03757563224335561</exact>
         </yawRate>
       </state>
       <state>
@@ -1870,24 +1870,24 @@
         </time>
         <position>
           <point>
-            <x>25.7151964708891</x>
-            <y>3.476514232077281</y>
+            <x>27.515004133710345</x>
+            <y>5.99100070276886</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.10968634271900757</exact>
+          <exact>-0.032983651369683974</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.440086184859004</exact>
+          <exact>8.966427388545988</exact>
         </velocity>
         <orientation>
-          <exact>-0.28005790802901875</exact>
+          <exact>-0.00826210115914296</exact>
         </orientation>
         <acceleration>
-          <exact>-0.7174691211561316</exact>
+          <exact>-0.6326676444901801</exact>
         </acceleration>
         <yawRate>
-          <exact>0.41119869999534764</exact>
+          <exact>-0.10688966669416089</exact>
         </yawRate>
       </state>
       <state>
@@ -1896,24 +1896,24 @@
         </time>
         <position>
           <point>
-            <x>26.53459167549763</x>
-            <y>3.3058989196258173</y>
+            <x>28.40230972129648</x>
+            <y>5.956419340270527</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.13239438122029729</exact>
+          <exact>-0.05245924093070328</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.285502318680525</exact>
+          <exact>8.767168662648837</exact>
         </velocity>
         <orientation>
-          <exact>-0.2340518264504102</exact>
+          <exact>-0.027579070478478997</exact>
         </orientation>
         <acceleration>
-          <exact>-0.8173783594724429</exact>
+          <exact>-1.3133243791634681</exact>
         </acceleration>
         <yawRate>
-          <exact>0.46006081578608554</exact>
+          <exact>-0.19316969319336036</exact>
         </yawRate>
       </state>
       <state>
@@ -1922,24 +1922,24 @@
         </time>
         <position>
           <point>
-            <x>27.3482104489375</x>
-            <y>3.1733750416662474</y>
+            <x>29.261985867784105</x>
+            <y>5.893022046332182</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.13903183028954552</exact>
+          <exact>-0.06980722277121093</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.189007831899065</exact>
+          <exact>8.447464911689362</exact>
         </velocity>
         <orientation>
-          <exact>-0.1886123609711711</exact>
+          <exact>-0.054168212061291514</exact>
         </orientation>
         <acceleration>
-          <exact>-0.5415396596739848</exact>
+          <exact>-1.8373723845641725</exact>
         </acceleration>
         <yawRate>
-          <exact>0.45439465479239105</exact>
+          <exact>-0.26589141582812514</exact>
         </yawRate>
       </state>
       <state>
@@ -1948,24 +1948,24 @@
         </time>
         <position>
           <point>
-            <x>28.155678164812493</x>
-            <y>3.0755917203201455</y>
+            <x>30.092155144869473</x>
+            <y>5.807505220975446</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.136027110046412</exact>
+          <exact>-0.07787442430482318</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.067053611266997</exact>
+          <exact>8.222901599172669</exact>
         </velocity>
         <orientation>
-          <exact>-0.14516894953583115</exact>
+          <exact>-0.08233511308037966</exact>
         </orientation>
         <acceleration>
-          <exact>-0.6532289915650287</exact>
+          <exact>-1.3075020743098145</exact>
         </acceleration>
         <yawRate>
-          <exact>0.43443411435339946</exact>
+          <exact>-0.28166901019087404</exact>
         </yawRate>
       </state>
       <state>
@@ -1974,24 +1974,24 @@
         </time>
         <position>
           <point>
-            <x>28.95368313200076</x>
-            <y>3.0136317729603523</y>
+            <x>30.893640512980745</x>
+            <y>5.702080282538994</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.1301953971286891</exact>
+          <exact>-0.08275375112577407</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.926396471289462</exact>
+          <exact>7.928978047837375</exact>
         </velocity>
         <orientation>
-          <exact>-0.10392588003327304</exact>
+          <exact>-0.11050740513469066</exact>
         </orientation>
         <acceleration>
-          <exact>-0.7308321615806598</exact>
+          <exact>-1.6119958815191644</exact>
         </acceleration>
         <yawRate>
-          <exact>0.4124306950255811</exact>
+          <exact>-0.28172292054311</exact>
         </yawRate>
       </state>
       <state>
@@ -2000,24 +2000,24 @@
         </time>
         <position>
           <point>
-            <x>29.742357779289403</x>
-            <y>2.9843725718924365</y>
+            <x>31.660561493803137</x>
+            <y>5.582280395736946</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.11914057319900229</exact>
+          <exact>-0.08192471056651233</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.840680606660867</exact>
+          <exact>7.584778414618937</exact>
         </velocity>
         <orientation>
-          <exact>-0.06647783558731878</exact>
+          <exact>-0.13665585670558045</exact>
         </orientation>
         <acceleration>
-          <exact>-0.48148511063763516</exact>
+          <exact>-1.818780480516337</exact>
         </acceleration>
         <yawRate>
-          <exact>0.3744804444595355</exact>
+          <exact>-0.2614845157088978</exact>
         </yawRate>
       </state>
       <state>
@@ -2026,24 +2026,24 @@
         </time>
         <position>
           <point>
-            <x>30.521386549182672</x>
-            <y>2.9743340464857693</y>
+            <x>32.39793683362008</x>
+            <y>5.453694645393824</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.10232286243953541</exact>
+          <exact>-0.0755764091432039</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.733727791585461</exact>
+          <exact>7.374098284844411</exact>
         </velocity>
         <orientation>
-          <exact>-0.0353109544491288</exact>
+          <exact>-0.15915548071978686</exact>
         </orientation>
         <acceleration>
-          <exact>-0.5747060779798504</exact>
+          <exact>-1.1902523146715411</exact>
         </acceleration>
         <yawRate>
-          <exact>0.3116688113818997</exact>
+          <exact>-0.22499624014205993</exact>
         </yawRate>
       </state>
       <state>
@@ -2052,24 +2052,24 @@
         </time>
         <position>
           <point>
-            <x>31.288823531328294</x>
-            <y>2.977362838857592</y>
+            <x>33.1088996055357</x>
+            <y>5.311199739083004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.07990586654769948</exact>
+          <exact>-0.0701039917972369</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.611648251937066</exact>
+          <exact>7.115614934805978</exact>
         </velocity>
         <orientation>
-          <exact>-0.011506495639927462</exact>
+          <exact>-0.17879697172843959</exact>
         </orientation>
         <acceleration>
-          <exact>-0.6367674454139426</exact>
+          <exact>-1.3929025146659946</exact>
         </acceleration>
         <yawRate>
-          <exact>0.23804458809201337</exact>
+          <exact>-0.19641491008652728</exact>
         </yawRate>
       </state>
       <state>
@@ -2078,24 +2078,24 @@
         </time>
         <position>
           <point>
-            <x>32.04720863671803</x>
-            <y>3.001503059982102</y>
+            <x>33.79072053017081</x>
+            <y>5.165193143091863</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.02143324443252564</exact>
+          <exact>-0.06382136354923537</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.5581765898861</exact>
+          <exact>6.823739106235232</exact>
         </velocity>
         <orientation>
-          <exact>0.0063497699780642215</exact>
+          <exact>-0.19605684117891609</exact>
         </orientation>
         <acceleration>
-          <exact>-0.22172842736797677</exact>
+          <exact>-1.5233520695907257</exact>
         </acceleration>
         <yawRate>
-          <exact>0.17856265617991604</exact>
+          <exact>-0.172598694504765</exact>
         </yawRate>
       </state>
       <state>
@@ -2104,24 +2104,24 @@
         </time>
         <position>
           <point>
-            <x>32.80089538605617</x>
-            <y>3.021599468363528</y>
+            <x>34.44910831849144</x>
+            <y>5.016925357980604</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00743128500882859</exact>
+          <exact>-0.05717712284041808</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.521418581246551</exact>
+          <exact>6.6745529612959125</exact>
         </velocity>
         <orientation>
-          <exact>0.014571489757124242</exact>
+          <exact>-0.21123802232929206</exact>
         </orientation>
         <acceleration>
-          <exact>-0.14851423685441043</exact>
+          <exact>-0.7340851090032312</exact>
         </acceleration>
         <yawRate>
-          <exact>0.0822171977906002</exact>
+          <exact>-0.15181181150376005</exact>
         </yawRate>
       </state>
       <state>
@@ -2130,24 +2130,24 @@
         </time>
         <position>
           <point>
-            <x>33.551642794945415</x>
-            <y>3.0352574700398387</y>
+            <x>35.09141946995113</x>
+            <y>4.86366359169989</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0022259704676653477</exact>
+          <exact>-0.04811947512852226</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.497992294499149</exact>
+          <exact>6.531586463148543</exact>
         </velocity>
         <orientation>
-          <exact>0.01588717086717594</exact>
+          <exact>-0.2228018351131237</exact>
         </orientation>
         <acceleration>
-          <exact>-0.08722002643701914</exact>
+          <exact>-0.7021044879436279</exact>
         </acceleration>
         <yawRate>
-          <exact>0.013156811100516995</exact>
+          <exact>-0.11563812783831645</exact>
         </yawRate>
       </state>
       <state>
@@ -2156,24 +2156,24 @@
         </time>
         <position>
           <point>
-            <x>34.30098000983553</x>
-            <y>3.044620734498771</y>
+            <x>35.71931274078152</x>
+            <y>4.71059332550068</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0037763409350001277</exact>
+          <exact>-0.0380887998624649</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.4901678781975365</exact>
+          <exact>6.39482213826938</exact>
         </velocity>
         <orientation>
-          <exact>0.014419023882481861</exact>
+          <exact>-0.2313476043797007</exact>
         </orientation>
         <acceleration>
-          <exact>-0.03468662803502932</exact>
+          <exact>-0.6703307585405776</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.014681469846940763</exact>
+          <exact>-0.08545769266576991</exact>
         </yawRate>
       </state>
       <state>
@@ -2182,24 +2182,24 @@
         </time>
         <position>
           <point>
-            <x>35.04966495726047</x>
-            <y>3.0505571840892642</y>
+            <x>36.336806201319654</x>
+            <y>4.557967658593986</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.005512478958895027</exact>
+          <exact>-0.027849835543574005</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.484097344535335</exact>
+          <exact>6.326246820963571</exact>
         </velocity>
         <orientation>
-          <exact>0.01168015180695497</exact>
+          <exact>-0.2380182215743242</exact>
         </orientation>
         <acceleration>
-          <exact>-0.026075420869827504</exact>
+          <exact>-0.3513257408754981</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.02738872075526892</exact>
+          <exact>-0.06670617194623335</exact>
         </yawRate>
       </state>
       <state>
@@ -2208,24 +2208,24 @@
         </time>
         <position>
           <point>
-            <x>35.79785352605247</x>
-            <y>3.053036904900388</y>
+            <x>36.94731591359547</x>
+            <y>4.4062083337799685</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.006431930687245426</exact>
+          <exact>-0.017035289284170498</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.479709471353424</exact>
+          <exact>6.254834691420617</exact>
         </velocity>
         <orientation>
-          <exact>0.008178152015797038</exact>
+          <exact>-0.2406709562675001</exact>
         </orientation>
         <acceleration>
-          <exact>-0.017890969801465016</exact>
+          <exact>-0.36381987920001924</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.03501999791157931</exact>
+          <exact>-0.026527346931758955</exact>
         </yawRate>
       </state>
       <state>
@@ -2234,24 +2234,24 @@
         </time>
         <position>
           <point>
-            <x>36.54574400725107</x>
-            <y>3.0552949185063434</y>
+            <x>37.55116744891752</x>
+            <y>4.257858519912255</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00416742317097623</exact>
+          <exact>-0.006394516013181123</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.478110795031948</exact>
+          <exact>6.180938721987635</exact>
         </velocity>
         <orientation>
-          <exact>0.006011516256493619</exact>
+          <exact>-0.2412798452962859</exact>
         </orientation>
         <acceleration>
-          <exact>-0.007034436018929575</exact>
+          <exact>-0.37469658603278</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.0216663575930343</exact>
+          <exact>-0.006088890287858084</exact>
         </yawRate>
       </state>
       <state>
@@ -2260,24 +2260,24 @@
         </time>
         <position>
           <point>
-            <x>37.293499799631434</x>
-            <y>3.0551857028460803</y>
+            <x>38.14939812283521</x>
+            <y>4.112832230265624</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.004627053822453767</exact>
+          <exact>0.004643238737245893</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.476895553623723</exact>
+          <exact>6.1238185760808</exact>
         </velocity>
         <orientation>
-          <exact>0.003439475409368458</exact>
+          <exact>-0.23966275561076147</exact>
         </orientation>
         <acceleration>
-          <exact>-0.005126380455571918</exact>
+          <exact>-0.3776607633141986</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.025720408471251604</exact>
+          <exact>0.016170896855244588</exact>
         </yawRate>
       </state>
       <state>
@@ -2286,24 +2286,24 @@
         </time>
         <position>
           <point>
-            <x>38.041150422358136</x>
-            <y>3.0528857147055772</y>
+            <x>38.741914492494566</x>
+            <y>3.9761710691925805</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.004664085084016481</exact>
+          <exact>0.015540361891522806</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.476053512988767</exact>
+          <exact>6.031585327413661</exact>
         </velocity>
         <orientation>
-          <exact>0.0007271514370172828</exact>
+          <exact>-0.23426899211443772</exact>
         </orientation>
         <acceleration>
-          <exact>-0.003319033587304648</exact>
+          <exact>-0.5372307884777547</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.02712323972351175</exact>
+          <exact>0.05393763496323756</exact>
         </yawRate>
       </state>
       <state>
@@ -2312,24 +2312,24 @@
         </time>
         <position>
           <point>
-            <x>38.78882662799148</x>
-            <y>3.0511815746196347</y>
+            <x>39.32485908190321</x>
+            <y>3.8458275796021364</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0019621299586854365</exact>
+          <exact>0.02586278882042447</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.4783260504878735</exact>
+          <exact>5.9105056241966745</exact>
         </velocity>
         <orientation>
-          <exact>-0.0005165889766983746</exact>
+          <exact>-0.2274004074836021</exact>
         </orientation>
         <acceleration>
-          <exact>0.024085290028584484</exact>
+          <exact>-0.665799442994091</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.012437404137156525</exact>
+          <exact>0.06868584630835617</exact>
         </yawRate>
       </state>
       <state>
@@ -2338,24 +2338,24 @@
         </time>
         <position>
           <point>
-            <x>39.53697943928775</x>
-            <y>3.0489186954402276</y>
+            <x>39.900139604122224</x>
+            <y>3.7252988686069233</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0016182377467141716</exact>
+          <exact>0.034015940343384454</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.485568048792094</exact>
+          <exact>5.843295886373775</exact>
         </velocity>
         <orientation>
-          <exact>-0.0015539646973750242</exact>
+          <exact>-0.21820348156229064</exact>
         </orientation>
         <acceleration>
-          <exact>0.04803635042723072</exact>
+          <exact>-0.3377928154980489</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.010373757206766495</exact>
+          <exact>0.09196925921311244</exact>
         </yawRate>
       </state>
       <state>
@@ -2364,24 +2364,24 @@
         </time>
         <position>
           <point>
-            <x>40.28608808331164</x>
-            <y>3.046221256826576</y>
+            <x>40.47016137645593</x>
+            <y>3.6129785723345034</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.001301521135522848</exact>
+          <exact>0.0433017709222948</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.497421471766767</exact>
+          <exact>5.774968215550878</exact>
         </velocity>
         <orientation>
-          <exact>-0.002400725668964711</exact>
+          <exact>-0.20737064051856244</exact>
         </orientation>
         <acceleration>
-          <exact>0.07020058740885807</exact>
+          <exact>-0.3430249403964405</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.008467609715896869</exact>
+          <exact>0.10832841043728197</exact>
         </yawRate>
       </state>
       <state>
@@ -2390,24 +2390,24 @@
         </time>
         <position>
           <point>
-            <x>41.03624758115323</x>
-            <y>3.043793867055868</y>
+            <x>41.034766796310116</x>
+            <y>3.5089920171411078</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0005402570193159708</exact>
+          <exact>0.05231517707035164</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.506532399631693</exact>
+          <exact>5.705745842785851</exact>
         </velocity>
         <orientation>
-          <exact>-0.002746947993268206</exact>
+          <exact>-0.19485793600694423</exact>
         </orientation>
         <acceleration>
-          <exact>0.05575772586193732</exact>
+          <exact>-0.3472385153211952</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.0034622232430349224</exact>
+          <exact>0.12512704511618206</exact>
         </yawRate>
       </state>
       <state>
@@ -2416,24 +2416,24 @@
         </time>
         <position>
           <point>
-            <x>41.78751917353088</x>
-            <y>3.0412160534785193</y>
+            <x>41.595611859561615</x>
+            <y>3.4184836223767108</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0004345991963013792</exact>
+          <exact>0.06039874322197688</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.519624078064499</exact>
+          <exact>5.644242582833046</exact>
         </velocity>
         <orientation>
-          <exact>-0.003030678433583116</exact>
+          <exact>-0.1801000903059154</exact>
         </orientation>
         <acceleration>
-          <exact>0.07490789537640878</exact>
+          <exact>-0.4318516843668838</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.0028373044031491023</exact>
+          <exact>0.14757845701028838</exact>
         </yawRate>
       </state>
       <state>
@@ -2442,24 +2442,24 @@
         </time>
         <position>
           <point>
-            <x>42.54028599418504</x>
-            <y>3.038527666643645</y>
+            <x>42.14860123604885</x>
+            <y>3.3340897666661458</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00033438878516339055</exact>
+          <exact>0.06774718861639853</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.536395110159389</exact>
+          <exact>5.53648844433811</exact>
         </velocity>
         <orientation>
-          <exact>-0.0032548532930765446</exact>
+          <exact>-0.16450152262656534</exact>
         </orientation>
         <acceleration>
-          <exact>0.09255134850320593</exact>
+          <exact>-0.636375687246844</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.002241748594934284</exact>
+          <exact>0.15598567679350056</exact>
         </yawRate>
       </state>
       <state>
@@ -2468,24 +2468,24 @@
         </time>
         <position>
           <point>
-            <x>43.29471745887491</x>
-            <y>3.035486768789204</y>
+            <x>42.69157528452298</x>
+            <y>3.2674364354611054</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0009179721048035047</exact>
+          <exact>0.07122298381140517</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.555577686923896</exact>
+          <exact>5.393381712360633</exact>
         </velocity>
         <orientation>
-          <exact>-0.0035953636143329164</exact>
+          <exact>-0.14823554167891093</exact>
         </orientation>
         <acceleration>
-          <exact>0.14298431382758867</exact>
+          <exact>-0.7860157780196013</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00340510321256377</exact>
+          <exact>0.16265980947654413</exact>
         </yawRate>
       </state>
       <state>
@@ -2494,24 +2494,24 @@
         </time>
         <position>
           <point>
-            <x>44.051979526200874</x>
-            <y>3.031602152923929</y>
+            <x>43.222998229122744</x>
+            <y>3.2041753544597347</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.001234838886039921</exact>
+          <exact>0.07292870628425628</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.592562649729993</exact>
+          <exact>5.3078843447517245</exact>
         </velocity>
         <orientation>
-          <exact>-0.004246903145843274</exact>
+          <exact>-0.13274143750967093</exact>
         </orientation>
         <acceleration>
-          <exact>0.2242993253054772</exact>
+          <exact>-0.46038319093607527</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.0065153953151035745</exact>
+          <exact>0.15494104169240408</exact>
         </yawRate>
       </state>
       <state>
@@ -2520,24 +2520,24 @@
         </time>
         <position>
           <point>
-            <x>44.813698379857044</x>
-            <y>3.0270411912020263</y>
+            <x>43.74697079759747</x>
+            <y>3.155186637425475</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0012006694631190172</exact>
+          <exact>0.07376653431799939</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.644270582788645</exact>
+          <exact>5.210539759264733</exact>
         </velocity>
         <orientation>
-          <exact>-0.004981353441191922</exact>
+          <exact>-0.11741811822967176</exact>
         </orientation>
         <acceleration>
-          <exact>0.2902118027163033</exact>
+          <exact>-0.5122816187924707</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.007344502953486485</exact>
+          <exact>0.15323319279999179</exact>
         </yawRate>
       </state>
       <state>
@@ -2546,24 +2546,24 @@
         </time>
         <position>
           <point>
-            <x>45.57996744369919</x>
-            <y>3.0224782306722924</y>
+            <x>44.260806902329804</x>
+            <y>3.110174303373537</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0007312373575259696</exact>
+          <exact>0.07453214388956225</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.6852074030637265</exact>
+          <exact>5.1042974768184814</exact>
         </velocity>
         <orientation>
-          <exact>-0.005397085758440344</exact>
+          <exact>-0.10247276482661713</exact>
         </orientation>
         <acceleration>
-          <exact>0.2599871017984513</exact>
+          <exact>-0.5494826199048055</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00415732317248424</exact>
+          <exact>0.14945353403054626</exact>
         </yawRate>
       </state>
       <state>
@@ -2572,24 +2572,24 @@
         </time>
         <position>
           <point>
-            <x>46.35139167310507</x>
-            <y>3.017605741276824</y>
+            <x>44.767179993872624</x>
+            <y>3.0777643833627217</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.0005167551343003356</exact>
+          <exact>0.07490483359333505</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.746555293208291</exact>
+          <exact>5.034806918109846</exact>
         </velocity>
         <orientation>
-          <exact>-0.005784527462015047</exact>
+          <exact>-0.08754385933547458</exact>
         </orientation>
         <acceleration>
-          <exact>0.34921657769362546</exact>
+          <exact>-0.41548907561304566</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.0038744170357470336</exact>
+          <exact>0.1492890549114212</exact>
         </yawRate>
       </state>
       <state>
@@ -2598,24 +2598,830 @@
         </time>
         <position>
           <point>
-            <x>47.12975755917545</x>
-            <y>3.0127461976878696</y>
+            <x>45.2652898187974</x>
+            <y>3.048925158009639</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00007775830960652933</exact>
+          <exact>0.07459852516092444</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.823184230123236</exact>
+          <exact>4.940638954024076</exact>
         </velocity>
         <orientation>
-          <exact>-0.005972031119575383</exact>
+          <exact>-0.07303772186448047</exact>
         </orientation>
         <acceleration>
-          <exact>0.4127994670990661</exact>
+          <exact>-0.5222346597704792</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.001875036575603355</exact>
+          <exact>0.14506137470994107</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>76</exact>
+        </time>
+        <position>
+          <point>
+            <x>45.75374813191106</x>
+            <y>3.031366567748029</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.07255358632288711</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.828396885006574</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.05907352398686171</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.5959223640829668</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.1396419787761876</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>77</exact>
+        </time>
+        <position>
+          <point>
+            <x>46.233002775061955</x>
+            <y>3.0158954404762213</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.07019323459049057</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.759094956100184</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0457373920056399</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.3914811429594977</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.1333613198122098</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>78</exact>
+        </time>
+        <position>
+          <point>
+            <x>46.70483132927659</x>
+            <y>3.0085879992020907</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.06401395656637109</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.673580549069482</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.035011359538788825</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.4603369770389193</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.10726032466851075</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>79</exact>
+        </time>
+        <position>
+          <point>
+            <x>47.16733505004231</x>
+            <y>3.0014535831842215</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.0579761427486067</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.576669535382045</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.02464625236193655</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.5051775246831702</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.10365107176852274</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>80</exact>
+        </time>
+        <position>
+          <point>
+            <x>47.62228684098425</x>
+            <y>3.0000235125856154</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.04991273141211346</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.518536551870506</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.01765676514647021</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.32560819417431264</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.06989487215466345</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>81</exact>
+        </time>
+        <position>
+          <point>
+            <x>48.070686116232366</x>
+            <y>2.9985095684897938</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.04157190292318007</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.447729961212153</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.010781182608812214</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.37932930682069765</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.06875582537657994</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>82</exact>
+        </time>
+        <position>
+          <point>
+            <x>48.5115427333358</x>
+            <y>2.998718221378733</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.03329225717837081</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.36808470945356</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0067713956827612325</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.4139056485346347</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.040097869260509816</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>83</exact>
+        </time>
+        <position>
+          <point>
+            <x>48.94507829759695</x>
+            <y>2.999390912318776</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.025324608617019937</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.291075308265837</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0033291850239092952</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.5510170924225517</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.03442210658851707</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>84</exact>
+        </time>
+        <position>
+          <point>
+            <x>49.372337245102415</x>
+            <y>3.002889535087057</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.005532144989857202</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.262564913786609</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0003733523549362565</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.017435108483233167</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.029558326689730255</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>85</exact>
+        </time>
+        <position>
+          <point>
+            <x>49.799162253411794</x>
+            <y>3.0043728086697903</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00072745779154463</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.280980492265804</exact>
+        </velocity>
+        <orientation>
+          <exact>0.0005960526790265076</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.1938158860660216</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00969405033962764</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>86</exact>
+        </time>
+        <position>
+          <point>
+            <x>50.229786243455315</x>
+            <y>3.0042679942661112</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.0018045107340234961</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.336986426674252</exact>
+        </velocity>
+        <orientation>
+          <exact>0.0003569088657680037</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.3584878057171646</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.0023914381325850385</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>87</exact>
+        </time>
+        <position>
+          <point>
+            <x>50.66562529313737</x>
+            <y>3.0037764630929953</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.0013657512616663365</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.383080362818951</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00004095351420296193</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.27786578893952923</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.0039786237997096255</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>88</exact>
+        </time>
+        <position>
+          <point>
+            <x>51.10698306329662</x>
+            <y>3.002967690114716</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.0013833685497554502</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.446600715621016</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0005222048218669244</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.3535072418025383</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.004812513076639624</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>89</exact>
+        </time>
+        <position>
+          <point>
+            <x>51.5553722933974</x>
+            <y>3.00200922046482</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.0010942281785929601</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.522950914131262</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0009597081817856915</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.406163606291404</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00437503359918767</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>90</exact>
+        </time>
+        <position>
+          <point>
+            <x>52.00994438570286</x>
+            <y>3.001346303056404</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00022753510223904358</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.570819251278914</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0010944904769195432</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.2726665135956811</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.0013478229513385286</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>91</exact>
+        </time>
+        <position>
+          <point>
+            <x>52.46994056022409</x>
+            <y>3.000784981404882</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00003246047254341935</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.630843528597057</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0011273482323368306</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.3246413464016792</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00032857755417287386</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>92</exact>
+        </time>
+        <position>
+          <point>
+            <x>52.936400343742314</x>
+            <y>3.0003382926579496</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00023037766669224298</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.699501842763192</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0010778562836684963</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.35900696140154353</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0004949194866833424</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>93</exact>
+        </time>
+        <position>
+          <point>
+            <x>53.408266739895694</x>
+            <y>2.999917862867804</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00017549714638021501</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.739019342113767</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0010241728575088702</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.2151925452791028</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0005368342615962398</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>94</exact>
+        </time>
+        <position>
+          <point>
+            <x>53.88443224910519</x>
+            <y>2.999551749822178</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00022056315249027782</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.7853872738138294</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0009505801244445508</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.24800780324794375</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0007359273306431935</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>95</exact>
+        </time>
+        <position>
+          <point>
+            <x>54.365553170126795</x>
+            <y>2.999241170351013</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00025163940023668614</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.8380308753551065</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0008620627298520494</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.27794923990284626</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0008851739459250145</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>96</exact>
+        </time>
+        <position>
+          <point>
+            <x>54.85149279712344</x>
+            <y>2.9989819815003527</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.000372632136377952</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.887942253266051</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0007639134433265901</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.35436207707006134</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0009814928652545967</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>97</exact>
+        </time>
+        <position>
+          <point>
+            <x>55.34446199327014</x>
+            <y>2.9988863838086957</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.0004942747618733803</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.977464869270122</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0005944367204130292</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.5350869588220674</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0016947672291356094</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>98</exact>
+        </time>
+        <position>
+          <point>
+            <x>55.84807518660502</x>
+            <y>2.9989210954756857</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.000513600390840594</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.099666167011256</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0003947474603351733</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.6811487894752046</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.001996892600778559</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>99</exact>
+        </time>
+        <position>
+          <point>
+            <x>56.36237553530908</x>
+            <y>2.9989423309158596</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00039438284058518645</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.195128645333455</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.0002598592269243591</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.6042299914535679</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0013488823341081303</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>100</exact>
+        </time>
+        <position>
+          <point>
+            <x>56.888662278216785</x>
+            <y>2.9990860252993103</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00040338923371105093</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.337429983043202</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00009341630209524518</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.8089628735239244</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0016644292482911394</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>101</exact>
+        </time>
+        <position>
+          <point>
+            <x>57.43103004275555</x>
+            <y>2.99930110945997</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00032886630039439787</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.51478556788428</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00006262448738047458</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.9547723632344013</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0015604078947571974</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>102</exact>
+        </time>
+        <position>
+          <point>
+            <x>57.9879274229158</x>
+            <y>2.999441941692248</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00012035398869371261</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.629235958351785</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00012438813580437942</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.6595973783783357</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0006176364842390466</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>103</exact>
+        </time>
+        <position>
+          <point>
+            <x>58.557941542989326</x>
+            <y>2.999586413876087</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00007196639163894462</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.775616381711651</exact>
+        </velocity>
+        <orientation>
+          <exact>0.0001668720102207631</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.7966865132870629</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0004248387441638368</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>104</exact>
+        </time>
+        <position>
+          <point>
+            <x>59.14381418994836</x>
+            <y>2.999722940798955</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00002589682251066639</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.944902428073827</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00018886815849824997</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.8886536147217559</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.0002199614827748687</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>105</exact>
+        </time>
+        <position>
+          <point>
+            <x>59.746763537658154</x>
+            <y>2.999825354230194</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00003934903293240037</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>6.152266729761291</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00018150452377431909</exact>
+        </orientation>
+        <acceleration>
+          <exact>1.589787739411219</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00007363634723930618</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>106</exact>
+        </time>
+        <position>
+          <point>
+            <x>60.38111336126029</x>
+            <y>2.9998955533433116</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00006214360146927469</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>6.565006136542935</exact>
+        </velocity>
+        <orientation>
+          <exact>0.0001553390976584099</exact>
+        </orientation>
+        <acceleration>
+          <exact>2.498077860086933</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.0002616542611590919</exact>
         </yawRate>
       </state>
     </trajectory>
@@ -2634,7 +3440,7 @@
       </time>
       <position>
         <point>
-          <x>10.9996</x>
+          <x>12.9996</x>
           <y>3.0</y>
         </point>
       </position>
@@ -2661,24 +3467,24 @@
         </time>
         <position>
           <point>
-            <x>11.000734607438027</x>
+            <x>13.001301516716751</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000025618</exact>
+          <exact>-0.00000000000000015940</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.033497933884307315</exact>
+          <exact>0.050235255447040564</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000133</exact>
+          <exact>0.00000000000000000034</exact>
         </orientation>
         <acceleration>
-          <exact>0.3241735537190056</exact>
+          <exact>0.48614763335837496</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000001326</exact>
+          <exact>0.00000000000000000342</exact>
         </yawRate>
       </state>
       <state>
@@ -2687,24 +3493,24 @@
         </time>
         <position>
           <point>
-            <x>11.008244628099185</x>
+            <x>13.01256393688955</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000045200</exact>
+          <exact>0.00000000000000026508</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.12534710743802524</exact>
+          <exact>0.1879770848985799</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000001076</exact>
+          <exact>0.00000000000000000478</exact>
         </orientation>
         <acceleration>
-          <exact>0.5835123966942071</exact>
+          <exact>0.8750657400450728</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000009435</exact>
+          <exact>0.00000000000000004442</exact>
         </yawRate>
       </state>
       <state>
@@ -2713,24 +3519,24 @@
         </time>
         <position>
           <point>
-            <x>11.027316838842985</x>
+            <x>13.041165622652137</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000090617</exact>
+          <exact>0.00000000000000123133</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.2625805785124035</exact>
+          <exact>0.3937795830202914</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000003953</exact>
+          <exact>0.00000000000000003186</exact>
         </orientation>
         <acceleration>
-          <exact>0.7780165289256082</exact>
+          <exact>1.1667543200600958</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000028774</exact>
+          <exact>0.00000000000000027076</exact>
         </yawRate>
       </state>
       <state>
@@ -2739,24 +3545,24 @@
         </time>
         <position>
           <point>
-            <x>11.05798877779791</x>
+            <x>13.087201698778557</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000102010</exact>
+          <exact>0.00000000000000084378</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.35579062338949985</exact>
+          <exact>0.5347086745196148</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000008973</exact>
+          <exact>0.00000000000000007085</exact>
         </orientation>
         <acceleration>
-          <exact>0.5369809485814978</exact>
+          <exact>0.8163792103757591</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000050195</exact>
+          <exact>0.00000000000000038994</exact>
         </yawRate>
       </state>
       <state>
@@ -2765,24 +3571,24 @@
         </time>
         <position>
           <point>
-            <x>11.099339223367174</x>
-            <y>3.0000000000000004</y>
+            <x>13.149470013666615</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000138887</exact>
+          <exact>0.00000000000000131221</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.474928463654383</exact>
+          <exact>0.7165174493356515</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000016850</exact>
+          <exact>0.00000000000000014704</exact>
         </orientation>
         <acceleration>
-          <exact>0.6482862183407629</exact>
+          <exact>0.9921739931972348</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000078766</exact>
+          <exact>0.00000000000000076186</exact>
         </yawRate>
       </state>
       <state>
@@ -2791,24 +3597,24 @@
         </time>
         <position>
           <point>
-            <x>11.153594280945988</x>
+            <x>13.231486462972747</x>
             <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000173517</exact>
+          <exact>0.00000000000000168368</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.6126606164351767</exact>
+          <exact>0.9277644539635599</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000028650</exact>
+          <exact>0.00000000000000027591</exact>
         </orientation>
         <acceleration>
-          <exact>0.7229240737406026</exact>
+          <exact>1.1107615084944769</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000118002</exact>
+          <exact>0.00000000000000128872</exact>
         </yawRate>
       </state>
       <state>
@@ -2817,24 +3623,24 @@
         </time>
         <position>
           <point>
-            <x>11.218823884012878</x>
+            <x>13.330410558875549</x>
             <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000135888</exact>
+          <exact>0.00000000000000054144</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.6952023435421291</exact>
+          <exact>1.056292969845499</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000041083</exact>
+          <exact>0.00000000000000036024</exact>
         </orientation>
         <acceleration>
-          <exact>0.4595889960540563</exact>
+          <exact>0.7226459268365129</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000124328</exact>
+          <exact>0.00000000000000084328</exact>
         </yawRate>
       </state>
       <state>
@@ -2843,24 +3649,24 @@
         </time>
         <position>
           <point>
-            <x>11.293201604619405</x>
-            <y>3.000000000000001</y>
+            <x>13.443714988537728</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000153181</exact>
+          <exact>0.00000000000000043809</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.7947497195987527</exact>
+          <exact>1.213919433603957</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000056351</exact>
+          <exact>0.00000000000000045266</exact>
         </orientation>
         <acceleration>
-          <exact>0.5315185263670534</exact>
+          <exact>0.8463602330125252</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000152687</exact>
+          <exact>0.00000000000000092416</exact>
         </yawRate>
       </state>
       <state>
@@ -2869,24 +3675,24 @@
         </time>
         <position>
           <point>
-            <x>11.378166033371812</x>
+            <x>13.573874038082806</x>
             <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000161101</exact>
+          <exact>0.00000000000000030643</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.9060632588309001</exact>
+          <exact>1.3919336719562918</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000074480</exact>
+          <exact>0.00000000000000054614</exact>
         </orientation>
         <acceleration>
-          <exact>0.5772506278092945</exact>
+          <exact>0.926523672775279</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000181286</exact>
+          <exact>0.00000000000000093479</exact>
         </yawRate>
       </state>
       <state>
@@ -2895,24 +3701,24 @@
         </time>
         <position>
           <point>
-            <x>11.471919215877179</x>
+            <x>13.718172860543952</x>
             <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000108864</exact>
+          <exact>-0.00000000000000032096</exact>
         </steeringAngle>
         <velocity>
-          <exact>0.9714406805372976</exact>
+          <exact>1.4984791371036514</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000080015</exact>
+          <exact>0.00000000000000057846</exact>
         </orientation>
         <acceleration>
-          <exact>0.3618339917348869</exact>
+          <exact>0.596352631502115</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000055355</exact>
+          <exact>0.00000000000000032326</exact>
         </yawRate>
       </state>
       <state>
@@ -2921,24 +3727,24 @@
         </time>
         <position>
           <point>
-            <x>11.572875929102992</x>
-            <y>3.000000000000001</y>
+            <x>13.874340333799296</x>
+            <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000098658</exact>
+          <exact>-0.00000000000000050035</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.049470890955121</exact>
+          <exact>1.6281386511236327</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000075391</exact>
+          <exact>0.00000000000000058465</exact>
         </orientation>
         <acceleration>
-          <exact>0.41515320101899167</exact>
+          <exact>0.6944023251139183</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000046248</exact>
+          <exact>0.00000000000000006184</exact>
         </yawRate>
       </state>
       <state>
@@ -2947,24 +3753,24 @@
         </time>
         <position>
           <point>
-            <x>11.682102557234941</x>
-            <y>3.000000000000001</y>
+            <x>14.044337451721084</x>
+            <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000082836</exact>
+          <exact>-0.00000000000000064350</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.136175996375152</exact>
+          <exact>1.7739039937157073</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000070046</exact>
+          <exact>0.00000000000000056391</exact>
         </orientation>
         <acceleration>
-          <exact>0.44858294175696445</exact>
+          <exact>0.7574109172230516</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000053442</exact>
+          <exact>-0.00000000000000020737</exact>
         </yawRate>
       </state>
       <state>
@@ -2973,24 +3779,24 @@
         </time>
         <position>
           <point>
-            <x>11.798043542182327</x>
+            <x>14.225463219977925</x>
             <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000041218</exact>
+          <exact>-0.00000000000000050703</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.1833988258680315</exact>
+          <exact>1.8480961427712428</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000061543</exact>
+          <exact>0.00000000000000054356</exact>
         </orientation>
         <acceleration>
-          <exact>0.24694516973724012</exact>
+          <exact>0.363248599118586</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000085031</exact>
+          <exact>-0.00000000000000020344</exact>
         </yawRate>
       </state>
       <state>
@@ -2999,24 +3805,24 @@
         </time>
         <position>
           <point>
-            <x>11.918913513981337</x>
+            <x>14.413854285888881</x>
             <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000024025</exact>
+          <exact>-0.00000000000000048825</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.2345574025448525</exact>
+          <exact>1.9192164602330561</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000051997</exact>
+          <exact>0.00000000000000051693</exact>
         </orientation>
         <acceleration>
-          <exact>0.26364894271796363</exact>
+          <exact>0.3479871426743282</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000095463</exact>
+          <exact>-0.00000000000000026639</exact>
         </yawRate>
       </state>
       <state>
@@ -3025,24 +3831,24 @@
         </time>
         <position>
           <point>
-            <x>12.045046548091577</x>
-            <y>3.000000000000001</y>
+            <x>14.609205420325075</x>
+            <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000007349</exact>
+          <exact>-0.00000000000000056917</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.2884617412300146</exact>
+          <exact>1.9873040267108864</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000041416</exact>
+          <exact>0.00000000000000040154</exact>
         </orientation>
         <acceleration>
-          <exact>0.27440278982065325</exact>
+          <exact>0.3329210892787524</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000105809</exact>
+          <exact>-0.00000000000000115383</exact>
         </yawRate>
       </state>
       <state>
@@ -3051,24 +3857,24 @@
         </time>
         <position>
           <point>
-            <x>12.175476376563168</x>
-            <y>3.000000000000001</y>
+            <x>14.809627322220223</x>
+            <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000009357</exact>
+          <exact>-0.00000000000000055888</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.3221306528729015</exact>
+          <exact>2.0213952558509356</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000029815</exact>
+          <exact>0.00000000000000029094</exact>
         </orientation>
         <acceleration>
-          <exact>0.1970761350445769</exact>
+          <exact>0.17429788440944052</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000116014</exact>
+          <exact>-0.00000000000000110598</exact>
         </yawRate>
       </state>
       <state>
@@ -3077,24 +3883,24 @@
         </time>
         <position>
           <point>
-            <x>12.309823611870904</x>
+            <x>15.01353364318004</x>
             <y>3.0000000000000013</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000023878</exact>
+          <exact>-0.00000000000000065719</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.3663275606582916</exact>
+          <exact>2.0569616355340177</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000017515</exact>
+          <exact>0.00000000000000017155</exact>
         </orientation>
         <acceleration>
-          <exact>0.24248135633542375</exact>
+          <exact>0.18121205006975474</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000122995</exact>
+          <exact>-0.00000000000000119396</exact>
         </yawRate>
       </state>
       <state>
@@ -3103,24 +3909,24 @@
         </time>
         <position>
           <point>
-            <x>12.448996358440617</x>
+            <x>15.221062666517732</x>
             <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000036563</exact>
+          <exact>-0.00000000000000074949</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.4181585608175107</exact>
+          <exact>2.0938185309381874</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000006827</exact>
+          <exact>0.00000000000000004417</exact>
         </orientation>
         <acceleration>
-          <exact>0.2734170587828697</exact>
+          <exact>0.18720304162031884</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000106886</exact>
+          <exact>-0.00000000000000127374</exact>
         </yawRate>
       </state>
       <state>
@@ -3129,24 +3935,24 @@
         </time>
         <position>
           <point>
-            <x>12.59231478078928</x>
-            <y>3.000000000000001</y>
+            <x>15.431711096771757</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000040889</exact>
+          <exact>-0.00000000000000082969</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.449480454076049</exact>
+          <exact>2.1223250092085673</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000006199</exact>
+          <exact>-0.00000000000000027987</exact>
         </orientation>
         <acceleration>
-          <exact>0.1748255670026447</exact>
+          <exact>0.18884957279364273</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000006274</exact>
+          <exact>-0.00000000000000115752</exact>
         </yawRate>
       </state>
       <state>
@@ -3155,24 +3961,24 @@
         </time>
         <position>
           <point>
-            <x>12.73911286611608</x>
-            <y>3.000000000000001</y>
+            <x>15.64611038159066</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000047279</exact>
+          <exact>-0.00000000000000081500</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.4874148531420706</exact>
+          <exact>2.168312884415663</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000005217</exact>
+          <exact>-0.00000000000000033396</exact>
         </orientation>
         <acceleration>
-          <exact>0.20283358746631258</exact>
+          <exact>0.26841549017735694</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000009822</exact>
+          <exact>-0.00000000000000054096</exact>
         </yawRate>
       </state>
       <state>
@@ -3181,24 +3987,24 @@
         </time>
         <position>
           <point>
-            <x>12.889950774830297</x>
-            <y>3.000000000000001</y>
+            <x>15.865851839322112</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000052337</exact>
+          <exact>-0.00000000000000070410</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.5299399545860715</exact>
+          <exact>2.228645729639525</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000004039</exact>
+          <exact>-0.00000000000000039946</exact>
         </orientation>
         <acceleration>
-          <exact>0.22073259078244</exact>
+          <exact>0.33229927296130296</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000011783</exact>
+          <exact>-0.00000000000000065497</exact>
         </yawRate>
       </state>
       <state>
@@ -3207,24 +4013,24 @@
         </time>
         <position>
           <point>
-            <x>13.044148619049558</x>
-            <y>3.000000000000001</y>
+            <x>16.090388458372864</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000053429</exact>
+          <exact>-0.00000000000000034305</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.5549551544673226</exact>
+          <exact>2.2621872315117937</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000003298</exact>
+          <exact>-0.00000000000000042943</exact>
         </orientation>
         <acceleration>
-          <exact>0.1385130354338133</exact>
+          <exact>0.16916704057181495</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000007406</exact>
+          <exact>-0.00000000000000029975</exact>
         </yawRate>
       </state>
       <state>
@@ -3233,24 +4039,24 @@
         </time>
         <position>
           <point>
-            <x>13.201103997297622</x>
-            <y>3.000000000000001</y>
+            <x>16.31830743481835</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000058574</exact>
+          <exact>-0.00000000000000017826</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.5848361015646177</exact>
+          <exact>2.2962732092001743</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000002395</exact>
+          <exact>-0.00000000000000045332</exact>
         </orientation>
         <acceleration>
-          <exact>0.15902376755168315</exact>
+          <exact>0.17159439464179327</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000009035</exact>
+          <exact>-0.00000000000000023883</exact>
         </yawRate>
       </state>
       <state>
@@ -3259,24 +4065,24 @@
         </time>
         <position>
           <point>
-            <x>13.361227124216846</x>
-            <y>3.000000000000001</y>
+            <x>16.549657315739964</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000062805</exact>
+          <exact>-0.00000000000000005290</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.6180555942930144</exact>
+          <exact>2.330785652700432</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000001457</exact>
+          <exact>-0.00000000000000041550</exact>
         </orientation>
         <acceleration>
-          <exact>0.17189849174483057</exact>
+          <exact>0.17343169869058636</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000009380</exact>
+          <exact>0.00000000000000037817</exact>
         </yawRate>
       </state>
       <state>
@@ -3285,24 +4091,24 @@
         </time>
         <position>
           <point>
-            <x>13.523968814831164</x>
-            <y>3.000000000000001</y>
+            <x>16.783641476999314</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000058378</exact>
+          <exact>0.00000000000000006818</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.637495708135706</exact>
+          <exact>2.3492737995484982</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000967</exact>
+          <exact>-0.00000000000000031881</exact>
         </orientation>
         <acceleration>
-          <exact>0.10747395015161189</exact>
+          <exact>0.09800266120241025</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000004898</exact>
+          <exact>0.00000000000000096687</exact>
         </yawRate>
       </state>
       <state>
@@ -3311,24 +4117,24 @@
         </time>
         <position>
           <point>
-            <x>13.688850205024472</x>
-            <y>3.000000000000001</y>
+            <x>17.019584061903387</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000053496</exact>
+          <exact>0.00000000000000014428</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.6606539973925183</exact>
+          <exact>2.369921534008206</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000459</exact>
+          <exact>-0.00000000000000021967</exact>
         </orientation>
         <acceleration>
-          <exact>0.12313100001365139</exact>
+          <exact>0.10831172546169099</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000005079</exact>
+          <exact>0.00000000000000099144</exact>
         </yawRate>
       </state>
       <state>
@@ -3337,24 +4143,24 @@
         </time>
         <position>
           <point>
-            <x>13.856184435794027</x>
-            <y>3.000000000000001</y>
+            <x>17.257691251737356</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000048125</exact>
+          <exact>0.00000000000000022008</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.6863569311800228</exact>
+          <exact>2.3925333065599856</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000000007</exact>
+          <exact>-0.00000000000000011812</exact>
         </orientation>
         <acceleration>
-          <exact>0.1329203954585352</exact>
+          <exact>0.11764304212313541</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000004661</exact>
+          <exact>0.00000000000000101546</exact>
         </yawRate>
       </state>
       <state>
@@ -3363,24 +4169,24 @@
         </time>
         <position>
           <point>
-            <x>14.025543776175013</x>
-            <y>3.000000000000001</y>
+            <x>17.497985806792997</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000041369</exact>
+          <exact>0.00000000000000020562</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.7013826222773283</exact>
+          <exact>2.4176636798274176</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000000205</exact>
+          <exact>-0.00000000000000008765</exact>
         </orientation>
         <acceleration>
-          <exact>0.08304257286720329</exact>
+          <exact>0.1879980793044178</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000001981</exact>
+          <exact>0.00000000000000030473</exact>
         </yawRate>
       </state>
       <state>
@@ -3389,24 +4195,24 @@
         </time>
         <position>
           <point>
-            <x>14.196556426609561</x>
-            <y>3.000000000000001</y>
+            <x>17.741995482111633</x>
+            <y>2.9999999999999996</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000036125</exact>
+          <exact>0.00000000000000019016</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.7192723041763098</exact>
+          <exact>2.4659388853584456</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000000364</exact>
+          <exact>-0.00000000000000021351</exact>
         </orientation>
         <acceleration>
-          <exact>0.09510010574610836</exact>
+          <exact>0.2902698436975767</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000001587</exact>
+          <exact>-0.00000000000000125856</exact>
         </yawRate>
       </state>
       <state>
@@ -3415,24 +4221,24 @@
         </time>
         <position>
           <point>
-            <x>14.369463537755273</x>
-            <y>3.000000000000001</y>
+            <x>17.99176571298114</x>
+            <y>2.9999999999999996</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000030778</exact>
+          <exact>0.00000000000000021329</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.7391210084251696</exact>
+          <exact>2.531977964383136</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000000474</exact>
+          <exact>-0.00000000000000034127</exact>
         </orientation>
         <acceleration>
-          <exact>0.10263279636598562</exact>
+          <exact>0.36563681424104644</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000001102</exact>
+          <exact>-0.00000000000000127766</exact>
         </yawRate>
       </state>
       <state>
@@ -3441,24 +4247,24 @@
         </time>
         <position>
           <point>
-            <x>14.54393435979378</x>
-            <y>3.000000000000001</y>
+            <x>18.246774213814867</x>
+            <y>2.9999999999999996</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000032061</exact>
+          <exact>0.00000000000000027334</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.7507219056110301</exact>
+          <exact>2.5680167752827296</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000005874</exact>
+          <exact>-0.00000000000000045932</exact>
         </orientation>
         <acceleration>
-          <exact>0.06411059617232784</exact>
+          <exact>0.17756009685658386</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000054002</exact>
+          <exact>-0.00000000000000118048</exact>
         </yawRate>
       </state>
       <state>
@@ -3467,24 +4273,24 @@
         </time>
         <position>
           <point>
-            <x>14.719681573980694</x>
-            <y>3.000000000000001</y>
+            <x>18.505333820535547</x>
+            <y>2.9999999999999996</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000036842</exact>
+          <exact>0.00000000000000031567</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.7645324558928144</exact>
+          <exact>2.6029981611182267</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000013655</exact>
+          <exact>-0.00000000000000046473</exact>
         </orientation>
         <acceleration>
-          <exact>0.07341292914228516</exact>
+          <exact>0.1722441564795356</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000077809</exact>
+          <exact>-0.00000000000000005406</exact>
         </yawRate>
       </state>
       <state>
@@ -3493,24 +4299,24 @@
         </time>
         <position>
           <point>
-            <x>14.896891226975413</x>
-            <y>3.0000000000000004</y>
+            <x>18.767338214335624</x>
+            <y>2.9999999999999996</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000041753</exact>
+          <exact>0.00000000000000040516</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.7798542862666524</exact>
+          <exact>2.636910595867003</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000021473</exact>
+          <exact>-0.00000000000000022932</exact>
         </orientation>
         <acceleration>
-          <exact>0.07922339709286694</exact>
+          <exact>0.16687058598937854</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000078174</exact>
+          <exact>0.00000000000000235404</exact>
         </yawRate>
       </state>
       <state>
@@ -3519,24 +4325,24 @@
         </time>
         <position>
           <point>
-            <x>15.076050354213706</x>
-            <y>3.0000000000000004</y>
+            <x>19.032167327959122</x>
+            <y>2.9999999999999996</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000046796</exact>
+          <exact>0.00000000000000052907</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.8107280818217286</exact>
+          <exact>2.6625520283718243</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000029374</exact>
+          <exact>0.00000000000000001453</exact>
         </orientation>
         <acceleration>
-          <exact>0.26160639823130105</exact>
+          <exact>0.16984584606330552</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000079011</exact>
+          <exact>0.00000000000000243856</exact>
         </yawRate>
       </state>
       <state>
@@ -3545,24 +4351,24 @@
         </time>
         <position>
           <point>
-            <x>15.25908678676948</x>
-            <y>3.0000000000000004</y>
+            <x>19.30036202664398</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000052081</exact>
+          <exact>0.00000000000000063265</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.8562254313485225</exact>
+          <exact>2.7035956598962723</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000037446</exact>
+          <exact>0.00000000000000027022</exact>
         </orientation>
         <acceleration>
-          <exact>0.31754906076648715</exact>
+          <exact>0.23745728319102025</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000080726</exact>
+          <exact>0.00000000000000255683</exact>
         </yawRate>
       </state>
       <state>
@@ -3571,24 +4377,24 @@
         </time>
         <position>
           <point>
-            <x>15.448407988186716</x>
-            <y>3.0000000000000004</y>
+            <x>19.57327453913276</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000055173</exact>
+          <exact>0.00000000000000058398</exact>
         </steeringAngle>
         <velocity>
-          <exact>1.9350992119740624</exact>
+          <exact>2.7562816672521726</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000044630</exact>
+          <exact>0.00000000000000033277</exact>
         </orientation>
         <acceleration>
-          <exact>0.46456751010323205</exact>
+          <exact>0.2862696043778361</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000071834</exact>
+          <exact>0.00000000000000062553</exact>
         </yawRate>
       </state>
       <state>
@@ -3597,24 +4403,24 @@
         </time>
         <position>
           <point>
-            <x>15.646954327452157</x>
-            <y>3.0000000000000004</y>
+            <x>19.85050900292004</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000043778</exact>
+          <exact>0.00000000000000038724</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.039403941235543</exact>
+          <exact>2.7900531354554445</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000044531</exact>
+          <exact>0.00000000000000022155</exact>
         </orientation>
         <acceleration>
-          <exact>0.5718585471258898</exact>
+          <exact>0.19250061105669733</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000985</exact>
+          <exact>-0.00000000000000111223</exact>
         </yawRate>
       </state>
       <state>
@@ -3623,24 +4429,24 @@
         </time>
         <position>
           <point>
-            <x>15.854115236546953</x>
-            <y>3.0000000000000004</y>
+            <x>20.131572686240574</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000032307</exact>
+          <exact>0.00000000000000022537</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.1072131927925812</exact>
+          <exact>2.8324502041600246</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000044439</exact>
+          <exact>0.00000000000000010979</exact>
         </orientation>
         <acceleration>
-          <exact>0.3878978375309733</exact>
+          <exact>0.2293908072020302</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000296</exact>
+          <exact>-0.00000000000000111752</exact>
         </yawRate>
       </state>
       <state>
@@ -3649,24 +4455,24 @@
         </time>
         <position>
           <point>
-            <x>16.068991448347596</x>
+            <x>20.417203393017274</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000019972</exact>
+          <exact>0.00000000000000005282</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.1928569144573795</exact>
+          <exact>2.8809777508214265</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000044393</exact>
+          <exact>-0.00000000000000000494</exact>
         </orientation>
         <acceleration>
-          <exact>0.46427397464061315</exact>
+          <exact>0.25380539062491814</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000462</exact>
+          <exact>-0.00000000000000114735</exact>
         </yawRate>
       </state>
       <state>
@@ -3675,24 +4481,24 @@
         </time>
         <position>
           <point>
-            <x>16.293110485596294</x>
+            <x>20.7067026671794</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000007191</exact>
+          <exact>-0.00000000000000006596</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.2912166208582674</exact>
+          <exact>2.910251059646805</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000044347</exact>
+          <exact>-0.00000000000000000293</exact>
         </orientation>
         <acceleration>
-          <exact>0.5150576848918671</exact>
+          <exact>0.16420251209312112</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000455</exact>
+          <exact>0.00000000000000002012</exact>
         </yawRate>
       </state>
       <state>
@@ -3701,24 +4507,24 @@
         </time>
         <position>
           <point>
-            <x>16.525077753208826</x>
+            <x>20.99946971277489</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000002997</exact>
+          <exact>-0.00000000000000015677</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.3506660185359434</exact>
+          <exact>2.9460076033194045</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000039786</exact>
+          <exact>-0.00000000000000000028</exact>
         </orientation>
         <acceleration>
-          <exact>0.33364745675544255</exact>
+          <exact>0.19173504378469644</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000045620</exact>
+          <exact>0.00000000000000002647</exact>
         </yawRate>
       </state>
       <state>
@@ -3727,24 +4533,24 @@
         </time>
         <position>
           <point>
-            <x>16.763684793180715</x>
+            <x>21.29605518043759</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000009784</exact>
+          <exact>-0.00000000000000024649</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.4233485325303303</exact>
+          <exact>2.9862939248214113</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000029181</exact>
+          <exact>0.00000000000000000105</exact>
         </orientation>
         <acceleration>
-          <exact>0.38986000561312095</exact>
+          <exact>0.2095002903871857</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000106043</exact>
+          <exact>0.00000000000000001332</exact>
         </yawRate>
       </state>
       <state>
@@ -3753,24 +4559,24 @@
         </time>
         <position>
           <point>
-            <x>17.01005585648911</x>
-            <y>2.9999999999999996</y>
+            <x>21.595837135565766</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000016802</exact>
+          <exact>-0.00000000000000023521</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.5052829497510696</exact>
+          <exact>3.010376010004927</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000018240</exact>
+          <exact>0.00000000000000000144</exact>
         </orientation>
         <acceleration>
-          <exact>0.4261664890189722</exact>
+          <exact>0.13567511308519176</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000109416</exact>
+          <exact>0.00000000000000000386</exact>
         </yawRate>
       </state>
       <state>
@@ -3779,24 +4585,24 @@
         </time>
         <position>
           <point>
-            <x>17.263315901289182</x>
+            <x>21.89832863702007</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000023993</exact>
+          <exact>-0.00000000000000014884</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.5656857676471647</exact>
+          <exact>3.040405732632976</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000007001</exact>
+          <exact>0.00000000000000000177</exact>
         </orientation>
         <acceleration>
-          <exact>0.3861178864090864</exact>
+          <exact>0.16422651963899393</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000112382</exact>
+          <exact>0.00000000000000000334</exact>
         </yawRate>
       </state>
       <state>
@@ -3805,24 +4611,24 @@
         </time>
         <position>
           <point>
-            <x>17.52425003333702</x>
+            <x>22.20410071293159</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000028526</exact>
+          <exact>-0.00000000000000006153</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.6577992850977843</exact>
+          <exact>3.0759083804380047</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000004450</exact>
+          <exact>0.00000000000000000205</exact>
         </orientation>
         <acceleration>
-          <exact>0.5301902400547966</exact>
+          <exact>0.19040436485499945</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000025510</exact>
+          <exact>0.00000000000000000281</exact>
         </yawRate>
       </state>
       <state>
@@ -3831,24 +4637,24 @@
         </time>
         <position>
           <point>
-            <x>17.79573969970553</x>
-            <y>2.9999999999999996</y>
+            <x>22.51358727405136</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000028523</exact>
+          <exact>0.00000000000000002411</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.7758310444521572</exact>
+          <exact>3.1227967352368577</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000016530</exact>
+          <exact>0.00000000000000000185</exact>
         </orientation>
         <acceleration>
-          <exact>0.6453003054466181</exact>
+          <exact>0.36441898081930535</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000120795</exact>
+          <exact>-0.00000000000000000197</exact>
         </yawRate>
       </state>
       <state>
@@ -3857,24 +4663,24 @@
         </time>
         <position>
           <point>
-            <x>18.077345073682245</x>
-            <y>2.9999999999999996</y>
+            <x>22.83026959094009</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000028577</exact>
+          <exact>0.00000000000000011379</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.8638086195161168</exact>
+          <exact>3.217971018869085</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000029048</exact>
+          <exact>0.00000000000000000124</exact>
         </orientation>
         <acceleration>
-          <exact>0.548615685746571</exact>
+          <exact>0.5780614707613378</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000125179</exact>
+          <exact>-0.00000000000000000618</exact>
         </yawRate>
       </state>
       <state>
@@ -3883,24 +4689,24 @@
         </time>
         <position>
           <point>
-            <x>18.369837662252188</x>
-            <y>2.9999999999999996</y>
+            <x>23.158420513396628</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000028585</exact>
+          <exact>0.00000000000000020784</exact>
         </steeringAngle>
         <velocity>
-          <exact>2.9918733538829394</exact>
+          <exact>3.3503163696447418</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000042049</exact>
+          <exact>0.00000000000000000049</exact>
         </orientation>
         <acceleration>
-          <exact>0.7235217457520272</exact>
+          <exact>0.7361296522536007</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000130009</exact>
+          <exact>-0.00000000000000000744</exact>
         </yawRate>
       </state>
       <state>
@@ -3909,24 +4715,24 @@
         </time>
         <position>
           <point>
-            <x>18.676715586615472</x>
-            <y>2.9999999999999996</y>
+            <x>23.497648795030017</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000035871</exact>
+          <exact>0.00000000000000030642</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.1498133529490735</exact>
+          <exact>3.439110402716424</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000021847</exact>
+          <exact>0.00000000000000003340</exact>
         </orientation>
         <acceleration>
-          <exact>0.8473683327396806</exact>
+          <exact>0.5138990169382962</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000202017</exact>
+          <exact>0.00000000000000032907</exact>
         </yawRate>
       </state>
       <state>
@@ -3935,24 +4741,24 @@
         </time>
         <position>
           <point>
-            <x>18.996463727383585</x>
-            <y>2.9999999999999996</y>
+            <x>23.847095292125637</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000045052</exact>
+          <exact>0.00000000000000040673</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.250135599102839</exact>
+          <exact>3.5534853813593945</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000006549</exact>
+          <exact>0.00000000000000018825</exact>
         </orientation>
         <acceleration>
-          <exact>0.5732682670646849</exact>
+          <exact>0.6238742818397307</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000283965</exact>
+          <exact>0.00000000000000154850</exact>
         </yawRate>
       </state>
       <state>
@@ -3961,24 +4767,24 @@
         </time>
         <position>
           <point>
-            <x>19.32761453321195</x>
-            <y>3.0</y>
+            <x>24.20895950998154</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000054539</exact>
+          <exact>0.00000000000000051070</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.376612648533725</exact>
+          <exact>3.686269520391646</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000035961</exact>
+          <exact>0.00000000000000034869</exact>
         </orientation>
         <acceleration>
-          <exact>0.685232199141107</exact>
+          <exact>0.6979906208311066</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000294111</exact>
+          <exact>0.00000000000000160444</exact>
         </yawRate>
       </state>
       <state>
@@ -3987,24 +4793,24 @@
         </time>
         <position>
           <point>
-            <x>19.672407282742114</x>
-            <y>3.0</y>
+            <x>24.581482224648845</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000042967</exact>
+          <exact>0.00000000000000048200</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.521720467518054</exact>
+          <exact>3.767999265489583</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000033319</exact>
+          <exact>0.00000000000000044362</exact>
         </orientation>
         <acceleration>
-          <exact>0.759575962599109</exact>
+          <exact>0.4634300864815461</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000026415</exact>
+          <exact>0.00000000000000094925</exact>
         </yawRate>
       </state>
       <state>
@@ -4013,24 +4819,24 @@
         </time>
         <position>
           <point>
-            <x>20.02972605795084</x>
-            <y>3.0000000000000004</y>
+            <x>24.96322482050494</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000022513</exact>
+          <exact>0.00000000000000026369</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.6374464107569815</exact>
+          <exact>3.8696927333513678</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000017453</exact>
+          <exact>0.00000000000000044375</exact>
         </orientation>
         <acceleration>
-          <exact>0.7635292043184254</exact>
+          <exact>0.5486325380540572</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000158666</exact>
+          <exact>0.00000000000000000133</exact>
         </yawRate>
       </state>
       <state>
@@ -4039,24 +4845,24 @@
         </time>
         <position>
           <point>
-            <x>20.40217599477822</x>
-            <y>3.0</y>
+            <x>25.355891346581295</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000001187</exact>
+          <exact>0.00000000000000003888</exact>
         </steeringAngle>
         <velocity>
-          <exact>3.8215552505369366</exact>
+          <exact>3.9855034590783074</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000915</exact>
+          <exact>0.00000000000000044394</exact>
         </orientation>
         <acceleration>
-          <exact>1.0636169467098924</exact>
+          <exact>0.6046026651330872</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000165371</exact>
+          <exact>0.00000000000000000186</exact>
         </yawRate>
       </state>
       <state>
@@ -4065,24 +4871,24 @@
         </time>
         <position>
           <point>
-            <x>20.795758848072083</x>
-            <y>3.0</y>
+            <x>25.75780715468086</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000010672</exact>
+          <exact>-0.00000000000000019192</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.057316290732445</exact>
+          <exact>4.056030498559106</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000006</exact>
+          <exact>0.00000000000000029517</exact>
         </orientation>
         <acceleration>
-          <exact>1.2800512084739573</exact>
+          <exact>0.39883520195102057</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000009092</exact>
+          <exact>-0.00000000000000148773</exact>
         </yawRate>
       </state>
       <state>
@@ -4091,24 +4897,24 @@
         </time>
         <position>
           <point>
-            <x>21.207141391915542</x>
-            <y>3.0</y>
+            <x>26.167658328216547</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000022463</exact>
+          <exact>-0.00000000000000042677</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.163105646804678</exact>
+          <exact>4.143383995742612</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000006</exact>
+          <exact>0.00000000000000011312</exact>
         </orientation>
         <acceleration>
-          <exact>0.4231574242889095</exact>
+          <exact>0.47056590959375166</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000000</exact>
+          <exact>-0.00000000000000182050</exact>
         </yawRate>
       </state>
       <state>
@@ -4117,24 +4923,24 @@
         </time>
         <position>
           <point>
-            <x>21.627901223888742</x>
-            <y>3.0</y>
+            <x>26.5868794813412</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000022762</exact>
+          <exact>-0.00000000000000052584</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.274284082498939</exact>
+          <exact>4.242603318280491</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000005</exact>
+          <exact>-0.00000000000000000022</exact>
         </orientation>
         <acceleration>
-          <exact>0.8773714073454275</exact>
+          <exact>0.5174934554947422</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000000012</exact>
+          <exact>-0.00000000000000113337</exact>
         </yawRate>
       </state>
       <state>
@@ -4143,24 +4949,24 @@
         </time>
         <position>
           <point>
-            <x>22.065980141634306</x>
-            <y>3.0</y>
+            <x>27.01401931245813</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000010220</exact>
+          <exact>-0.00000000000000040338</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.504920514761825</exact>
+          <exact>4.30293722411902</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000003</exact>
+          <exact>-0.00000000000000000025</exact>
         </orientation>
         <acceleration>
-          <exact>1.4061586778308472</exact>
+          <exact>0.34106432958347876</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000000020</exact>
+          <exact>-0.00000000000000000025</exact>
         </yawRate>
       </state>
       <state>
@@ -4169,24 +4975,24 @@
         </time>
         <position>
           <point>
-            <x>22.531953890561958</x>
-            <y>3.0</y>
+            <x>27.447945150156173</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000003123</exact>
+          <exact>-0.00000000000000029354</exact>
         </steeringAngle>
         <velocity>
-          <exact>4.827613858650242</exact>
+          <exact>4.377617849692138</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000001</exact>
+          <exact>-0.00000000000000000025</exact>
         </orientation>
         <acceleration>
-          <exact>1.7979405236007198</exact>
+          <exact>0.4022139250933191</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000000020</exact>
+          <exact>-0.00000000000000000007</exact>
         </yawRate>
       </state>
       <state>
@@ -4195,24 +5001,24 @@
         </time>
         <position>
           <point>
-            <x>23.025102607547993</x>
-            <y>3.0</y>
+            <x>27.889879986345534</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000017245</exact>
+          <exact>-0.00000000000000042003</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.048541507178832</exact>
+          <exact>4.462411593734596</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000000</exact>
+          <exact>-0.00000000000000000024</exact>
         </orientation>
         <acceleration>
-          <exact>1.2944010450680277</exact>
+          <exact>0.4421955142768955</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000000009</exact>
+          <exact>0.00000000000000000009</exact>
         </yawRate>
       </state>
       <state>
@@ -4221,24 +5027,24 @@
         </time>
         <position>
           <point>
-            <x>23.543980293651188</x>
-            <y>3.0</y>
+            <x>28.338581533439466</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000032102</exact>
+          <exact>-0.00000000000000054837</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.3390122053105005</exact>
+          <exact>4.513962778458548</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000005385</exact>
+          <exact>-0.00000000000000000021</exact>
         </orientation>
         <acceleration>
-          <exact>1.5944007578312427</exact>
+          <exact>0.2914006665827514</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000053844</exact>
+          <exact>0.00000000000000000037</exact>
         </yawRate>
       </state>
       <state>
@@ -4247,24 +5053,24 @@
         </time>
         <position>
           <point>
-            <x>24.094586943126835</x>
+            <x>28.793080959629847</x>
             <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000047868</exact>
+          <exact>-0.00000000000000036032</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.679939738944367</exact>
+          <exact>4.577766490960398</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000029836</exact>
+          <exact>-0.00000000000000032908</exact>
         </orientation>
         <acceleration>
-          <exact>1.7989694000900098</exact>
+          <exact>0.34362303491749296</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000244513</exact>
+          <exact>-0.00000000000000328876</exact>
         </yawRate>
       </state>
       <state>
@@ -4273,24 +5079,24 @@
         </time>
         <position>
           <point>
-            <x>24.672804694395616</x>
-            <y>3.0000000000000004</y>
+            <x>29.254422712283414</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000042943</exact>
+          <exact>-0.00000000000000009614</exact>
         </steeringAngle>
         <velocity>
-          <exact>5.895989589457586</exact>
+          <exact>4.650206623018241</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000044408</exact>
+          <exact>-0.00000000000000073875</exact>
         </orientation>
         <acceleration>
-          <exact>1.246713790848064</exact>
+          <exact>0.3777648621426753</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000145719</exact>
+          <exact>-0.00000000000000409670</exact>
         </yawRate>
       </state>
       <state>
@@ -4299,24 +5105,24 @@
         </time>
         <position>
           <point>
-            <x>25.27581372133895</x>
-            <y>3.000000000000001</y>
+            <x>29.721545252791145</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000008413</exact>
+          <exact>0.00000000000000017119</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.172905249587992</exact>
+          <exact>4.694246016090305</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000044408</exact>
+          <exact>-0.00000000000000035737</exact>
         </orientation>
         <acceleration>
-          <exact>1.5081427962169622</exact>
+          <exact>0.24893729969198994</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000003</exact>
+          <exact>0.00000000000000381383</exact>
         </yawRate>
       </state>
       <state>
@@ -4325,24 +5131,24 @@
         </time>
         <position>
           <point>
-            <x>25.90884260406422</x>
+            <x>30.193620797293136</x>
             <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000027836</exact>
+          <exact>0.00000000000000044148</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.4935267022487615</exact>
+          <exact>4.748751862912133</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000022820</exact>
+          <exact>0.00000000000000048122</exact>
         </orientation>
         <acceleration>
-          <exact>1.6837717161517043</exact>
+          <exact>0.29354696856903106</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000215879</exact>
+          <exact>0.00000000000000838593</exact>
         </yawRate>
       </state>
       <state>
@@ -4351,24 +5157,24 @@
         </time>
         <position>
           <point>
-            <x>26.567750044173508</x>
-            <y>3.000000000000001</y>
+            <x>30.671541539166938</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000053111</exact>
+          <exact>0.00000000000000028768</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.6953188185780395</exact>
+          <exact>4.81063512353501</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000000000</exact>
+          <exact>0.00000000000000044619</exact>
         </orientation>
         <acceleration>
-          <exact>1.1627874173088575</exact>
+          <exact>0.32271143770246324</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000228204</exact>
+          <exact>-0.00000000000000035036</exact>
         </yawRate>
       </state>
       <state>
@@ -4377,24 +5183,24 @@
         </time>
         <position>
           <point>
-            <x>27.24978075374989</x>
-            <y>3.000000000000001</y>
+            <x>31.154199163261737</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000033583</exact>
+          <exact>-0.00000000000000026511</exact>
         </steeringAngle>
         <velocity>
-          <exact>6.953342514009113</exact>
+          <exact>4.842323161012345</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000000000</exact>
+          <exact>-0.00000000000000041118</exact>
         </orientation>
         <acceleration>
-          <exact>1.4042016490938807</exact>
+          <exact>0.1555297984102849</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000001</exact>
+          <exact>-0.00000000000000857371</exact>
         </yawRate>
       </state>
       <state>
@@ -4403,24 +5209,24 @@
         </time>
         <position>
           <point>
-            <x>27.95976301742907</x>
-            <y>3.000000000000001</y>
+            <x>31.639967434749593</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000044008</exact>
+          <exact>-0.00000000000000032383</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.251700323052393</exact>
+          <exact>4.872849099894441</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000000000</exact>
+          <exact>-0.00000000000000069521</exact>
         </orientation>
         <acceleration>
-          <exact>1.5661285534309244</exact>
+          <exact>0.14973473289894088</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000000001</exact>
+          <exact>-0.00000000000000284027</exact>
         </yawRate>
       </state>
       <state>
@@ -4429,24 +5235,24 @@
         </time>
         <position>
           <point>
-            <x>28.695100944881688</x>
-            <y>3.0000000000000004</y>
+            <x>32.12873045232031</x>
+            <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000041666</exact>
+          <exact>0.00000000000000023594</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.477204776189569</exact>
+          <exact>4.902219111167228</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000024193</exact>
+          <exact>-0.00000000000000026110</exact>
         </orientation>
         <acceleration>
-          <exact>1.447460782415582</exact>
+          <exact>0.14397052231719956</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000241925</exact>
+          <exact>0.00000000000000434107</exact>
         </yawRate>
       </state>
       <state>
@@ -4455,24 +5261,24 @@
         </time>
         <position>
           <point>
-            <x>29.45914289326018</x>
-            <y>2.9999999999999996</y>
+            <x>32.619686991102924</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000002086</exact>
+          <exact>0.00000000000000062902</exact>
         </steeringAngle>
         <velocity>
-          <exact>7.820876847122369</exact>
+          <exact>4.917055555127051</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000082347</exact>
+          <exact>0.00000000000000017495</exact>
         </orientation>
         <acceleration>
-          <exact>1.9647404546717586</exact>
+          <exact>0.07630198041695371</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000581548</exact>
+          <exact>0.00000000000000436056</exact>
         </yawRate>
       </state>
       <state>
@@ -4481,24 +5287,24 @@
         </time>
         <position>
           <point>
-            <x>30.262234456009722</x>
+            <x>33.11216879751366</x>
             <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000048074</exact>
+          <exact>0.00000000000000077003</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.25329316916201</exact>
+          <exact>4.932709024124992</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000060310</exact>
+          <exact>0.00000000000000061236</exact>
         </orientation>
         <acceleration>
-          <exact>2.3349032934839946</exact>
+          <exact>0.08015551153988418</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000001426577</exact>
+          <exact>0.00000000000000437410</exact>
         </yawRate>
       </state>
       <state>
@@ -4507,24 +5313,24 @@
         </time>
         <position>
           <point>
-            <x>31.101026734326027</x>
-            <y>3.0</y>
+            <x>33.60625294217496</x>
+            <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000020421</exact>
+          <exact>0.00000000000000059620</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.539416742605091</exact>
+          <exact>4.949086880533976</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000031674</exact>
+          <exact>0.00000000000000064366</exact>
         </orientation>
         <acceleration>
-          <exact>1.6733820099845067</exact>
+          <exact>0.08354585452739113</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000919846</exact>
+          <exact>0.00000000000000031301</exact>
         </yawRate>
       </state>
       <state>
@@ -4533,24 +5339,24 @@
         </time>
         <position>
           <point>
-            <x>31.97308263206496</x>
-            <y>3.0</y>
+            <x>34.10184675863154</x>
+            <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000005768</exact>
+          <exact>-0.00000000000000011328</exact>
         </steeringAngle>
         <velocity>
-          <exact>8.914485142074108</exact>
+          <exact>4.965330079143857</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000039936</exact>
+          <exact>-0.00000000000000001660</exact>
         </orientation>
         <acceleration>
-          <exact>2.0568999070013865</exact>
+          <exact>0.11799184366036866</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000082616</exact>
+          <exact>-0.00000000000000660265</exact>
         </yawRate>
       </state>
       <state>
@@ -4559,24 +5365,24 @@
         </time>
         <position>
           <point>
-            <x>32.88607250716687</x>
+            <x>34.599773739809564</x>
             <y>3.0000000000000004</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000070530</exact>
+          <exact>-0.00000000000000057264</exact>
         </steeringAngle>
         <velocity>
-          <exact>9.354015874323938</exact>
+          <exact>4.995216731928284</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000041154</exact>
+          <exact>-0.00000000000000028683</exact>
         </orientation>
         <acceleration>
-          <exact>2.3180053377926377</exact>
+          <exact>0.17820746900927292</exact>
         </acceleration>
         <yawRate>
-          <exact>0.00000000000000810896</exact>
+          <exact>-0.00000000000000270228</exact>
         </yawRate>
       </state>
       <state>
@@ -4585,24 +5391,24 @@
         </time>
         <position>
           <point>
-            <x>33.83624322535107</x>
+            <x>35.10123819821604</x>
             <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>0.00000000000000026695</exact>
+          <exact>-0.00000000000000057263</exact>
         </steeringAngle>
         <velocity>
-          <exact>9.679508426658423</exact>
+          <exact>5.0355461806777155</exact>
         </velocity>
         <orientation>
-          <exact>0.00000000000000033725</exact>
+          <exact>0.00000000000000015856</exact>
         </orientation>
         <acceleration>
-          <exact>2.062300787850306</exact>
+          <exact>0.22241980331041258</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000074291</exact>
+          <exact>0.00000000000000445389</exact>
         </yawRate>
       </state>
       <state>
@@ -4611,24 +5417,24 @@
         </time>
         <position>
           <point>
-            <x>34.82732373862629</x>
+            <x>35.60605691466809</x>
             <y>3.000000000000001</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000057263</exact>
+          <exact>-0.00000000000000046765</exact>
         </steeringAngle>
         <velocity>
-          <exact>10.165487362824807</exact>
+          <exact>5.062259713783384</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000008473</exact>
+          <exact>0.00000000000000019983</exact>
         </orientation>
         <acceleration>
-          <exact>2.7638665072153783</exact>
+          <exact>0.15415686427868033</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000421976</exact>
+          <exact>0.00000000000000041273</exact>
         </yawRate>
       </state>
       <state>
@@ -4637,24 +5443,648 @@
         </time>
         <position>
           <point>
-            <x>35.87334536137983</x>
+            <x>36.11394108275445</x>
             <y>3.0</y>
           </point>
         </position>
         <steeringAngle>
-          <exact>-0.00000000000000031459</exact>
+          <exact>-0.00000000000000017682</exact>
         </steeringAngle>
         <velocity>
-          <exact>10.771606202905314</exact>
+          <exact>5.096501500340083</exact>
         </velocity>
         <orientation>
-          <exact>-0.00000000000000015627</exact>
+          <exact>-0.00000000000000047681</exact>
         </orientation>
         <acceleration>
-          <exact>3.263699826991539</exact>
+          <exact>0.18649243616554578</exact>
         </acceleration>
         <yawRate>
-          <exact>-0.00000000000000071541</exact>
+          <exact>-0.00000000000000676638</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>78</exact>
+        </time>
+        <position>
+          <point>
+            <x>36.625537413912895</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000017421</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.136149262200495</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000052790</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.20821661731580374</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000051091</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>79</exact>
+        </time>
+        <position>
+          <point>
+            <x>37.140314055217814</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000061638</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.160517417227273</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000038653</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.138123908556631</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000914427</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>80</exact>
+        </time>
+        <position>
+          <point>
+            <x>37.6578386813633</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000052235</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.19081909240189</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000067935</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.1634435101363766</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000292819</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>81</exact>
+        </time>
+        <position>
+          <point>
+            <x>38.178617684380995</x>
+            <y>3.0000000000000013</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000022318</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.225315088060558</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000021680</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.18006711339714257</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000462545</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>82</exact>
+        </time>
+        <position>
+          <point>
+            <x>38.70215146886392</x>
+            <y>3.0000000000000004</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000073268</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.246318467931905</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000024819</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.11876954672100179</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000464999</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>83</exact>
+        </time>
+        <position>
+          <point>
+            <x>39.22804833732832</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000103384</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.272330628631461</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000071530</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.14012136498078673</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000467106</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>84</exact>
+        </time>
+        <position>
+          <point>
+            <x>39.75673532613939</x>
+            <y>2.9999999999999996</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000057150</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.30187473580671</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000059155</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.15408901147793055</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000123749</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>85</exact>
+        </time>
+        <position>
+          <point>
+            <x>40.28886992175069</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000034269</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.352012506249111</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000011893</exact>
+        </orientation>
+        <acceleration>
+          <exact>0.41290440065516965</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000472624</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>86</exact>
+        </time>
+        <position>
+          <point>
+            <x>40.82386201391746</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000057266</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.326145446370662</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000000004</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.4440645211253021</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000118885</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>87</exact>
+        </time>
+        <position>
+          <point>
+            <x>41.35018339844157</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000057267</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>5.182810008993728</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000000003</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.9682315746572057</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000000013</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>88</exact>
+        </time>
+        <position>
+          <point>
+            <x>41.85735073425239</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000044824</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.947276127702512</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000000001</exact>
+        </orientation>
+        <acceleration>
+          <exact>-1.3660489602681238</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000000017</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>89</exact>
+        </time>
+        <position>
+          <point>
+            <x>42.34476329148825</x>
+            <y>3.0</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000030865</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.79636670065058</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000000001</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.8212739710573523</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000000008</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>90</exact>
+        </time>
+        <position>
+          <point>
+            <x>42.81579832749624</x>
+            <y>3.0000000000000004</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000039887</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.620684867010755</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000017456</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.9307485460129501</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000174568</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>91</exact>
+        </time>
+        <position>
+          <point>
+            <x>43.26826635077725</x>
+            <y>3.0000000000000004</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000052842</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.42598560997658</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000037550</exact>
+        </orientation>
+        <acceleration>
+          <exact>-1.011448205000854</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000200939</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>92</exact>
+        </time>
+        <position>
+          <point>
+            <x>43.70491569896822</x>
+            <y>3.0000000000000004</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000041105</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.298579360553561</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000044409</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.7583839011608635</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000068593</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>93</exact>
+        </time>
+        <position>
+          <point>
+            <x>44.12649691404164</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>0.00000000000000016965</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>4.126613845739838</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000044410</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.9513167564073894</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000000006</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>94</exact>
+        </time>
+        <position>
+          <point>
+            <x>44.52915133889259</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000003045</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.9220344542182</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000039684</exact>
+        </orientation>
+        <acceleration>
+          <exact>-1.0845226682400015</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000047260</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>95</exact>
+        </time>
+        <position>
+          <point>
+            <x>44.915381144887306</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000014107</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.797392046579612</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000022532</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.6973499070057847</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000171520</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>96</exact>
+        </time>
+        <position>
+          <point>
+            <x>45.28773208109449</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000024769</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.645819625519973</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000005996</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.8115614683304155</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000165362</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>97</exact>
+        </time>
+        <position>
+          <point>
+            <x>45.64391991628767</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000034968</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.4754925933515235</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000009824</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.8848960180938886</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000038281</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>98</exact>
+        </time>
+        <position>
+          <point>
+            <x>45.986641009254</x>
+            <y>3.0000000000000013</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000044778</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.375148480063961</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000025044</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.5558715863752116</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000152197</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>99</exact>
+        </time>
+        <position>
+          <point>
+            <x>46.31829588586736</x>
+            <y>3.0000000000000013</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000054272</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.2551925737828458</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000039772</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.6385659389824277</exact>
+        </acceleration>
+        <yawRate>
+          <exact>0.00000000000000147286</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>100</exact>
+        </time>
+        <position>
+          <point>
+            <x>46.6372306590756</x>
+            <y>3.0000000000000013</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000069545</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.121770719452393</exact>
+        </velocity>
+        <orientation>
+          <exact>0.00000000000000015831</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.6905310668685911</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000239413</exact>
+        </yawRate>
+      </state>
+      <state>
+        <time>
+          <exact>101</exact>
+        </time>
+        <position>
+          <point>
+            <x>46.94477214419973</x>
+            <y>3.000000000000001</y>
+          </point>
+        </position>
+        <steeringAngle>
+          <exact>-0.00000000000000087157</exact>
+        </steeringAngle>
+        <velocity>
+          <exact>3.0178427907366334</exact>
+        </velocity>
+        <orientation>
+          <exact>-0.00000000000000025142</exact>
+        </orientation>
+        <acceleration>
+          <exact>-0.6817513022377442</exact>
+        </acceleration>
+        <yawRate>
+          <exact>-0.00000000000000409726</exact>
         </yawRate>
       </state>
     </trajectory>
