@@ -37,15 +37,22 @@ def main(plans_folder: str, output_folder: str):
 
     click.echo(f"Loaded {len(plans)} plans from {plans_folder}")
 
+    
     matrix = compute_similarity_matrix(plans, up_to_time=float("inf"))
+
+
 
     matrix_txt = os.path.join(output_folder, "similarity_matrix.txt")
     np.savetxt(matrix_txt, matrix, fmt="%.3f")
 
     matrix_png = os.path.join(output_folder, "similarity_matrix.png")
+    
+    plt.figure(figsize=(3,3))
     plt.imshow(matrix, vmin=0.0, vmax=1.0, cmap="hot", interpolation="nearest")
-    plt.colorbar(label="IoU Similarity")
-    plt.title("Plan Similarity Matrix")
+    # plt.colorbar(label="IoU Similarity")
+    # plt.title("Plan Similarity Matrix")
+    plt.xticks([])
+    plt.yticks([])
     plt.tight_layout()
     plt.savefig(matrix_png, dpi=200)
     plt.close()
