@@ -25,5 +25,5 @@ scenario overtake:
                     position([5m..10m], ahead_of: car1, at: end)
         
         c2: car2.drive(p) with:
-            lane(right_of:ego, at:start)
-            position([1m..30m], ahead_of:ego, at:start)
+            lane(same_as:ego, at:start)
+            position([25m..30m], ahead_of:ego, at:start)

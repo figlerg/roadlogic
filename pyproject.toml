@@ -9,7 +9,7 @@ description = "Logic-based planning and CommonRoad/Frenetix simulation framework
 authors = [
     { name = "Felix Gigler", email = "felix.gigler@tuwien.ac.at" },
     { name = "Alessio Gambi"},
-    { name = "Dejan Ničković"},
+    { name = "Dejan Nickovic"},
     { name = "Cristinel Mateis"}
 ]
 
