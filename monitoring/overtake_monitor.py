@@ -13,7 +13,7 @@ from syma_arv.monitor.minmax import MinMaxMonitor
 from syma_arv.monitor.tropical import TropicalMonitor
 
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
-from planning.intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.Constraint import RelativeConstraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
 from planning.misc.errors import HardSyntaxErrorStrategy
 from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor

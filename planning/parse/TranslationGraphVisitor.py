@@ -4,7 +4,7 @@ import warnings
 from planning.intermediate_structure.Actor import Actor
 from planning.intermediate_structure.SamplingHint import SamplingHint
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
-from planning.intermediate_structure.Constraint import Constraint, Relation, Modifier
+from planning.intermediate_structure.Constraint import RelativeConstraint, Relation, Modifier
 from planning.parse.generated.openscenario2Visitor import openscenario2Visitor
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
@@ -281,8 +281,8 @@ def arg_list_helper(arg_list: dict, modifier):
         if 'ahead_of' in keys:
             relative_actor = arg_list['ahead_of']
 
-            con1 = Constraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=interval[1])
-            con2 = Constraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=interval[0])
+            con1 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=interval[1])
+            con2 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=interval[0])
 
             con1.match(con2) # saves pointer for partner in both constraints
 
@@ -291,8 +291,8 @@ def arg_list_helper(arg_list: dict, modifier):
         elif 'behind' in keys:
             relative_actor = arg_list['behind']
 
-            con1 = Constraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=-interval[0])
-            con2 = Constraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=-interval[1])
+            con1 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=-interval[0])
+            con2 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=-interval[1])
 
             con1.match(con2) # saves pointer for partner in both constraints
 
@@ -306,21 +306,21 @@ def arg_list_helper(arg_list: dict, modifier):
         if 'same_as' in keys:
             relative_actor = arg_list['same_as']
 
-            con1 = Constraint('self', relative_actor, Modifier.LANE, Relation.EQ)
+            con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.EQ)
 
             constraints = {con1}
 
         elif 'left_of' in keys:
             relative_actor = arg_list['left_of']
 
-            con1 = Constraint('self', relative_actor, Modifier.LANE, Relation.L)
+            con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.L)
 
             constraints = {con1}
 
         elif 'right_of' in keys:
             relative_actor = arg_list['right_of']
 
-            con1 = Constraint('self', relative_actor, Modifier.LANE, Relation.G)
+            con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.G)
 
             constraints = {con1}
 

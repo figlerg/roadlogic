@@ -4,7 +4,7 @@ from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 from antlr4 import FileStream, CommonTokenStream
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
-from planning.intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.Constraint import RelativeConstraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
 from planning.misc.errors import HardSyntaxErrorStrategy
 from syma.automaton.automaton import Location, SymbolicAutomaton
@@ -17,7 +17,7 @@ from syma_arv.monitor.tropical import TropicalMonitor
 
 from collections import deque
 from typing import Set, Union, List
-from planning.intermediate_structure.Constraint import Constraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.Constraint import RelativeConstraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
 
 from commonroad_extensions.plan_execution.id_hash import encode, decode
 

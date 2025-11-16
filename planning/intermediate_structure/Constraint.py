@@ -1,7 +1,13 @@
 from enum import Enum
-
+from abc import ABC, abstractmethod
 
 # from z3 import Int, Real, simplify, And
+
+
+
+from abc import ABC, abstractmethod
+from typing import Dict, Tuple
+
 
 
 class Relation(Enum):
@@ -31,20 +37,20 @@ class Relation(Enum):
     def __eq__(self, other):
         return str(self) == str(other)
 
-
-def give_complementary_relation(in_enum):
-    if in_enum == Relation.G:
-        return Relation.L
-    elif in_enum == Relation.L:
-        return Relation.G
-    elif in_enum == Relation.LEQ:
-        return Relation.GEQ
-    elif in_enum == Relation.GEQ:
-        return Relation.LEQ
-    elif in_enum == Relation.EQ:
-        return Relation.EQ
-    elif in_enum == Relation.INEQ:
-        return Relation.INEQ
+    @property
+    def flipped(self):
+        if self == Relation.G:
+            return Relation.L
+        elif self == Relation.L:
+            return Relation.G
+        elif self == Relation.LEQ:
+            return Relation.GEQ
+        elif self == Relation.GEQ:
+            return Relation.LEQ
+        elif self == Relation.EQ:
+            return Relation.EQ
+        elif self == Relation.INEQ:
+            return Relation.INEQ
 
 
 class Modifier(Enum):
@@ -61,38 +67,200 @@ class Modifier(Enum):
         return str(self) == str(other)
 
 
-class Constraint:
+
+# Placement: actor -> (lane, position)
+Placement = Dict[str, Tuple[int, float]]
+
+
+class BaseConstraint(ABC):
     """
-    The internal class for handling relative positional modifiers from OSC2.
+    Abstract base class for all constraint types.
 
-    It encodes modifiers such as "lane(same_as:car1, at:start)" as mathematical relations between objects.
-    This example would be "l(car1) == l(ego)", where 'at_start' is only used for defining where in the
-    graph this constraint is placed.
-
-    TODO for now, I only allow a very small subset of possible constraints:
-     Linear constraints where the lanes and positions are not mixed and can only appear with factor 1.
-    ...
-    Attributes
-    ----------
-    __actor_1: str
-        Name of the first actor.
-    __actor_2: str
-        Name of the second actor.
-    __modifier: Modifier
-        Enumerator for the type of modifier that is used (lane, position).
-        Mixed usage is not allowed (makes not much sense to have this freedom in the specs).
-    __relation: Relation
-        Enumerator for specifying the relation between the cars.
-    __c: float
-        A constant to allow constraints such as 'l(car1) == l(ego) + 1'.
+    This class defines the common interface that every constraint must implement.
+    Concrete subclasses include `RelativeConstraint` for binary actor-to-actor
+    relations and `AbsoluteConstraint` for constraints involving global positions
+    or lane indices.
 
     Methods
     -------
-    eval(val):
-        Returns True if a set of values satisfies the constraint, False otherwise.
-        If the valuation does not have the information necessary to decide, raise an exception.
-    ...
+    eval(placement)
+        Evaluate the constraint for the given placement mapping
+        actor -> (lane, position). Must be implemented by subclasses.
+    __str__()
+        Return a human-readable representation of the constraint.
+    is_relative()
+        Whether this constraint represents a relative actor-to-actor relation.
+        Defaults to False, can be overridden by subclasses.
+    is_absolute()
+        Whether this constraint represents an absolute (global) condition.
+        Defaults to False, can be overridden by subclasses.
     """
+
+    @abstractmethod
+    def eval(self, placement: Placement) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def __str__(self) -> str:
+        raise NotImplementedError
+
+    def is_relative(self) -> bool:
+        return False
+
+    def is_absolute(self) -> bool:
+        return False
+
+
+class AbsoluteConstraint(BaseConstraint):
+    """
+    A constraint expressing an absolute condition on a single actor.
+
+    This class represents constraints that refer to global values, such as
+    requiring an actor to be on a specific lane or within a longitudinal
+    interval. Unlike `RelativeConstraint`, it does not relate two actors to
+    each other but compares an actor's attribute against a fixed value.
+
+    Examples
+    --------
+    - lane(ego) == 1
+    - pos(car1) >= 10
+    - pos(ego) <= 20
+
+    Attributes
+    ----------
+    _actor : str
+        Name of the actor to which the constraint applies.
+    _modifier : Modifier
+        Specifies whether the constraint refers to lane or position.
+    _relation : Relation
+        Comparison operator applied between the actor’s value and the constant.
+    _value : float
+        Constant reference value used in the comparison.
+
+    Methods
+    -------
+    eval(placement)
+        Evaluate the absolute constraint for the given placement mapping
+        actor -> (lane, position). Raises an exception if the actor is missing.
+    __str__()
+        Return a readable string representation.
+    is_absolute()
+        Override: this constraint is absolute.
+    """
+
+    def __init__(self, actor: str, modifier: Modifier, relation: Relation, value: float):
+        self._actor = actor
+        self._modifier = modifier
+        self._relation = relation
+        self._value = value
+
+    @property
+    def actor(self) -> str:
+        return self._actor
+
+    @property
+    def modifier(self) -> Modifier:
+        return self._modifier
+
+    @property
+    def relation(self) -> Relation:
+        return self._relation
+
+    @property
+    def value(self) -> float:
+        return self._value
+
+    def is_absolute(self) -> bool:
+        return True
+
+    def eval(self, placement: Placement) -> bool:
+        if self._actor not in placement:
+            raise KeyError(
+                f"Actor '{self._actor}' not found in placement; "
+                f"cannot evaluate absolute constraint."
+            )
+
+        lane, position = placement[self._actor]
+
+        if self._modifier == Modifier.LANE:
+            x = lane
+        elif self._modifier == Modifier.POSITION:
+            x = position
+        else:
+            raise NotImplementedError(f"Unsupported modifier: {self._modifier}")
+
+        v = self._value
+        r = self._relation
+
+        if r == Relation.L:
+            return x < v
+        if r == Relation.G:
+            return x > v
+        if r == Relation.LEQ:
+            return x <= v
+        if r == Relation.GEQ:
+            return x >= v
+        if r == Relation.EQ:
+            return x == v
+        if r == Relation.INEQ:
+            return x != v
+
+        raise NotImplementedError(f"Unsupported relation: {r}")
+
+    def __str__(self) -> str:
+        return f"{self._modifier}({self._actor}) {self._relation.value} {self._value}"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+
+class RelativeConstraint(BaseConstraint):
+    """
+    A constraint representing a relative positional relationship between two actors.
+
+    This class encodes binary relations such as "lane(car1) < lane(car2)" or
+    "pos(a) >= pos(b) + c". These are the original constraint types used throughout
+    the project and always involve two distinct actors. The modifier determines
+    whether the relation applies to lane indices or longitudinal positions.
+    Absolute or global constraints are handled separately via `AbsoluteConstraint`.
+
+    With the introduction of `BaseConstraint` and `AbsoluteConstraint`, this class
+    strictly models actor-to-actor relations. Transformations such as flipping,
+    standardization, or ascending ordering are meaningful only for this binary
+    constraint type. Code that requires relative constraints should explicitly check
+    for `isinstance(obj, RelativeConstraint)` to ensure that absolute constraints are
+    rejected early.
+
+    Attributes
+    ----------
+    __actor_1 : str
+        Name of the first actor.
+    __actor_2 : str
+        Name of the second actor.
+    __modifier : Modifier
+        Specifies whether the constraint compares lane or position.
+    __relation : Relation
+        The comparison operator used between the two actors.
+    __c : float
+        Constant offset, e.g. for constraints of the form
+        pos(a) == pos(b) + c.
+
+    Methods
+    -------
+    eval(placement)
+        Evaluate the constraint for a given placement mapping
+        actor -> (lane, position). Raises an exception if required
+        information is missing.
+    flip()
+        Return an equivalent constraint with actor_1 and actor_2 swapped.
+    standardize()
+        Normalize the constraint by reordering actors where appropriate.
+    ascending(actor_list)
+        Return the constraint rewritten according to an ordering of actors.
+    __str__()
+        Return a human-readable representation.
+    """
+
 
     def __init__(self, actor_1, actor_2, modifier, relation, c=0):
         self.__actor_1 = actor_1
@@ -414,7 +582,7 @@ class Constraint:
         self.__actor_1, self.__actor_2 = self.actor_2, self.__actor_1
         self.__c *= -1
 
-        new_rel = give_complementary_relation(self.__relation)
+        new_rel = self.__relation.flipped
 
         self.__relation = None
         self.__relation = new_rel
@@ -496,21 +664,31 @@ class Constraint:
     #     return False
 
 
+
+
 if __name__ == '__main__':
     eq = Relation.EQ
     l = Relation.L
     g = Relation.G
 
+    print(l.flipped)
+
     actor1 = 'car1'
     actor2 = 'car2'
 
-    con_lane_l = Constraint(actor1, actor2, Modifier.LANE, Relation.L)
-    con_lane_g = Constraint(actor1, actor2, Modifier.LANE, Relation.G)
-    con_lane_e = Constraint(actor1, actor2, Modifier.LANE, Relation.EQ)
-    con_pos_l = Constraint(actor1, actor2, Modifier.POSITION, Relation.L, 5)
-    con_pos_g = Constraint(actor1, actor2, Modifier.POSITION, Relation.G, 10)
+    con_lane_l = RelativeConstraint(actor1, actor2, Modifier.LANE, Relation.L)
+    con_lane_g = RelativeConstraint(actor1, actor2, Modifier.LANE, Relation.G)
+    con_lane_e = RelativeConstraint(actor1, actor2, Modifier.LANE, Relation.EQ)
+    con_pos_l = RelativeConstraint(actor1, actor2, Modifier.POSITION, Relation.L, 5)
+    con_pos_g = RelativeConstraint(actor1, actor2, Modifier.POSITION, Relation.G, 10)
+
+    con_lane_l.flip()
+    print(con_lane_l)
+
 
     rels = [con_lane_l, con_lane_g, con_lane_e, con_pos_g, con_pos_l]
+
+
 
     for r in rels:
         print(r)
