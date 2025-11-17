@@ -1,5 +1,5 @@
 import itertools
-from planning.intermediate_structure.Constraint import RelativeConstraint, Relation, Modifier
+from planning.intermediate_structure.Constraint import RelativeConstraint, Relation, Modifier, AbsoluteConstraint
 import networkx as nx
 import matplotlib.pyplot as plt
 import z3
@@ -343,12 +343,16 @@ class TranslationGraph(object):
 
         for edge in self.graph.edges:
             for con in self.graph.edges[edge]['object']:
-                con: RelativeConstraint
+                if isinstance(con, RelativeConstraint):
+                    con: RelativeConstraint
 
-                if con.actor_1 == original_name:
-                    con.actor_1 = new_name
-                if con.actor_2 == original_name:
-                    con.actor_2 = new_name
+                    if con.actor_1 == original_name:
+                        con.actor_1 = new_name
+                    if con.actor_2 == original_name:
+                        con.actor_2 = new_name
+                elif isinstance(con,AbsoluteConstraint):
+                    if con.actor == new_name:
+                        con.actor=new_name
 
     def prune(self):
         # The parallel composition gives us unreachable nodes. These can be safely removed.

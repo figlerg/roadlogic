@@ -40,6 +40,7 @@ class Planner:
 
         visitor = TranslationGraphVisitor()
         self._translation_graph: TranslationGraph = visitor.visit(ctx)
+        # self._translation_graph.draw()
 
         self.verbose = verbose
         if verbose:

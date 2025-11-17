@@ -4,7 +4,7 @@ import warnings
 from planning.intermediate_structure.Actor import Actor
 from planning.intermediate_structure.SamplingHint import SamplingHint
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
-from planning.intermediate_structure.Constraint import RelativeConstraint, Relation, Modifier
+from planning.intermediate_structure.Constraint import RelativeConstraint, AbsoluteConstraint, Relation, Modifier
 from planning.parse.generated.openscenario2Visitor import openscenario2Visitor
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
@@ -59,7 +59,26 @@ class TranslationGraphVisitor(openscenario2Visitor):
     def visitField_declaration(self, ctx: openscenario2Parser.Field_declarationContext):
         names = self.visit(ctx.parameter_declaration())
         field_type = self.visit(ctx.parameter_declaration().type_declarator())
-        return names_to_objects(names, field_type)
+
+        
+        if field_type in ['car', ]:  # write an enumerator or set the various actor types somewhere globally?
+            out = []
+            for name in names:
+                actor = Actor(id=name, type=field_type)
+                out.append(actor)
+
+        elif field_type in ['road', 'path']:
+            raise Exception(f'Passed old syntax. {field_type} is deprecated.')  # removed the path modifier
+            out = []
+            for name in names:
+                path = SamplingHint(type=field_type, properties={'name': name, 'type': field_type})
+                out.append(path)
+
+        else:
+            raise NotImplementedError(f'The {field_type} variable type translation is not implemented yet!')
+
+
+        return out
 
     def visitParameter_declaration(self, ctx: openscenario2Parser.Parameter_declarationContext):
         names = []
@@ -85,11 +104,21 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
     # this is a node in the serial/parallel composition
     def visitDo_member(self, ctx: openscenario2Parser.Do_memberContext):
+        # either a composition node or a single behavior invocation
 
-        try:
-            return self.visit(ctx.composition())
-        except AttributeError:
-            return self.visit(ctx.behavior_invocation())
+        comp_ctx = ctx.composition()
+        if comp_ctx is not None:
+            return self.visit(comp_ctx)
+
+        beh_ctx = ctx.behavior_invocation()
+        if beh_ctx is not None:
+            return self.visit(beh_ctx)
+
+        # If we ever end up here, the grammar / parse tree is not what we expect
+        raise NotImplementedError(
+            f"do_member without composition or behavior_invocation: {ctx.getText()}"
+        )
+
 
     def visitBehavior_invocation(self, ctx: openscenario2Parser.Behavior_invocationContext):
         # This is essentially the parsing of the atomic behavior.
@@ -98,11 +127,12 @@ class TranslationGraphVisitor(openscenario2Visitor):
         atomic_behavior = self.visit(ctx.behavior_name())
 
         parent = ctx.parentCtx
+        member_name = "x"
 
-        try:
-            member_name = parent.label_name().getText()
-        except AttributeError:
-            member_name = 'x'  # maybe use a global variable to keep track of an enumerator for subgraphs?
+        if hasattr(parent, "label_name"):
+            label_ctx = parent.label_name()
+            if label_ctx is not None:
+                member_name = label_ctx.getText()
 
         atomic_graph = TranslationGraph()
 
@@ -114,13 +144,14 @@ class TranslationGraphVisitor(openscenario2Visitor):
         atomic_graph.add_node(behavior_node)
         atomic_graph.add_node(fin_node, final=True)
 
-        try:
-            precondition, postcondition = self.visit(ctx.behavior_with_declaration())
+        bwd_ctx = ctx.behavior_with_declaration()
 
-
-        except AttributeError:
-            # print(ctx.getText())
+        if bwd_ctx is None:
+            # no conditions present in the syntax
             precondition, postcondition = set(), set()
+        else:
+            # any real error inside will now bubble up
+            precondition, postcondition = self.visit(bwd_ctx)
 
         atomic_graph.add_transition(init_node, behavior_node, precondition)
         atomic_graph.add_transition(behavior_node, fin_node, postcondition)
@@ -150,23 +181,49 @@ class TranslationGraphVisitor(openscenario2Visitor):
     def visitBehavior_with_member(self, ctx: openscenario2Parser.Behavior_with_memberContext):
         return self.visit(ctx.modifier_application())
 
+    # def visitModifier_application(self, ctx: openscenario2Parser.Modifier_applicationContext):
+    #     modifier = self.visit(ctx.modifier_name())
+    #     arg_list = self.visit(ctx.argument_list())
+
+    #     if modifier in ['position', 'lane']:
+    #         start_or_end, constraints = arg_list_helper(arg_list, modifier)
+
+    #     elif modifier == 'path':
+    #         start_or_end, constraints = None, set()
+    #         warnings.warn(
+    #             f"The modifier {modifier} is ignored in this version of the tool, since we assume in general that the two cars have the same path.")
+
+    #     else:
+    #         start_or_end, constraints = None, set()
+    #         warnings.warn(f"The {modifier} modifier is not supported yet and will be ignored.")
+
+    #     return start_or_end, constraints
+
     def visitModifier_application(self, ctx: openscenario2Parser.Modifier_applicationContext):
         modifier = self.visit(ctx.modifier_name())
         arg_list = self.visit(ctx.argument_list())
 
-        if modifier in ['position', 'lane']:
-            start_or_end, constraints = arg_list_helper(arg_list, modifier)
+        # All modifiers in the DSL support 'at'
+        assert "at" in arg_list, f"Modifier '{modifier}' requires an 'at' argument."
+        start_or_end = arg_list["at"]
 
-        elif modifier == 'path':
-            start_or_end, constraints = None, set()
-            warnings.warn(
-                f"The modifier {modifier} is ignored in this version of the tool, since we assume in general that the two cars have the same path.")
 
-        else:
-            start_or_end, constraints = None, set()
-            warnings.warn(f"The {modifier} modifier is not supported yet and will be ignored.")
+        match modifier:
+            case "position":
+                constraints = self._build_position_constraints(arg_list)
+
+            case "lane":
+                constraints = self._build_lane_constraints(arg_list)
+
+            case _:
+                # Unsupported according to DSL 2.1
+                raise NotImplementedError(
+                    f"Modifier '{modifier}' not supported. Currently the position and lane modifiers are part of our implementation."
+                )
 
         return start_or_end, constraints
+    
+
 
     def visitBehavior_name(self, ctx: openscenario2Parser.Behavior_nameContext):
         return self.visit(ctx.identifier())
@@ -209,9 +266,8 @@ class TranslationGraphVisitor(openscenario2Visitor):
     def visitArgument_list(self, ctx: openscenario2Parser.Argument_listContext):
         argument_values = {}
 
-        pos_num = 0
-        for child in ctx.positional_argument():
-            argument_values[pos_num] = self.visit(child)
+        for i, child in enumerate(ctx.positional_argument()):
+            argument_values[i] = self.visit(child)
 
         for child in ctx.named_argument():
             child: openscenario2Parser.Named_argumentContext
@@ -222,8 +278,15 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
         return argument_values
 
+    def visitPositional_argument(self, ctx: openscenario2Parser.Positional_argumentContext):
+        return self.visit(ctx.expression())
+
     def visitExpression(self, ctx: openscenario2Parser.ExpressionContext):
         return self.visitChildren(ctx)
+    
+    def visitInteger_literal(self, ctx: openscenario2Parser.Integer_literalContext):
+        # lane(0, ...) -> 0
+        return int(ctx.getText())
 
     def visitRange_constructor(self, ctx: openscenario2Parser.Range_constructorContext):
         start, end = ctx.expression()
@@ -237,28 +300,164 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
         return nr
 
+    # helpers for constraints
+    def _build_lane_constraints(self, arg_list: dict) -> set:
+        """
+        Build constraints for the 'lane' modifier.
 
-# helpers
-def names_to_objects(names: list, member_type: str):
-    # ego = Actor(type = 'car', position={RelativePosition.ON:r1}, id = 'ego')
-    # r1 = SamplingConstraint(type = 'path',properties= {'name':'r1', 'type':'road'})
+        Supports:
+        - Relative:
+            lane(same_as: other, at: ...)
+            lane(left_of: other, at: ...)
+            lane(right_of: other, at: ...)
+            lane(side_of: other, side: left/right, at: ...)   # mapped to left_of/right_of
+        - Absolute:
+            lane(1, at: ...)
+            lane(lane: 1, at: ...)
+        """
+        # --- compatibility shim for new OSC DSL syntax: lane(side_of: X, side: left/right) ---
+        if "side_of" in arg_list and "side" in arg_list:
+            target = arg_list["side_of"]
+            side = str(arg_list["side"]).lower()
 
-    if member_type in ['car', ]:  # write an enumerator or set the various actor types somewhere globally?
-        out = []
-        for name in names:
-            actor = Actor(id=name, type=member_type)
-            out.append(actor)
+            if side == "left":
+                arg_list["left_of"] = target
+            elif side == "right":
+                arg_list["right_of"] = target
+            else:
+                raise NotImplementedError(
+                    f"Unsupported side value '{arg_list['side']}' in lane(side_of:..., side:...)."
+                )
 
-    elif member_type in ['road', 'path']:
-        out = []
-        for name in names:
-            path = SamplingHint(type=member_type, properties={'name': name, 'type': member_type})
-            out.append(path)
+        relative_keys = {"same_as", "left_of", "right_of"}
+        present_rel = relative_keys.intersection(arg_list.keys())
 
-    else:
-        raise NotImplementedError('The {} variable type translation is not implemented yet!'.format(member_type))
+        if len(present_rel) > 1:
+            raise AssertionError(
+                f"'lane' modifier may have at most one of {relative_keys}, got {present_rel}."
+            )
 
-    return out
+        # ---------- RELATIVE CASE ----------
+        if present_rel:
+            key = next(iter(present_rel))
+            relative_actor = arg_list[key]
+
+            match key:
+                case "same_as":
+                    con = RelativeConstraint("self", relative_actor, Modifier.LANE, Relation.EQ)
+                case "left_of":
+                    con = RelativeConstraint("self", relative_actor, Modifier.LANE, Relation.L)
+                case "right_of":
+                    con = RelativeConstraint("self", relative_actor, Modifier.LANE, Relation.G)
+                case _:
+                    raise NotImplementedError(f"Unexpected lane relation key: {key}")
+
+            return {con}
+
+        # ---------- ABSOLUTE CASE ----------
+        if 0 in arg_list:
+            lane_value = arg_list[0]
+        elif "lane" in arg_list:
+            lane_value = arg_list["lane"]
+        else:
+            raise AssertionError(
+                "Absolute 'lane' requires a positional argument (index 0) "
+                "or a named 'lane' argument."
+            )
+
+        # basic sanity check – helps catch parsing issues
+        if lane_value is None:
+            raise AssertionError(
+                "Lane value for absolute 'lane' parsed as None. "
+                "Check literal visitors / argument_list parsing."
+            )
+
+        con = AbsoluteConstraint("self", Modifier.LANE, Relation.EQ, lane_value)
+        return {con}
+
+
+
+    def _build_position_constraints(self, arg_list: dict) -> set:
+        """
+        Build constraints for the 'position' modifier.
+
+        Supports:
+        - Relative:
+            position([a,b], ahead_of: actor, at: ...)
+            position([a,b], behind: actor, at: ...)
+        - Absolute:
+            position([a,b], at: ...)
+            position(12, at: ...)
+        """
+        relative_keys = {"ahead_of", "behind"}
+        present_rel = relative_keys.intersection(arg_list.keys())
+
+        if len(present_rel) > 1:
+            raise AssertionError(
+                f"'position' modifier may have at most one of {relative_keys}, got {present_rel}."
+            )
+
+        # ---------- RELATIVE CASE ----------
+        if present_rel:
+            key = next(iter(present_rel))
+
+            if 0 not in arg_list:
+                raise AssertionError(
+                    "Relative 'position' requires an interval as positional argument (index 0)."
+                )
+
+            interval = arg_list[0]
+            if not (isinstance(interval, (list, tuple)) and len(interval) == 2):
+                raise AssertionError(
+                    "Relative 'position' interval must be a 2-element list/tuple [low, high]."
+                )
+
+            low, high = interval
+            relative_actor = arg_list[key]
+
+            if key == "ahead_of":
+                # self ∈ [other + low, other + high]
+                con1 = RelativeConstraint(
+                    "self", relative_actor, Modifier.POSITION, Relation.LEQ, c=high
+                )
+                con2 = RelativeConstraint(
+                    "self", relative_actor, Modifier.POSITION, Relation.GEQ, c=low
+                )
+            elif key == "behind":
+                # self ∈ [other - high, other - low]
+                con1 = RelativeConstraint(
+                    "self", relative_actor, Modifier.POSITION, Relation.LEQ, c=-low
+                )
+                con2 = RelativeConstraint(
+                    "self", relative_actor, Modifier.POSITION, Relation.GEQ, c=-high
+                )
+            else:
+                raise NotImplementedError(f"Unexpected relative position key: {key}")
+
+            con1.match(con2)
+            return {con1, con2}
+
+        # ---------- ABSOLUTE CASE ----------
+        if 0 in arg_list:
+            value = arg_list[0]
+        elif "position" in arg_list:
+            value = arg_list["position"]
+        else:
+            raise AssertionError(
+                "Absolute 'position' requires a positional argument (index 0) "
+                "or a named 'position' argument."
+            )
+
+        # Interval [low, high]
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            low, high = value
+            con1 = AbsoluteConstraint("self", Modifier.POSITION, Relation.GEQ, low)
+            con2 = AbsoluteConstraint("self", Modifier.POSITION, Relation.LEQ, high)
+            return {con1, con2}
+
+        # Single value
+        con = AbsoluteConstraint("self", Modifier.POSITION, Relation.EQ, value)
+        return {con}
 
 
 def arg_list_helper(arg_list: dict, modifier):

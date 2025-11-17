@@ -1,0 +1,9 @@
+# just an ego with a lane change
+
+scenario follow:
+    ego: car
+
+    do ego.drive(p, duration:  [3s..20s]) with:
+        lane(0, at:start)
+        lane(1, at:end)
+
