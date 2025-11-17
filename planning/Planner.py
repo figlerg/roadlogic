@@ -12,10 +12,13 @@ from typing import List,Union, Sequence
 from planning.asp.MyModel import MyModel
 from planning.asp.generate_plans import generate_plans, visualize_plans
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
+from planning.intermediate_structure.Constraint import RelativeConstraint, AbsoluteConstraint, Modifier
 from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
 from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 from planning.misc.errors import HardSyntaxErrorStrategy
+
+
 
 ## TODO appending planning/ at the start above should solve things for the makefile, but somehow the parsing craps out?
 
@@ -151,30 +154,76 @@ class Planner:
         edge0 = (aut_path[0], aut_path[1])
         gamma0 = G.edges[edge0]['object']
 
-        init_rules = ['init(state(ego,loc(0,0),dyn(1,0))).\n']
+        # --- decide mode: legacy (relative-only) vs. absolute-aware ---
+        has_absolute = any(isinstance(c, AbsoluteConstraint) for c in gamma0)
 
-        grounded = {'ego'}
+        idx = dict()
+
+        if has_absolute:
+            # no fixed ego anchor; let constraints define everything
+            init_rules = []
+            grounded = set()
+        else:
+            # legacy mode: ego is anchor at (0,0)
+            init_rules = ['init(state(ego,loc(0,0),dyn(1,0))).\n']
+            grounded = {'ego'}
+            idx['ego'] = 0
+
         remaining = set(actor_ids) - grounded
         remaining = sorted(remaining)
 
         try:
             remaining.remove('obstacle')
-            warnings.warn("'obstacle' is a special variable name and is used to encode static obstacles. Make sure this is what you want.")
+            warnings.warn(
+                "'obstacle' is a special variable name and is used to encode static obstacles. "
+                "Make sure this is what you want."
+            )
         except (KeyError, ValueError):
             pass
 
-        pair_subconstraints = defaultdict(set)  # each pair of actors may have a relational constraint
+        pair_subconstraints = defaultdict(set)   # each pair of actors may have relational constraints
+        abs_constraints = defaultdict(set)       # absolute constraints per actor
 
-        idx = {actor_str: i + 1 for i, actor_str in enumerate(sorted(actor_ids))}
         # I need to assign each actor a number so that the variable names are not swapped between actors
+        already_indexed_no = len(idx)
+        idx.update({actor_str: already_indexed_no + i for i, actor_str in enumerate(sorted(actor_ids))})
 
+        # collect relative + absolute constraints on the initial edge
         for con in sorted(gamma0, key=str):
-            con.standardize()
-            key = (con.actor_1, con.actor_2)
-            key_flipped = (con.actor_2, con.actor_1)
-            pair_subconstraints[key].add(con)
-            pair_subconstraints[key_flipped].add(con)
+            if isinstance(con, RelativeConstraint):
+                con.standardize()  # just to be safe, flip this to alphabetical version to eliminate nondeterminism
+                key = (con.actor_1, con.actor_2)
+                key_flipped = (con.actor_2, con.actor_1)
+                pair_subconstraints[key].add(con)
+                pair_subconstraints[key_flipped].add(con)
+            elif isinstance(con, AbsoluteConstraint):
+                abs_constraints[con.actor].add(con)
 
+        # --- if we are in absolute-aware mode, first ground actors that are fully constrained absolutely ---
+        if has_absolute:
+            for a in list(remaining):
+                cons_abs = abs_constraints.get(a, set())
+                # use the string values of the modifiers, like in the relative case
+                mods = {c.modifier.value for c in cons_abs}
+
+                # require both lane and position absolutes to ground purely from absolutes
+                if "l" in mods and "p" in mods:
+                    subconstraints_strs = set()
+                    for c in cons_abs:
+                        subconstraints_strs.update(c.asp_goal_format(idx))
+
+                    subconstraints_str = ', '.join(sorted(subconstraints_strs)) if subconstraints_strs else 'true'
+
+                    rule = (
+                        f"1 {{ init(state({a}, loc(S{idx[a]}, L{idx[a]}), dyn(1,0))) : "
+                        f"segment(S{idx[a]}),lane(L{idx[a]}), {subconstraints_str} }} 1.\n"
+                    )
+
+                    init_rules.append(rule)
+                    grounded.add(a)
+                    remaining.remove(a)
+
+        # --- existing relative-constraint logic, now possibly on top of absolute-anchored actors ---
         while remaining:
             progress = False
 
@@ -190,8 +239,13 @@ class Planner:
                         usable_rels[(a1, a2)] = constraint_set
 
                         subconstraints_strs = set()
+                        # relative constraints between a1 and a2
                         for sub in pair_subconstraints[(a1, a2)]:
                             subconstraints_strs.update(sub.asp_goal_format(idx))
+
+                        # also include any absolute constraints on a1 (if present)
+                        for c_abs in abs_constraints.get(a1, set()):
+                            subconstraints_strs.update(c_abs.asp_goal_format(idx))
 
                         subconstraints_str = ', '.join(sorted(subconstraints_strs))
 
@@ -211,6 +265,7 @@ class Planner:
 
         init_rules = sorted(init_rules)
 
+
         goals_rules = []
 
         for i, _ in enumerate(aut_path):
@@ -222,8 +277,11 @@ class Planner:
 
             edge_actor_ids = set()
             for con in gamma:
-                edge_actor_ids.add(con.actor_1)
-                edge_actor_ids.add(con.actor_2)
+                if isinstance(con, RelativeConstraint):
+                    edge_actor_ids.add(con.actor_1)
+                    edge_actor_ids.add(con.actor_2)
+                elif isinstance(con, AbsoluteConstraint):
+                    edge_actor_ids.add(con.actor)
             
             edge_actor_ids = sorted(list(edge_actor_ids), key=str)
 

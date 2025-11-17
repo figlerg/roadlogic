@@ -351,7 +351,7 @@ class TranslationGraph(object):
                     if con.actor_2 == original_name:
                         con.actor_2 = new_name
                 elif isinstance(con,AbsoluteConstraint):
-                    if con.actor == new_name:
+                    if con.actor == original_name:
                         con.actor=new_name
 
     def prune(self):

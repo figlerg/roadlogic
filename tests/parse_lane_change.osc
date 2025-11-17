@@ -5,5 +5,6 @@ scenario follow:
 
     do ego.drive(p, duration:  [3s..20s]) with:
         lane(0, at:start)
+        position([0m..10m], at:start)
         lane(1, at:end)
 

@@ -121,14 +121,14 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
 
     def visitBehavior_invocation(self, ctx: openscenario2Parser.Behavior_invocationContext):
-        # This is essentially the parsing of the atomic behavior.
-
+        # Parse actor and behavior name
         actor_id = self.visit(ctx.actor_expression())
         atomic_behavior = self.visit(ctx.behavior_name())
 
         parent = ctx.parentCtx
-        member_name = "x"
 
+        # Try to get an explicit label (for composed behaviors)
+        member_name = None
         if hasattr(parent, "label_name"):
             label_ctx = parent.label_name()
             if label_ctx is not None:
@@ -136,28 +136,38 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
         atomic_graph = TranslationGraph()
 
-        init_node = f'{member_name}.init'
-        behavior_node = f'{member_name}.{atomic_behavior}'
-        fin_node = f'{member_name}.fin'
+        # Node naming:
+        # - if we have a label, use "<label>.init", "<label>.<behavior>", "<label>.fin"
+        # - if there is no label (top-level atomic behavior), use global "init" / "fin"
+        if member_name:
+            init_node = f"{member_name}.init"
+            behavior_node = f"{member_name}.{atomic_behavior}"
+            fin_node = f"{member_name}.fin"
+        else:
+            init_node = "init"
+            behavior_node = atomic_behavior
+            fin_node = "fin"
 
         atomic_graph.add_node(init_node, initial=True)
         atomic_graph.add_node(behavior_node)
         atomic_graph.add_node(fin_node, final=True)
 
+        # Pre- and postconditions: only if the child exists,
+        # otherwise use empty sets
         bwd_ctx = ctx.behavior_with_declaration()
-
         if bwd_ctx is None:
-            # no conditions present in the syntax
             precondition, postcondition = set(), set()
         else:
-            # any real error inside will now bubble up
             precondition, postcondition = self.visit(bwd_ctx)
 
         atomic_graph.add_transition(init_node, behavior_node, precondition)
         atomic_graph.add_transition(behavior_node, fin_node, postcondition)
-        atomic_graph.substitute_actor('self', actor_id)
+
+        # Replace 'self' by actual actor id in all constraints
+        atomic_graph.substitute_actor("self", actor_id)
 
         return atomic_graph
+
 
     def visitBehavior_with_declaration(self, ctx: openscenario2Parser.Behavior_with_declarationContext):
         # This can appear in a composition, and in a behavior_invocation.
@@ -460,74 +470,74 @@ class TranslationGraphVisitor(openscenario2Visitor):
         return {con}
 
 
-def arg_list_helper(arg_list: dict, modifier):
-    # I assume there is both an 'at' and some positional argument in there
-    # ('ahead_of', 'behind', same_as, left_of, right_of).
+# def arg_list_helper(arg_list: dict, modifier):
+#     # I assume there is both an 'at' and some positional argument in there
+#     # ('ahead_of', 'behind', same_as, left_of, right_of).
 
-    assert 'at' in arg_list.keys(), "Please specify an 'at' argument for position and lane modifiers."
-    start_or_end = arg_list['at']
+#     assert 'at' in arg_list.keys(), "Please specify an 'at' argument for position and lane modifiers."
+#     start_or_end = arg_list['at']
 
-    allowed_positional_keywords = {'ahead_of', 'behind', 'same_as', 'left_of', 'right_of'}
-    assert (len(allowed_positional_keywords.intersection(set(arg_list.keys()))) == 1), \
-        f"Positional modifiers such as '{modifier}' need exactly one of {allowed_positional_keywords} in the argument list."
+#     allowed_positional_keywords = {'ahead_of', 'behind', 'same_as', 'left_of', 'right_of'}
+#     assert (len(allowed_positional_keywords.intersection(set(arg_list.keys()))) == 1), \
+#         f"Positional modifiers such as '{modifier}' need exactly one of {allowed_positional_keywords} in the argument list."
 
-    keys = arg_list.keys()
+#     keys = arg_list.keys()
 
-    if modifier == 'position':
-        assert 0 in arg_list.keys(), "Need an interval as positional argument in modifier declaration."
-        interval = arg_list[0]
+#     if modifier == 'position':
+#         assert 0 in arg_list.keys(), "Need an interval as positional argument in modifier declaration."
+#         interval = arg_list[0]
 
-        if 'ahead_of' in keys:
-            relative_actor = arg_list['ahead_of']
+#         if 'ahead_of' in keys:
+#             relative_actor = arg_list['ahead_of']
 
-            con1 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=interval[1])
-            con2 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=interval[0])
+#             con1 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=interval[1])
+#             con2 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=interval[0])
 
-            con1.match(con2) # saves pointer for partner in both constraints
+#             con1.match(con2) # saves pointer for partner in both constraints
 
-            constraints = {con1, con2}
+#             constraints = {con1, con2}
 
-        elif 'behind' in keys:
-            relative_actor = arg_list['behind']
+#         elif 'behind' in keys:
+#             relative_actor = arg_list['behind']
 
-            con1 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=-interval[0])
-            con2 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=-interval[1])
+#             con1 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.LEQ, c=-interval[0])
+#             con2 = RelativeConstraint('self', relative_actor, Modifier.POSITION, Relation.GEQ, c=-interval[1])
 
-            con1.match(con2) # saves pointer for partner in both constraints
+#             con1.match(con2) # saves pointer for partner in both constraints
 
-            constraints = {con1, con2}
+#             constraints = {con1, con2}
 
-        else:
-            raise NotImplementedError(f"Modifier {modifier} needs an argument 'behind' or 'ahead_of' another actor.")
+#         else:
+#             raise NotImplementedError(f"Modifier {modifier} needs an argument 'behind' or 'ahead_of' another actor.")
 
-    if modifier == 'lane':
+#     if modifier == 'lane':
 
-        if 'same_as' in keys:
-            relative_actor = arg_list['same_as']
+#         if 'same_as' in keys:
+#             relative_actor = arg_list['same_as']
 
-            con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.EQ)
+#             con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.EQ)
 
-            constraints = {con1}
+#             constraints = {con1}
 
-        elif 'left_of' in keys:
-            relative_actor = arg_list['left_of']
+#         elif 'left_of' in keys:
+#             relative_actor = arg_list['left_of']
 
-            con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.L)
+#             con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.L)
 
-            constraints = {con1}
+#             constraints = {con1}
 
-        elif 'right_of' in keys:
-            relative_actor = arg_list['right_of']
+#         elif 'right_of' in keys:
+#             relative_actor = arg_list['right_of']
 
-            con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.G)
+#             con1 = RelativeConstraint('self', relative_actor, Modifier.LANE, Relation.G)
 
-            constraints = {con1}
+#             constraints = {con1}
 
-        else:
-            raise NotImplementedError(
-                f"Modifier {modifier} needs an argument 'same_as', 'left_of', 'right_of' another actor.")
+#         else:
+#             raise NotImplementedError(
+#                 f"Modifier {modifier} needs an argument 'same_as', 'left_of', 'right_of' another actor.")
 
-    return start_or_end, constraints
+#     return start_or_end, constraints
 
 
 if __name__ == '__main__':

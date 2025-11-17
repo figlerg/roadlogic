@@ -121,30 +121,30 @@ class BaseConstraint(ABC):
 
     @property
     def interval_partner(self):
-        return self.__interval_partner
+        return self._interval_partner
     
     def match(self, other):
         # matches this constraint to another constraint. Is invoked if both are created from a position interval.
         # makes bookkeeping easier
 
-        self.__interval_partner = other
-        other.__interval_partner = self
+        self._interval_partner = other
+        other._interval_partner = self
 
     @property
     def relation(self):
-        return self.__relation
+        return self._relation
 
     @relation.setter
     def relation(self, value):
-        self.__relation = value
+        self._relation = value
 
     @property
     def modifier(self):
-        return self.__modifier
+        return self._modifier
 
     @modifier.setter
     def modifier(self, value):
-        self.__modifier = value
+        self._modifier = value
 
 
 
@@ -192,12 +192,16 @@ class AbsoluteConstraint(BaseConstraint):
         self._relation = relation
         self._value = value
 
-        self.__interval_partner = None
+        self._interval_partner = None
 
 
     @property
     def actor(self) -> str:
         return self._actor
+    
+    @actor.setter
+    def actor(self, value):
+        self._actor = value
 
     @property
     def value(self) -> float:
@@ -310,8 +314,8 @@ class AbsoluteConstraint(BaseConstraint):
 
             if rel == Relation.EQ:
                 op = "="
-            elif rel in {Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ}:
-                op = str(rel)  # '<', '>', '<=', '>=', '!='
+            elif rel in (Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ):
+                op = rel.value  # '<', '>', '<=', '>=', '!='
             else:
                 raise NotImplementedError(
                     f"Unexpected relation in AbsoluteConstraint (lane): {rel}"
@@ -326,8 +330,6 @@ class AbsoluteConstraint(BaseConstraint):
 
             # ----- interval case: two AbsoluteConstraints paired via interval_partner -----
             if partner is not None:
-                # we only need one of the pair to emit the combined atom; the other will emit
-                # the same thing, but that is harmless for ASP, or you can use an id-tie-break
                 v1 = self.value
                 v2 = partner.value
 
@@ -350,8 +352,8 @@ class AbsoluteConstraint(BaseConstraint):
 
             if rel == Relation.EQ:
                 op = "="
-            elif rel in {Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ}:
-                op = str(rel)
+            elif rel in (Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ):
+                op = rel.value
             else:
                 raise NotImplementedError(
                     f"Unexpected relation in AbsoluteConstraint (position): {rel}"
@@ -364,6 +366,7 @@ class AbsoluteConstraint(BaseConstraint):
             raise NotImplementedError(
                 f"Unsupported modifier in AbsoluteConstraint.asp_goal_format: {self.modifier}"
             )
+
 
 
     
@@ -419,34 +422,34 @@ class RelativeConstraint(BaseConstraint):
 
 
     def __init__(self, actor_1, actor_2, modifier, relation, c=0):
-        self.__actor_1 = actor_1
-        self.__actor_2 = actor_2
-        self.__modifier = modifier
-        self.__relation = relation
-        self.__c = c
+        self._actor_1 = actor_1
+        self._actor_2 = actor_2
+        self._modifier = modifier
+        self._relation = relation
+        self._c = c
 
         # added: I want to keep a pointer for the other part of the interval in case of position intervals
-        self.__interval_partner = None
+        self._interval_partner = None
 
     @property
     def c(self):
-        return self.__c
+        return self._c
 
     @property
     def actor_1(self):
-        return self.__actor_1
+        return self._actor_1
 
     @actor_1.setter
     def actor_1(self, value):
-        self.__actor_1 = value
+        self._actor_1 = value
 
     @property
     def actor_2(self):
-        return self.__actor_2
+        return self._actor_2
 
     @actor_2.setter
     def actor_2(self, value):
-        self.__actor_2 = value
+        self._actor_2 = value
 
     def eval(self, placement: dict):
         a1 = self.actor_1
@@ -488,15 +491,15 @@ class RelativeConstraint(BaseConstraint):
         raise NotImplementedError("This should not be reachable.")
 
     def __str__(self):
-        actor_1_decorated = f"{self.__modifier}_{self.__actor_1}"
-        actor_2_decorated = f"{self.__modifier}_{self.__actor_2}"
+        actor_1_decorated = f"{self._modifier}_{self._actor_1}"
+        actor_2_decorated = f"{self._modifier}_{self._actor_2}"
 
-        out = f"{actor_1_decorated} {self.__relation} {actor_2_decorated}"
+        out = f"{actor_1_decorated} {self._relation} {actor_2_decorated}"
 
-        if self.__c > 0:
-            out += f" + {self.__c}"
-        elif self.__c < 0:
-            out += f" {self.__c}"
+        if self._c > 0:
+            out += f" + {self._c}"
+        elif self._c < 0:
+            out += f" {self._c}"
 
         return out
 
@@ -523,14 +526,14 @@ class RelativeConstraint(BaseConstraint):
             return True
 
         # there's a second way for the constraints to be equal: namely if they are flipped
-        if self.__relation == Relation.EQ or self.__relation == Relation.INEQ:
-            a1 = self.__actor_1
-            b1 = self.__actor_2
-            a2 = other.__actor_1
-            b2 = other.__actor_2
+        if self._relation == Relation.EQ or self._relation == Relation.INEQ:
+            a1 = self._actor_1
+            b1 = self._actor_2
+            a2 = other._actor_1
+            b2 = other._actor_2
 
-            c1 = self.__c
-            c2 = other.__c
+            c1 = self._c
+            c2 = other._c
 
             # Once we are in this case, the only way the two objects can encode the same constraint is when the two
             # sides are flipped and c is moved to the other side.
@@ -551,27 +554,27 @@ class RelativeConstraint(BaseConstraint):
         # "goal1(T,t) :- time(T,t), query(t), T<=t, holds(state(car1,loc(L1,S1),dyn(Vel1,0)), T), holds(state(ego,loc(L,S),dyn(Vel,0)), T)"
         #  outside and add only some atoms here which encode the relation.
 
-        actor1 = str(self.__actor_1)
-        actor2 = str(self.__actor_2)
+        actor1 = str(self._actor_1)
+        actor2 = str(self._actor_2)
 
         goal_atoms = []
 
         i1 = indices[actor1]
         i2 = indices[actor2]
 
-        if self.__modifier == Modifier.LANE:
-            if self.__relation == Relation.L:
+        if self._modifier == Modifier.LANE:
+            if self._relation == Relation.L:
                 goal_atoms.append(f"L{i1} < L{i2}")
-            elif self.__relation == Relation.G:
+            elif self._relation == Relation.G:
                 goal_atoms.append(f"L{i1} > L{i2}")
-            elif self.__relation == Relation.EQ:
+            elif self._relation == Relation.EQ:
                 goal_atoms.append(f"L{i1} = L{i2}")
             else:
                 raise NotImplementedError
 
-        elif self.__modifier == Modifier.POSITION:
-            partner = self.__interval_partner
-            cs = [self.__c, partner.__c]
+        elif self._modifier == Modifier.POSITION:
+            partner = self._interval_partner
+            cs = [self._c, partner._c]
             a, b = int(min(cs)), int(max(cs))
 
             # ego... with position([a..b], behind:car1, at:start)
@@ -597,25 +600,25 @@ class RelativeConstraint(BaseConstraint):
 
     @property
     def exp1(self):
-        return f"{self.__modifier}({self.__actor_1})"
+        return f"{self._modifier}({self._actor_1})"
 
     @property
     def exp2(self):
-        return f"{self.__modifier}({self.__actor_2})"
+        return f"{self._modifier}({self._actor_2})"
 
 
     def flip(self):
         # rewrite "p(actor2) R p(actor1) + c" as "p(actor) R' p(actor2) -c"
-        self.__actor_1, self.__actor_2 = self.actor_2, self.__actor_1
-        self.__c *= -1
+        self._actor_1, self._actor_2 = self.actor_2, self._actor_1
+        self._c *= -1
 
-        new_rel = self.__relation.flipped
+        new_rel = self._relation.flipped
 
-        self.__relation = None
-        self.__relation = new_rel
+        self._relation = None
+        self._relation = new_rel
 
     def standardize(self):
-        actors = [self.__actor_1, self.__actor_2]
+        actors = [self._actor_1, self._actor_2]
         if not sorted(actors) == actors:
             self.flip()
 
@@ -637,28 +640,28 @@ class RelativeConstraint(BaseConstraint):
         if self == other:
             return True
 
-        if self.__modifier != other.__modifier:
+        if self._modifier != other._modifier:
             return False
 
         self.standardize()  # Beware, this happens in place
         other.standardize()
 
-        if self.__actor_1 == other.__actor_1 and self.__actor_2 == other.__actor_2:
+        if self._actor_1 == other._actor_1 and self._actor_2 == other._actor_2:
             smaller_rels = [Relation.L, Relation.LEQ]
             greater_rels = [Relation.G, Relation.GEQ]
 
-            if self.__relation in smaller_rels and other.__relation in smaller_rels:
-                if self.__c < other.__c:
+            if self._relation in smaller_rels and other._relation in smaller_rels:
+                if self._c < other._c:
                     return True
-                if self.__relation == Relation.L:
+                if self._relation == Relation.L:
                     # This differs between lesser and lesser-equal. This case means that self is stricter.
                     return True
 
             # a > b + c1, a > b + c2, if c2 is greater the constraint is tighter
-            if self.__relation in greater_rels and other.__relation in greater_rels:
-                if self.__c > other.__c:
+            if self._relation in greater_rels and other._relation in greater_rels:
+                if self._c > other._c:
                     return True
-                if self.__relation == Relation.G:
+                if self._relation == Relation.G:
                     return True
 
         return False
