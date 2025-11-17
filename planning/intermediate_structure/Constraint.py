@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 
 
@@ -103,12 +103,50 @@ class BaseConstraint(ABC):
     @abstractmethod
     def __str__(self) -> str:
         raise NotImplementedError
-
+    
+    @abstractmethod  # maybe needed because sometimes I use sets and don't want double constraints
+    def __eq__(self) -> bool:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def asp_goal_format(self, indices) -> str:
+        raise NotImplementedError
+    
     def is_relative(self) -> bool:
         return False
 
     def is_absolute(self) -> bool:
         return False
+    
+
+    @property
+    def interval_partner(self):
+        return self.__interval_partner
+    
+    def match(self, other):
+        # matches this constraint to another constraint. Is invoked if both are created from a position interval.
+        # makes bookkeeping easier
+
+        self.__interval_partner = other
+        other.__interval_partner = self
+
+    @property
+    def relation(self):
+        return self.__relation
+
+    @relation.setter
+    def relation(self, value):
+        self.__relation = value
+
+    @property
+    def modifier(self):
+        return self.__modifier
+
+    @modifier.setter
+    def modifier(self, value):
+        self.__modifier = value
+
+
 
 
 class AbsoluteConstraint(BaseConstraint):
@@ -154,17 +192,12 @@ class AbsoluteConstraint(BaseConstraint):
         self._relation = relation
         self._value = value
 
+        self.__interval_partner = None
+
+
     @property
     def actor(self) -> str:
         return self._actor
-
-    @property
-    def modifier(self) -> Modifier:
-        return self._modifier
-
-    @property
-    def relation(self) -> Relation:
-        return self._relation
 
     @property
     def value(self) -> float:
@@ -212,6 +245,129 @@ class AbsoluteConstraint(BaseConstraint):
 
     def __repr__(self) -> str:
         return str(self)
+    
+    def __hash__(self):
+        return hash(repr(sorted(self.__dict__.items())))
+    
+    def __eq__(self, other):
+
+        if type(other) is not type(self):
+            return False
+
+        # normally I would just compare dict, but this leads to an infinite recursion because the __interval_partner
+        #  is also a constraint. So I need to compare dict by hand and cast the object to str before comparing.
+
+        dict1_without_interval_partner = {k: v for k, v in self.__dict__.items() if
+                                          k != '_Constraint__interval_partner'}
+        dict2_without_interval_partner = {k: v for k, v in other.__dict__.items() if
+                                          k != '_Constraint__interval_partner'}
+
+        if dict1_without_interval_partner == dict2_without_interval_partner:
+            return True
+
+
+    def asp_goal_format(self, indices) -> List[str]:
+        """
+        Return a list of ASP atoms encoding this absolute constraint.
+
+        Parameters
+        ----------
+        indices : dict[str, int]
+            Mapping from actor name to integer index used in the ASP state
+            variables (e.g. ego -> 0 so that we use L0, S0, ...).
+
+        Returns
+        -------
+        list[str]
+            List of strings representing ASP atoms.
+        """
+        actor = str(self.actor)
+        if actor not in indices:
+            raise KeyError(
+                f"Actor '{actor}' not found in indices passed to asp_goal_format."
+            )
+
+        i = indices[actor]
+        goal_atoms: list[str] = []
+
+        # lane vs position
+        if self.modifier == Modifier.LANE:
+            var = f"L{i}"
+
+            partner = getattr(self, "interval_partner", None)
+            if partner is not None:
+                # If you ever support lane intervals, you could handle them here.
+                raise NotImplementedError(
+                    "Lane intervals for AbsoluteConstraint not supported."
+                )
+
+            rel = self.relation
+            val = self.value
+
+            # make lane values pretty (int) if they are integral floats
+            if isinstance(val, float) and val.is_integer():
+                val = int(val)
+
+            if rel == Relation.EQ:
+                op = "="
+            elif rel in {Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ}:
+                op = str(rel)  # '<', '>', '<=', '>=', '!='
+            else:
+                raise NotImplementedError(
+                    f"Unexpected relation in AbsoluteConstraint (lane): {rel}"
+                )
+
+            goal_atoms.append(f"{var} {op} {val}")
+            return goal_atoms
+
+        elif self.modifier == Modifier.POSITION:
+            var = f"S{i}"
+            partner = getattr(self, "interval_partner", None)
+
+            # ----- interval case: two AbsoluteConstraints paired via interval_partner -----
+            if partner is not None:
+                # we only need one of the pair to emit the combined atom; the other will emit
+                # the same thing, but that is harmless for ASP, or you can use an id-tie-break
+                v1 = self.value
+                v2 = partner.value
+
+                # normalize to integers where appropriate
+                vals = []
+                for v in (v1, v2):
+                    if isinstance(v, float) and v.is_integer():
+                        v = int(v)
+                    vals.append(v)
+
+                low, high = sorted(vals)
+                goal_atoms.append(f"{low} <= {var} <= {high}")
+                return goal_atoms
+
+            # ----- non-interval / single inequality case -----
+            rel = self.relation
+            val = self.value
+            if isinstance(val, float) and val.is_integer():
+                val = int(val)
+
+            if rel == Relation.EQ:
+                op = "="
+            elif rel in {Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ}:
+                op = str(rel)
+            else:
+                raise NotImplementedError(
+                    f"Unexpected relation in AbsoluteConstraint (position): {rel}"
+                )
+
+            goal_atoms.append(f"{var} {op} {val}")
+            return goal_atoms
+
+        else:
+            raise NotImplementedError(
+                f"Unsupported modifier in AbsoluteConstraint.asp_goal_format: {self.modifier}"
+            )
+
+
+    
+
 
 
 class RelativeConstraint(BaseConstraint):
@@ -273,28 +429,8 @@ class RelativeConstraint(BaseConstraint):
         self.__interval_partner = None
 
     @property
-    def interval_partner(self):
-        return self.__interval_partner
-
-    @property
     def c(self):
         return self.__c
-
-    @property
-    def relation(self):
-        return self.__relation
-
-    @relation.setter
-    def relation(self, value):
-        self.__relation = value
-
-    @property
-    def modifier(self):
-        return self.__modifier
-
-    @modifier.setter
-    def modifier(self, value):
-        self.__modifier = value
 
     @property
     def actor_1(self):
@@ -372,6 +508,9 @@ class RelativeConstraint(BaseConstraint):
 
     def __eq__(self, other):
 
+        if type(other) is not type(self):
+            return False
+
         # normally I would just compare dict, but this leads to an infinite recursion because the __interval_partner
         #  is also a constraint. So I need to compare dict by hand and cast the object to str before comparing.
 
@@ -403,76 +542,6 @@ class RelativeConstraint(BaseConstraint):
         else:
             return False
 
-    # Some utilities:
-
-    def match(self, other):
-        # matches this constraint to another constraint. Is invoked if both are created from a position interval.
-        # makes bookkeeping easier
-
-        self.__interval_partner = other
-        other.__interval_partner = self
-
-    # def related(self, other):
-    #     # check if both modifier and actors coincide
-    #     # NOTE: this assumes that the order of two actors is the same, which is how I create them in the parser
-    #     return self.actor_1 == other.actor_1 \
-    #         and self.actor_2 == other.actor_2 \
-    #         and self.__modifier == other.__modifier \
-
-    # def asp_format(self, segment_length = None, t = 0):
-    #
-    #     if not t:
-    #         t_str = '0'  # only initial conditions are handled with a concrete t
-    #     else:
-    #         t_str = f'T{t}'  # the rest is an abstract time point we don't know a priori (created by clingo)
-    #
-    #     if self.__modifier == Modifier.LANE:
-    #
-    #         if self.__relation == Relation.EQ:
-    #             out = f"same_lane({self.__actor_1},{self.__actor_2},{t_str})"
-    #         elif self.__relation == Relation.L:
-    #             out = f"left_of({self.__actor_1},{self.__actor_2},{t_str})"
-    #         elif self.__relation == Relation.G:
-    #             out = f"right_of({self.__actor_1},{self.__actor_2},{t_str})"
-    #         else:
-    #             raise NotImplementedError
-    #
-    #
-    #     elif self.__modifier == Modifier.POSITION:
-    #         # out = f'% position placeholder for constraint {self.__str__()}'
-    #
-    #         partner = self.__interval_partner
-    #
-    #         actor1 = str(self.__actor_1)
-    #         actor2 = str(self.__actor_2)
-    #
-    #         # position constraints always appear in pairs and are of the form p(x) REL p(y) + c. So I can recreate the interval from here.
-    #
-    #         cs = [self.__c, partner.__c]
-    #         a,b = int(min(cs)/segment_length), int(max(cs)/segment_length)
-    #         # TODO this might create problems.
-    #         #   Won't work for arbitrary floats in the intervals.
-    #
-    #         # TODO this is a bit weird: might be that I need to handle t=0 and t=T{t} separately... can't write the positive rule below as a fact, right?
-    #         # out = f":- S - S2 > {a}, holds(on({actor1},_,S),0), holds(on({actor2},_,S2),0)"
-    #         # out += f":- S - S2 < {b}, holds(on({actor1},_,S),0), holds(on({actor2},_,S2),0)"
-    #
-    #         if t:
-    #             # this is the POSITIVE statement that must hold
-    #             out = f"segment(S), segment(S2), holds(on({actor1},_,S),{t_str}),holds(on({actor2},_,S2),{t_str}), S - S2 >= {a}, S - S2 <= {b}"
-    #             # i.e. "the position at start must be in the interval (scaled down to segment length)"
-    #         else:
-    #             # at time 0 we need to phrase this as a constraint and negate the inequalities, because otherwise S, S2 are not safe (don't ask me why)
-    #             # also, we need to do the two separately to get disjunction of the two possibilities to be NOT in the interval.
-    #             out = f":-segment(S), segment(S2), holds(on({actor1},_,S),{t_str}),holds(on({actor2},_,S2),{t_str}), S - S2 < {a}.\n" \
-    #                   f":-segment(S), segment(S2), holds(on({actor1},_,S),{t_str}),holds(on({actor2},_,S2),{t_str}), S - S2 > {b}"
-    #             # out = '%' # debugging
-    #
-    #     else:
-    #         raise NotImplementedError("Expected lane or position modifier.")
-    #
-    #
-    #     return out
 
     def asp_goal_format(self, indices):
         # All the constraints are relational constraints between two actors. In the end I want something like this:
@@ -534,48 +603,6 @@ class RelativeConstraint(BaseConstraint):
     def exp2(self):
         return f"{self.__modifier}({self.__actor_2})"
 
-        # In the final structure we want to use z3:
-        # def to_z3(self):
-        #     if self.__modifier == Modifier.POSITION:
-        #         z3_type = Real
-        #     elif self.__modifier == Modifier.LANE:
-        #         z3_type = Int
-        #     else:
-        #         raise NotImplementedError()
-        # exp1 = z3_type(self.exp1)
-        # exp2 = z3_type(self.exp2)
-        #
-        # if self.__c:
-        #
-        #     if self.__relation == Relation.EQ:
-        #         return exp1 == exp2 + self.__c
-        #     elif self.__relation == Relation.LEQ:
-        #         return exp1 <= exp2 + self.__c
-        #     elif self.__relation == Relation.GEQ:
-        #         return exp1 >= exp2 + self.__c
-        #     elif self.__relation == Relation.L:
-        #         return exp1 < exp2 + self.__c
-        #     elif self.__relation == Relation.G:
-        #         return exp1 > exp2 + self.__c
-        #     elif self.__relation == Relation.INEQ:
-        #         return exp1 != exp2 + self.__c
-        #     else:
-        #         raise Exception('Surprising outcome!')
-        #
-        # if self.__relation == Relation.EQ:
-        #     return exp1 == exp2
-        # elif self.__relation == Relation.LEQ:
-        #     return exp1 <= exp2
-        # elif self.__relation == Relation.GEQ:
-        #     return exp1 >= exp2
-        # elif self.__relation == Relation.L:
-        #     return exp1 < exp2
-        # elif self.__relation == Relation.G:
-        #     return exp1 > exp2
-        # elif self.__relation == Relation.INEQ:
-        #     return exp1 != exp2
-        # else:
-        #     raise Exception('Surprising outcome!')
 
     def flip(self):
         # rewrite "p(actor2) R p(actor1) + c" as "p(actor) R' p(actor2) -c"
@@ -636,32 +663,6 @@ class RelativeConstraint(BaseConstraint):
 
         return False
 
-    # def __gt__(self, other):
-    #     if self == other:
-    #         return True
-    #     self.standardize() # Beware, this happens in place
-    #     other.standardize()
-    #
-    #
-    #     if self.__actor_1 == other.__actor_1 and self.__actor_2 == other.__actor_2:
-    #         smaller_rels = [Relation.L, Relation.LEQ]
-    #         greater_rels = [Relation.G, Relation.GEQ]
-    #
-    #         if self.__relation in smaller_rels and other.__relation in smaller_rels:
-    #             if self.__c > other.__c:
-    #                 return True
-    #             if other.__relation == Relation.L:
-    #                 # This differs between lesser and lesser-equal. This case means that self is stricter.
-    #                 return True
-    #
-    #         # a > b + c1, a > b + c2, if c2 is greater the constraint is tighter
-    #         if self.__relation in greater_rels and other.__relation in greater_rels:
-    #             if self.__c < other.__c:
-    #                 return True
-    #             if other.__relation == Relation.G:
-    #                 return True
-    #
-    #     return False
 
 
 

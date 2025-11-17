@@ -332,7 +332,7 @@ class TranslationGraph(object):
             transition_constraints = set()
 
             # Just some syntactic sugar in case I only add one constraint. This way I can drop the list brackets.
-            if type(constraints) == RelativeConstraint:
+            if isinstance(constraints, RelativeConstraint):
                 transition_constraints.add(constraints)
 
         self.__graph.add_edge(v1, v2, object=transition_constraints)
