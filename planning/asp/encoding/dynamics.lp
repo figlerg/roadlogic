@@ -74,7 +74,7 @@ stay(V, t) :- holds(state(V, loc(_, _), dyn(_, Vel_lat)), T), Vel_lat != 0, bloc
    holds(state(V1, loc(S2, L), dyn(_, _)), t),
    holds(state(V2, loc(S_mid, L), dyn(_, _)), t),
    vehicle(V1), vehicle(V2),
-   segment(S1), segment(S2), segment(S_mid), lane(L), time(t-1),
+   segment(S1), segment(S2), segment(S_mid), lane(L),
    V1 != V2,
    S1 < S_mid, S_mid < S2.
 
@@ -83,7 +83,7 @@ stay(V, t) :- holds(state(V, loc(_, _), dyn(_, Vel_lat)), T), Vel_lat != 0, bloc
    holds(state(V1, loc(S2, 		L-1), 	dyn(_, _)), t),
    holds(state(V2, loc(S_mid, 	L-1), 	dyn(_,_)), t),
    vehicle(V1), vehicle(V2),
-   segment(S1), segment(S2), segment(S_mid), lane(L), lane(L-1), time(t-1),
+   segment(S1), segment(S2), segment(S_mid), lane(L), lane(L-1),
    V1 != V2,
    S1 - safety_distance_back < S_mid, S_mid < S2.
 
@@ -92,7 +92,7 @@ stay(V, t) :- holds(state(V, loc(_, _), dyn(_, Vel_lat)), T), Vel_lat != 0, bloc
    holds(state(V1, loc(S2, 		L+1), 	dyn(_, _)), t),
    holds(state(V2, loc(S_mid, 	L+1), 	dyn(_,_)), t),
    vehicle(V1), vehicle(V2),
-   segment(S1), segment(S2), segment(S_mid), lane(L), lane(L+1), time(t-1),
+   segment(S1), segment(S2), segment(S_mid), lane(L), lane(L+1),
    V1 != V2,
    S1 - safety_distance_back < S_mid, S_mid < S2.
 

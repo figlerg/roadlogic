@@ -217,6 +217,9 @@ class Planner:
             if i == 0 or i == len(aut_path) - 1:
                 continue  # first handled above, last is out of bounds
 
+            # if goal_i was true at the previous step then it will be still true at the current step (it's enough to be true once!)
+            goals_rules.append(f'goal{i}(t) :- goal{i}(t-1).\n')
+
             edge = (aut_path[i], aut_path[i + 1])
             gamma = G.edges[edge]['object']
 
@@ -228,7 +231,10 @@ class Planner:
             edge_actor_ids = sorted(list(edge_actor_ids), key=str)
 
             # the base is the part which needs to be in each of the goal rules
-            rule = f'goal{i}(t) :- time(t), '
+            rule = f'goal{i}(t) :- '
+            if i > 1:
+                # serialization of the goals: goal_i, i >1, can be true only if goal_{i-1} is true
+                rule = rule + f'goal{i-1}(t), '
 
             # TODO this is probably not good yet. I just place all actors in the order of their appearance
             idx = {}
@@ -260,17 +266,17 @@ class Planner:
         goals_rules = sorted(goals_rules)
 
         # now we only need the assertion that the checklist is sat
-        n = len(aut_path) - 1
-        times = [f'T{i}' for i in range(1, n)]
         vehicles = [f'vehicle({actor}).\n' for actor in actor_ids]
         vehicles = sorted(vehicles)
+        # we only need to assert that the last goal is satisfied which, by construction, implicitly means that all previous goals are also satisfied
+        n = len(aut_path) - 1
+        # use the following two lines of code instead of the 3rd line of code if you want to implement the part "t > T3 + 1" from the original encoding
+        goal = f"goal(t) :- goal{n - 1}(t), goal{n - 1}(t-1), goal{n - 1}(t-2).\n"
+        goal_assertion = f":- query(t), not goal(t).\n"
+        # use the following line of code only after target values for the difference (S2 - S1), for both phases B and C
+        #    in the OS2 spec, are sampled from the ranges specified in the OS2 spec
+        #goal_assertion = f":- query(t), not goal{n-1}(t).\n"
 
-        goals = [f'goal{i}(T{i})' for i in range(1, n)]
-
-        # not sure why I added a constant to the final time. probably to see what is happening better on the animation
-        # TODO maybe add this as a padding_param=1 above. It could be useful in general, but IMO not worth it computing for 5 more steps
-        goal = f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t, t > {times[-1]} + 1.\n"
-        goal_assertion = f":- query(t), not goal({','.join(['_'] * (n - 1))},t).\n"
 
         with open(instance_file_target, 'w') as f:
             f.write('% INITIAL SETUP FACTS:\n')  # just in-file documentation
@@ -278,13 +284,12 @@ class Planner:
             f.writelines(init_rules)  # the initials
             f.writelines(['\n'] + vehicles + ['\n'])
 
-            f.write('\n#program check(t).\n\n')  # all the initials are in base
-
+            f.write('\n#program step(t).\n\n')
             f.write('% GOAL RULES:\n')
-            f.write('time(t).\n\n')
             f.writelines(goals_rules)
 
-            f.write('\n\n % GOAL ASSERTION:\n')
+            f.write('\n#program check(t).\n\n')  # all the initials are in base
+            f.write(f'#defined goal{n-1}/1.\n')  # declare goal{n-1} to avoid a warning at the first iteration when goal{n-1} is not known yet in the check-subprogram
             f.write(goal)
             f.write(goal_assertion)
 
