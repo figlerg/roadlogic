@@ -159,15 +159,23 @@ class Planner:
 
         idx = dict()
 
+        warnings.warn(
+            "Legacy initialization: ego fixed at lane index 2. "
+            "This assumes a 3-lane road (with lane ids 1,2,3) and must be removed in future versions.",
+            RuntimeWarning
+        )
+
+
         if has_absolute:
             # no fixed ego anchor; let constraints define everything
             init_rules = []
             grounded = set()
         else:
-            # legacy mode: ego is anchor at (0,0)
-            init_rules = ['init(state(ego,loc(0,0),dyn(1,0))).\n']
+            placement=2
+            # legacy mode: ego is anchor at (0,placement) -> lane "placement" as default
+            init_rules = [f'init(state(ego,loc(0,{placement}),dyn(1,0))).\n']
             grounded = {'ego'}
-            idx['ego'] = 0
+            idx['ego'] = placement
 
         remaining = set(actor_ids) - grounded
         remaining = sorted(remaining)

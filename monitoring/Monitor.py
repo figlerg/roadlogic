@@ -4,7 +4,7 @@ from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 from antlr4 import FileStream, CommonTokenStream
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
-from planning.intermediate_structure.Constraint import RelativeConstraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
+from planning.intermediate_structure.Constraint import RelativeConstraint, AbsoluteConstraint, Modifier, Relation, BaseConstraint
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
 from planning.misc.errors import HardSyntaxErrorStrategy
 from syma.automaton.automaton import Location, SymbolicAutomaton
@@ -17,8 +17,6 @@ from syma_arv.monitor.tropical import TropicalMonitor
 
 from collections import deque
 from typing import Set, Union, List
-from planning.intermediate_structure.Constraint import RelativeConstraint as MyConstraint # Dejan and I used the same name for our classes so I renamed mine in here
-
 from commonroad_extensions.plan_execution.id_hash import encode, decode
 
 import csv
@@ -318,7 +316,7 @@ class Monitor:
                 # # 2 -- 0<=a<5 --> 3
                 # aut.add_transition(loc_2, loc_3, constraint_3)
 
-                cons_osc:Set[MyConstraint] = T[v,w]
+                cons_osc:Set[BaseConstraint] = T[v,w]
 
                 cons_syma_node = None
 
@@ -326,14 +324,24 @@ class Monitor:
                 for con in cons_osc:
 
                     # potentially we introduce new variables
-                    con:MyConstraint
-                    v1 = con.exp1
-                    v2 = con.exp2
+                    con:Union[RelativeConstraint, AbsoluteConstraint]
 
-                    syma_aut.add_var(v1, domain=(-100, 100))  # TODO these limits are hardcoded
-                    syma_aut.add_var(v2, domain=(-100, 100))  # TODO these limits are hardcoded
+                    if isinstance(con, RelativeConstraint):
+                        v1 = con.exp1
+                        v2 = con.exp2
 
-                    new_con = convert_constraint(con)
+                        syma_aut.add_var(v1, domain=(-100, 100))  # TODO these limits are hardcoded
+                        syma_aut.add_var(v2, domain=(-100, 100))  # TODO these limits are hardcoded
+
+                        new_con = convert_relative_constraint(con)
+                    
+                    elif isinstance(con, AbsoluteConstraint):
+                        v1 = con.exp
+                        print(v1)
+                        syma_aut.add_var(v1, domain=(-100, 100))  # TODO these limits are hardcoded
+
+                        new_con = convert_absolute_constraint(con)
+                        
 
                     # first node
                     if not cons_syma_node:
@@ -347,7 +355,7 @@ class Monitor:
                 cons_syma = Constraint(formula=cons_syma_node)  # TODO not sure if the alphabet param is ecpected
 
                 
-
+                print(location_by_id)
                 syma_aut.add_transition(location_by_id[v],location_by_id[w], constraint=cons_syma)
 
         add_self_loops(syma_aut)
@@ -496,7 +504,7 @@ class Monitor:
         return str(key)
 
 
-def convert_constraint(con:MyConstraint) -> Node:
+def convert_relative_constraint(con:RelativeConstraint) -> Node:
     """
     Transforms a single constraint in the osc2scenic format to a constraint Node object in the syma-arv format.
 
@@ -545,6 +553,49 @@ def convert_constraint(con:MyConstraint) -> Node:
             out = NotNode(EqualNode(lhs,rhs))
 
     return out
+
+def convert_absolute_constraint(con: AbsoluteConstraint) -> Node:
+    """
+    Transforms a single absolute constraint into a constraint Node object
+    in the syma-arv format.
+
+    Absolute constraints have the form:
+        p(actor) R c
+        l(actor) R c
+    where p, l mean longitudinal position and lane, respectively.
+    """
+
+    # same variable name as used in syma_aut.add_var(...)
+    v1 = con.exp          # "p(ego)" or "l(ego)"
+    v2 = con.value        # numeric constant
+
+    v1_node = VariableNode(v1)
+    v2_node = ConstantNode(v2)
+
+    lhs = v1_node
+    rhs = v2_node
+
+    match con.relation.value:
+        case '==':
+            out = EqualNode(lhs, rhs)
+        case '<=':
+            out = LEQNode(lhs, rhs)
+        case '>=':
+            out = GEQNode(lhs, rhs)
+        case '<':
+            out = LessNode(lhs, rhs)
+        case '>':
+            out = GreaterNode(lhs, rhs)
+        case '!=':
+            out = NotNode(EqualNode(lhs, rhs))
+        case _:
+            raise NotImplementedError(
+                f"Unexpected relation in AbsoluteConstraint: {con.relation}"
+            )
+
+    return out
+
+
 
 def convert_holds(pos_var, lane_var, pos_target, lane_target, tolerance) -> Node:
     # check lane exactly and pos with tolerance

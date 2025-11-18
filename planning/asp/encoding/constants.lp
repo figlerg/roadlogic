@@ -7,7 +7,7 @@
 #program base.
 
 % grid size
-#const max_lane = 1.
+#const max_lane = 3.
 #const max_segment = 300.
 
 % actor constraints

@@ -207,6 +207,17 @@ class AbsoluteConstraint(BaseConstraint):
     def value(self) -> float:
         return self._value
 
+    @property
+    def exp(self)-> str:
+        if self.modifier == Modifier.POSITION:
+            out = f"p({self.actor})"
+        elif self.modifier == Modifier.LANE:
+            out = f"l({self.actor})"
+        else:
+            raise NotImplementedError(f"Unsupported modifier in AbsoluteConstraint: {self.modifier}")
+
+        return out
+
     def is_absolute(self) -> bool:
         return True
 

@@ -211,7 +211,16 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
             warnings.warn("The mapping from asp-model to planning problem is unfinished: It currently expects exactly three lanes. TODO enable a check which only maps to existing lanes.")
 
             xy_lon = coordinate_system.convert_to_cartesian_coords(lon_pos + padding_distance_left,0)
-            (x, y), _ = project_to_polyline(xy_lon, lane_centerlines[lat_pos+2])  # +2 because we convert -1,0.1 to 1,2,3. (lanes are numbered from left to right)
+
+            try:
+                key = lat_pos
+                (x, y), _ = project_to_polyline(xy_lon, lane_centerlines[key])  # +2 because we convert -1,0.1 to 1,2,3. (lanes are numbered from left to right)
+            except KeyError:
+                print(f"df[lat..]= {df['lat_pos'].apply(lambda x: (x, type(x)))}")
+                print(f"lane_centerlines={lane_centerlines}")
+                print(f"key={key}")
+
+                raise KeyError(f"Problem with the mapping to CR: lane_centerlines dict = {lane_centerlines.keys()}. bad key: {key}. ")
 
             orientation = get_orientation_from_xy((x,y),coordinate_system)
 
