@@ -1,0 +1,158 @@
+{
+  "ego": [
+    {
+      "position": "loc(0,0)",
+      "velocity": "dyn(1,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(1,0)",
+      "velocity": "dyn(8,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(9,0)",
+      "velocity": "dyn(6,-1)",
+      "time": 2
+    },
+    {
+      "position": "loc(15,-1)",
+      "velocity": "dyn(12,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(27,-1)",
+      "velocity": "dyn(6,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(33,-1)",
+      "velocity": "dyn(12,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(45,-1)",
+      "velocity": "dyn(8,1)",
+      "time": 6
+    },
+    {
+      "position": "loc(53,0)",
+      "velocity": "dyn(2,0)",
+      "time": 7
+    },
+    {
+      "position": "loc(55,0)",
+      "velocity": "dyn(2,0)",
+      "time": 8
+    },
+    {
+      "position": "loc(57,0)",
+      "velocity": "dyn(3,0)",
+      "time": 9
+    }
+  ],
+  "car1": [
+    {
+      "position": "loc(12,0)",
+      "velocity": "dyn(1,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(13,0)",
+      "velocity": "dyn(2,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(15,0)",
+      "velocity": "dyn(1,0)",
+      "time": 2
+    },
+    {
+      "position": "loc(16,0)",
+      "velocity": "dyn(1,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(17,0)",
+      "velocity": "dyn(1,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(18,0)",
+      "velocity": "dyn(1,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(19,0)",
+      "velocity": "dyn(3,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(22,0)",
+      "velocity": "dyn(1,0)",
+      "time": 7
+    },
+    {
+      "position": "loc(23,0)",
+      "velocity": "dyn(1,0)",
+      "time": 8
+    },
+    {
+      "position": "loc(24,0)",
+      "velocity": "dyn(1,0)",
+      "time": 9
+    }
+  ],
+  "obstacle": [
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 2
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 7
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 8
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 9
+    }
+  ]
+}

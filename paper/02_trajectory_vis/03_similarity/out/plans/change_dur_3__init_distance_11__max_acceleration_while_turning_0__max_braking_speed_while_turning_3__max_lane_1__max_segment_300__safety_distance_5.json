@@ -1,0 +1,158 @@
+{
+  "ego": [
+    {
+      "position": "loc(0,0)",
+      "velocity": "dyn(1,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(1,0)",
+      "velocity": "dyn(6,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(7,0)",
+      "velocity": "dyn(6,-1)",
+      "time": 2
+    },
+    {
+      "position": "loc(13,-1)",
+      "velocity": "dyn(12,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(25,-1)",
+      "velocity": "dyn(12,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(37,-1)",
+      "velocity": "dyn(12,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(49,-1)",
+      "velocity": "dyn(12,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(61,-1)",
+      "velocity": "dyn(9,1)",
+      "time": 7
+    },
+    {
+      "position": "loc(70,0)",
+      "velocity": "dyn(11,0)",
+      "time": 8
+    },
+    {
+      "position": "loc(81,0)",
+      "velocity": "dyn(11,0)",
+      "time": 9
+    }
+  ],
+  "car1": [
+    {
+      "position": "loc(11,0)",
+      "velocity": "dyn(1,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(12,0)",
+      "velocity": "dyn(1,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(13,0)",
+      "velocity": "dyn(1,0)",
+      "time": 2
+    },
+    {
+      "position": "loc(14,0)",
+      "velocity": "dyn(1,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(15,0)",
+      "velocity": "dyn(7,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(22,0)",
+      "velocity": "dyn(6,-1)",
+      "time": 5
+    },
+    {
+      "position": "loc(28,-1)",
+      "velocity": "dyn(3,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(31,-1)",
+      "velocity": "dyn(2,0)",
+      "time": 7
+    },
+    {
+      "position": "loc(33,-1)",
+      "velocity": "dyn(9,0)",
+      "time": 8
+    },
+    {
+      "position": "loc(42,-1)",
+      "velocity": "dyn(2,0)",
+      "time": 9
+    }
+  ],
+  "obstacle": [
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 2
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 7
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 8
+    },
+    {
+      "position": "loc(30,0)",
+      "velocity": "dyn(0,0)",
+      "time": 9
+    }
+  ]
+}

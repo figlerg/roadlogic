@@ -295,6 +295,7 @@ class Planner:
 
             # the base is the part which needs to be in each of the goal rules
             rule = f'goal{i}(t) :- time(t), '
+            # rule = f'goal{i}(t) :- '  # without time
 
             # TODO this is probably not good yet. I just place all actors in the order of their appearance
             idx = {}
@@ -347,7 +348,7 @@ class Planner:
             f.write('\n#program check(t).\n\n')  # all the initials are in base
 
             f.write('% GOAL RULES:\n')
-            f.write('time(t).\n\n')
+            f.write('time(t).\n\n') # toggle additional time pred?
             f.writelines(goals_rules)
 
             f.write('\n\n % GOAL ASSERTION:\n')

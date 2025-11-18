@@ -337,7 +337,6 @@ class Monitor:
                     
                     elif isinstance(con, AbsoluteConstraint):
                         v1 = con.exp
-                        print(v1)
                         syma_aut.add_var(v1, domain=(-100, 100))  # TODO these limits are hardcoded
 
                         new_con = convert_absolute_constraint(con)
@@ -355,7 +354,6 @@ class Monitor:
                 cons_syma = Constraint(formula=cons_syma_node)  # TODO not sure if the alphabet param is ecpected
 
                 
-                print(location_by_id)
                 syma_aut.add_transition(location_by_id[v],location_by_id[w], constraint=cons_syma)
 
         add_self_loops(syma_aut)

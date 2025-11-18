@@ -1,0 +1,86 @@
+{
+  "ego": [
+    {
+      "position": "loc(0,2)",
+      "velocity": "dyn(1,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(1,2)",
+      "velocity": "dyn(9,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(10,2)",
+      "velocity": "dyn(8,-1)",
+      "time": 2
+    },
+    {
+      "position": "loc(18,1)",
+      "velocity": "dyn(12,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(30,1)",
+      "velocity": "dyn(6,0)",
+      "time": 4
+    },
+    {
+      "position": "loc(36,1)",
+      "velocity": "dyn(12,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(48,1)",
+      "velocity": "dyn(12,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(60,1)",
+      "velocity": "dyn(12,0)",
+      "time": 7
+    }
+  ],
+  "car1": [
+    {
+      "position": "loc(10,2)",
+      "velocity": "dyn(1,0)",
+      "time": 0
+    },
+    {
+      "position": "loc(11,2)",
+      "velocity": "dyn(5,0)",
+      "time": 1
+    },
+    {
+      "position": "loc(16,2)",
+      "velocity": "dyn(1,0)",
+      "time": 2
+    },
+    {
+      "position": "loc(17,2)",
+      "velocity": "dyn(7,0)",
+      "time": 3
+    },
+    {
+      "position": "loc(24,2)",
+      "velocity": "dyn(6,-1)",
+      "time": 4
+    },
+    {
+      "position": "loc(30,1)",
+      "velocity": "dyn(6,0)",
+      "time": 5
+    },
+    {
+      "position": "loc(36,1)",
+      "velocity": "dyn(6,0)",
+      "time": 6
+    },
+    {
+      "position": "loc(42,1)",
+      "velocity": "dyn(9,0)",
+      "time": 7
+    }
+  ]
+}
