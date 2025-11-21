@@ -16,10 +16,12 @@ from commonroad_extensions.common.utils import create_planning_problems_from_dyn
 @click.option("--simulation-id", required=False, type=int, help="The (Unique) ID Assigned to the simulated scenario")
 @click.option("--tranche-size", "tranche_size_time_step", required=False, type=int, help="The size of each tranche of simulation in simulation steps.")
 @click.option("--max-duration", required=False, type=int, help="The max duration of the execution in time steps")
-@click.option("--prediction-mode", required=False, default="walenet", type=click.Choice(["walenet", "none"],case_sensitive=False))
+# Disable entirely prediction mode!
+# @click.option("--prediction-mode", required=False, default="walenet", type=click.Choice(["walenet", "none"],case_sensitive=False))
 @click.option("--convert", "list_of_dynamic_obstacles_to_convert", required=False, type=int, multiple=True, help="The list of ids of dynamic obstacles to convert to planning problems. -1 will convert them all")
 @click.option("--disable-perception-of", "list_of_disable_perception_ids", required=False, type=int, multiple=True, help="The list of ids of ego vehicles without a perception module.  -1 will disable perception for all")
-def execute_scenario(ctx, scenario_file: str, simulation_id: int, tranche_size_time_step: Optional[int], max_duration: Optional[int], prediction_mode:str, list_of_dynamic_obstacles_to_convert: Optional[List[int]], list_of_disable_perception_ids: Optional[List[int]]):
+def execute_scenario(ctx, scenario_file: str, simulation_id: int, tranche_size_time_step: Optional[int], max_duration: Optional[int], #prediction_mode:str,
+                     list_of_dynamic_obstacles_to_convert: Optional[List[int]], list_of_disable_perception_ids: Optional[List[int]]):
     # Extract common options
     output_folder = ctx.obj["output_folder"]
     verbose = ctx.obj["verbose"]
@@ -72,8 +74,9 @@ def execute_scenario(ctx, scenario_file: str, simulation_id: int, tranche_size_t
                 # Linear prediction visualization
                 # "draw_predicted_positions": True
             },
+            # We need to have at least the entry here to override whatever we set in the other file
             "prediction": {
-                "mode": None if prediction_mode == "none" else prediction_mode 
+                "mode": None
             }, # TODO felix: we changed this manually, decide which it should be
             # # Force the agents involved in a collision to generate a collision report
             # # TODO: Should this be part of the analysis instead of the execution?

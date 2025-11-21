@@ -1,5 +1,6 @@
 # activation of the wale-net prediction
-mode: "walenet"  # "walenet" or "ground_truth" or None
+ mode: "None" # NOTE: This is forcefully disabled by our simulation code, since the prediction is not used for setting up the scenarios.
+              #      This is  "walenet"  # "walenet" or "ground_truth" or None
 
 # Sensor Radius in Meter and Occlusion Area
 calc_visible_area: False

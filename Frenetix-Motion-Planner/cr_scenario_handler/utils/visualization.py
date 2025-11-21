@@ -29,8 +29,6 @@ from commonroad.geometry.shape import Rectangle
 
 from cr_scenario_handler.utils.configuration import Configuration
 
-from wale_net_lite.visualization import draw_uncertain_predictions
-
 # Color palette for plotting
 colors_spec = ["#e3af22", "#d6e322", "#96e322", "#55e322", "#22e32f",
                "#22e36f", "#22e3af", "#22d6e3", "#2296e3", "#2255e3",
@@ -164,6 +162,7 @@ def visualize_agent_at_timestep(scenario: Scenario, planning_problem: PlanningPr
             # Remove the entry with key 60000 from the copy
             predictions_copy.pop(ego.obstacle_id, None)
         if config.prediction.mode == "walenet":
+            from wale_net_lite.visualization import draw_uncertain_predictions
             draw_uncertain_predictions(predictions_copy, rnd.ax)
 
     # visualize reference path

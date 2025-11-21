@@ -1,19 +1,18 @@
 from typing import Optional, List, Dict, Tuple
 
-import subprocess
-import click
+# import subprocess
+# import click
 import os
-import glob
-import csv
-import enlighten
-import inspect
-import sys
+# import glob
+# import csv
+# import enlighten
+# import inspect
+# import sys
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 import colorsys
-
 
 from commonroad.scenario.scenario import Scenario, DynamicObstacle
 from commonroad.planning.planning_problem import PlanningProblemSet, PlanningProblem, GoalRegion
@@ -225,7 +224,7 @@ if __name__ == "__main__":
     target_time_step = 90 # Last timestep
     
     # Plot the past shaded boxes at those timesteps
-    plot_at_times = [10, 20, 30, 40, 50, 60,70, 80]
+    plot_at_times = [10, 20, 30]
 
     # Plot the figure to file
     visualize_the_scenario(executed_scenario, planning_problem_set, output_file, target_time_step, plot_at_times)

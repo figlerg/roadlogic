@@ -138,7 +138,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 from commonroad.geometry.shape import Rectangle
 
 from cr_scenario_handler.utils.configuration import Configuration
-from wale_net_lite.visualization import draw_uncertain_predictions
+
 
 from cr_scenario_handler.utils.visualization import colors_spec, darkcolors, lightcolors, green_to_red_colormap
 
@@ -336,6 +336,7 @@ def custom_visualize_multiagent_scenario_at_timestep(scenario: Scenario,
 
     # visualize predictions
     if predictions is not None and config.visualization.draw_predictions:
+        from wale_net_lite.visualization import draw_uncertain_predictions
         draw_uncertain_predictions(predictions, rnd.ax)
     
     # If linear prediction is used
