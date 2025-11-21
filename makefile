@@ -12,7 +12,8 @@ ADDITIONAL_PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/monitoring/syma-arv:$(ROOT_DIR)
 PYTHON := export PYTHONPATH=$${PYTHONPATH}:$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
 
 # Host the options for the various commands
-CLI_OPTS ?=
+# Use default options for execution... Hopefully, they do not break anything
+CLI_OPTS ?= --co config_planner.cost.cost_weights.velocity_offset 10.0 --co config_sim.simulation.max_steps 3.0
 EXEC_OPTS ?=
 PLOT_OPTS ?=
 
@@ -247,10 +248,19 @@ $(foreach metric_name,$(selected_metrics),$(foreach scenario_id,$(scenario_id_li
 define make-scenario-analysis 
 
 
-$(OUTPUT_FOLDER)/$1/monitoring_results.csv: $(OUTPUT_FOLDER)/$1/LANE.csv $(OUTPUT_FOLDER)/$1/LONGPOS.csv
-		$(PYTHON) monitoring/gen_monitoring_results.py \
-			--output-folder $(OUTPUT_FOLDER)/$1/ \
-			--osc-file $(OSC_FILE)
+# $(OUTPUT_FOLDER)/$1/monitoring_results.csv: $(OUTPUT_FOLDER)/$1/LANE.csv $(OUTPUT_FOLDER)/$1/LONGPOS.csv
+# 		$(PYTHON) monitoring/gen_monitoring_results.py \
+# 			--output-folder $(OUTPUT_FOLDER)/$1/ \
+# 			--osc-file $(OSC_FILE) \
+
+# new version where I load the pickled plan as well for the invariant monitor
+$(OUTPUT_FOLDER)/$1/monitoring_results.csv: \
+  $(OUTPUT_FOLDER)/$1/LANE.csv \
+  $(OUTPUT_FOLDER)/$1/LONGPOS.csv
+	$(PYTHON) monitoring/gen_monitoring_results.py \
+		--output-folder $(OUTPUT_FOLDER)/$1/ \
+		--osc-file $(OSC_FILE) \
+		--check-plan $(OUTPUT_FOLDER)/../serialized_models/$(patsubst scenario_%,%,$1).pkl
 
 endef
 
@@ -261,9 +271,15 @@ generate-summary:$(OUTPUT_FOLDER)/summary_log.json
 
 # generate-summary:$(OUTPUT_FOLDER)/summary_log.json
 
+BLUEPRINT_FOLDER ?=
+
+# $(OUTPUT_FOLDER)/summary_log.json: $(addprefix $(OUTPUT_FOLDER)/, $(addsuffix /monitoring_results.csv, $(scenario_id_list)))
+# 	rm -f $(OUTPUT_FOLDER)/summary_log.json
+# 	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER) $
 $(OUTPUT_FOLDER)/summary_log.json: $(addprefix $(OUTPUT_FOLDER)/, $(addsuffix /monitoring_results.csv, $(scenario_id_list)))
 	rm -f $(OUTPUT_FOLDER)/summary_log.json
-	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER)
+	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER) $(BLUEPRINT_FOLDER)
+
 
 
 

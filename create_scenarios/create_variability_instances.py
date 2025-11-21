@@ -4,35 +4,49 @@ import os
 from partition import partition, default_dict
 from itertools import product
 import click
+import numpy as np
+from typing import Tuple
 
 import random
-
-random.seed(42)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 default_out_folder = os.path.join(script_dir, "variability_experiments_instances")
 
 
 @click.command()
-@click.option('--output-folder', type=click.Path(), required=True, default=default_out_folder)
+@click.option('--output-folder', type=click.Path(), required=False, default=default_out_folder)
 @click.option('--n', type=int, default=10)
-def vary_params(output_folder: str, n:int):
+@click.option('--init-interval', nargs=2, type=int, default=(10, 20), help='Two integers describing the initial distance between actors ego and car1, e.g. --init-interval 10 20')
+@click.option('--init-distance-actor', nargs=1, type=str, default='car1', help='The actor for which the --init-interval is meant.')
+@click.option('--random-seed', type=int, required=False, default=42, help='The random seed') 
+def vary_params(output_folder: str, n:int, init_interval:Tuple[int,int], init_distance_actor, random_seed: int):
     """
     Main experiment:
     - Varies interval constants by partitioning their min/max range.
-    - Varies certain scalar constants by ±2.
+    - Varies certain scalar constants by ±width and everything in between.
     - Keeps some constants fixed.
     """
+    print(f"Setting random seed {random_seed}")
+    random.seed(random_seed)
+
     print(output_folder)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     # === Define constant categories ===
 
-    interval_constants = [("min_change_speed", "max_change_speed")]
-    scalar_constants = ["max_acceleration_while_turning","max_braking_speed_while_turning","safety_distance"]
-    fixed_constants = ["max_lane", "max_segment","change_dur"]
-    list_constants = [("init_distance", [11,18])]
+    # interval_constants = [("min_change_speed", "max_change_speed")]
+    # scalar_constants = ["max_acceleration_while_turning","max_braking_speed_while_turning","safety_distance"]
+    # fixed_constants = ["max_lane", "max_segment","change_dur"]
+    # list_constants = [("init_distance", [11,18])]
+
+    # try something else: simply try out several initial distances, keep model params the same
+    interval_constants = []
+    scalar_constants = ["max_acceleration_while_turning","max_braking_speed_while_turning"]
+    fixed_constants = ["max_lane", "max_segment","change_dur","safety_distance"]
+    
+    a,b = init_interval
+    list_constants = [("init_distance", list(range(a+1,b-1)))]  # some of these will lead to empty models...
 
     # === Prepare values to iterate ===
 
@@ -48,14 +62,26 @@ def vary_params(output_folder: str, n:int):
     scalar_variants = []
     for key in scalar_constants:
         default = default_dict[key]
-        scalar_variants.append([(key, val) for val in [default - 2, default, default + 2]])
+        
+        width = 2
+        vals = np.arange(start=max(0,default-width), stop=default+width)
+        print(vals)
+        scalar_variants.append([(key, val) for val in vals])
 
     list_variants = []
     for key, vals in list_constants:
         list_variants.append((key, x) for x in vals)
 
 
-    combos = product(*interval_variants, *scalar_variants, *list_variants)
+    safe_groups = [
+        group if group else [None]
+        for group in (interval_variants + scalar_variants + list_variants)
+    ]
+    
+    combos = list(product(*safe_groups))
+
+    print(f"\n{len(combos)}\n")
+    # print(f"\n{list(combos)}\n")
 
     # === Combine all variants ===
     for combo in random.sample(list(combos),n):
@@ -77,7 +103,7 @@ def vary_params(output_folder: str, n:int):
         # Set the fixed lane flag to true
         # config['fix_car_lane'] = ('car1',)
 
-        partition(config, output_folder)
+        partition(config, output_folder, init_distance_actor=init_distance_actor)
 
 
 def split_interval(min_val, max_val, parts=2):

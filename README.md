@@ -56,7 +56,7 @@ bash experiments_src/exp_001/run.sh # run the experiments with their shell scrip
 
 - Felix Gigler
 - Alessio Gambi
-- Dejan Ničković
+- Dejan Nickovic
 - Cristinel Mateis
 - Ezio Bartocci
 

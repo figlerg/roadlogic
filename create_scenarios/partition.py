@@ -6,18 +6,18 @@ import os
 
 # Default values from constants.lp
 default_dict = {
+    'max_lane': 1,
     'max_segment': 300,
     'max_velocity_change_lon': 8,
     'max_velocity_lon': 12,
     'max_velocity_lat': 1,
-    'safety_distance': 1,
-    'change_dur': 1,
-    'max_lane': 1,
-    'min_change_speed': 2,
-    'max_change_speed': 8,
-    'max_braking_speed_while_turning': 5,
+    'safety_distance': 5,
+    'change_dur': 3,
+    'min_change_speed': 6,
+    'max_change_speed': 9,
+    'max_braking_speed_while_turning': 4,
     'max_acceleration_while_turning': 1,
-    'safety_distance_back': 3,
+    'safety_distance_back': 5,
     'init_distance': None,
     'fix_car_lane': None
 }
@@ -36,7 +36,7 @@ def _param_value_repr(k, v):
     else:
         return f"{k}_{_truncate(v)}"
 
-def partition(constants: dict, out_path: str) -> str:
+def partition(constants: dict, out_path: str, init_distance_actor='car1') -> str:
     """
     Create an .lp file with specified constant overrides and comments for default/varied values.
     """
@@ -78,7 +78,7 @@ def partition(constants: dict, out_path: str) -> str:
                 added.append(k)
 
             if val and k == 'init_distance':
-                f.write(f"init(state(car1, loc(init_distance,0), dyn(1, 0))).\n\n")
+                f.write(f"init(state({init_distance_actor}, loc(init_distance,0), dyn(1, 0))).\n\n")
         f.write("\n")
 
         # Default parameters section

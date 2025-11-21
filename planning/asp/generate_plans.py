@@ -22,7 +22,7 @@ from planning.asp.MyModel import MyModel
 from typing import Sequence
 
 def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, save_path=None, verbose=False,
-                   time_limit = None, deterministic=False):
+                   time_limit = None, deterministic=True):
     '''
     The main function implementing incremental solving.
     @param imin:
@@ -41,7 +41,7 @@ def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, 
     ## NONE OF THESE HELP WITH THE SEARCH TREE ORDER
     # ctl.configuration.solve.rand_freq = 1
     # ctl.configuration.solve.sign_def = "random"
-    # ctl.configuration.solve.seed = 19
+    # ctl.configuration.solve.seed = seed
     # ctl.configuration.solve.restart_conflicts = 1
     # ctl.configuration.solve.restarts = "luby"
 
@@ -201,7 +201,9 @@ def visualize_plans(models, max_num=None, save=False, show=True, save_path=None,
         if custom_names:
             pkl_file = os.path.join(save_dir_pkl, f'{custom_names[i]}.pkl')
         else:
-            pkl_file = os.path.join(save_dir_pkl, f'model{i + 1:04d}.pkl')
+            pkl_file = os.path.join(save_dir_pkl, f'{i + 1:04d}.pkl')
+            # pkl_file = os.path.join(save_dir_pkl, f'scenario_{i + 1:04d}.pkl')
+            # pkl_file = os.path.join(save_dir_pkl, f'model_{i + 1:04d}.pkl')
 
         with open(pkl_file, "wb") as f:
             pickle.dump(models[i], f)

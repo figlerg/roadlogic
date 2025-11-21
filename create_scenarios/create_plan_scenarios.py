@@ -59,7 +59,8 @@ def main(osc_file, n, output_folder, cr_scenario, step_length, constants_overrid
         external_rule_files.append(os.path.join(top_folder,'planning', 'asp', 'encoding', 'facts.lp'))
         external_rule_files.append(constants_override) # this is the actual input. constants.lp is swapped out by it
 
-
+    # same as below, need the format to match for the invariant monitoring
+    # custom_names = [os.path.join(output_folder,'serialized_models',f"{i+1:04d}.pkl") for i in range(n)]
     # TODO Do this better: for now I just create 10*n plans and pick every tenth
     plans = translator.plans(n=n, external_rules=external_rule_files, visualize=True, diversity_step=step_length,rules_override=constants_override)
 

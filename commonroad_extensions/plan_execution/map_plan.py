@@ -88,11 +88,16 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
         for pred in predicates
     ]
 
-    
-
     # sort by time TODO I could do this without pandas, lazyness
     df = pd.DataFrame(structured)
     df_by_time = {t: group.drop(columns='t').set_index('agent') for t, group in df.groupby('t')}
+
+    # Assert that no actor appears more than once at the same time step
+    duplicates = df.duplicated(subset=["t", "agent"], keep=False)
+    assert not duplicates.any(), (
+        "Multiple positions for the same actor at the same time step:\n"
+        f"{df.loc[duplicates, ['t', 'agent', 'lon_pos', 'lat_pos']]}"
+    )
 
 
     agent_ids = df_by_time.get(0).index

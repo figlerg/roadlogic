@@ -91,7 +91,7 @@ class Planner:
 
     def plans(self, n, external_rules: Union[str, os.PathLike, Sequence[Union[str, os.PathLike]]] = None,
               visualize=True, imin=1, imax=30, show=False, diversity_step=1, time_limit = None,
-              rules_override = False, deterministic=False) -> List[MyModel]:
+              rules_override = False, deterministic=True) -> List[MyModel]:
         # simply returns plans in ASP format
 
         G = self._translation_graph
@@ -155,19 +155,21 @@ class Planner:
 
         grounded = {'ego'}
         remaining = set(actor_ids) - grounded
+        remaining = sorted(remaining)
 
         try:
             remaining.remove('obstacle')
             warnings.warn("'obstacle' is a special variable name and is used to encode static obstacles. Make sure this is what you want.")
-        except KeyError:
+        except (KeyError, ValueError):
             pass
 
         pair_subconstraints = defaultdict(set)  # each pair of actors may have a relational constraint
 
-        idx = {actor_str: i + 1 for i, actor_str in enumerate(actor_ids)}
+        idx = {actor_str: i + 1 for i, actor_str in enumerate(sorted(actor_ids))}
         # I need to assign each actor a number so that the variable names are not swapped between actors
 
-        for con in gamma0:
+        for con in sorted(gamma0, key=str):
+            con.standardize()
             key = (con.actor_1, con.actor_2)
             key_flipped = (con.actor_2, con.actor_1)
             pair_subconstraints[key].add(con)
@@ -176,7 +178,7 @@ class Planner:
         while remaining:
             progress = False
 
-            for a1 in list(remaining):
+            for a1 in sorted(list(remaining)):
 
                 usable_rels = {}
                 for (key_a1, a2), constraint_set in pair_subconstraints.items():
@@ -191,7 +193,7 @@ class Planner:
                         for sub in pair_subconstraints[(a1, a2)]:
                             subconstraints_strs.update(sub.asp_goal_format(idx))
 
-                        subconstraints_str = ', '.join(subconstraints_strs)
+                        subconstraints_str = ', '.join(sorted(subconstraints_strs))
 
                         rule = (
                             f"1 {{ init(state({a1}, loc(S{idx[a1]}, L{idx[a1]}), dyn(1,0))) : "
@@ -207,6 +209,8 @@ class Planner:
             if not progress:
                 raise ValueError(f"Could not ground all actors — disconnected or circular constraints: {remaining}")
 
+        init_rules = sorted(init_rules)
+
         goals_rules = []
 
         for i, _ in enumerate(aut_path):
@@ -220,6 +224,8 @@ class Planner:
             for con in gamma:
                 edge_actor_ids.add(con.actor_1)
                 edge_actor_ids.add(con.actor_2)
+            
+            edge_actor_ids = sorted(list(edge_actor_ids), key=str)
 
             # the base is the part which needs to be in each of the goal rules
             rule = f'goal{i}(t) :- time(t), '
@@ -236,11 +242,11 @@ class Planner:
 
             # now add the goals one by one. These have to be true at the same time.
             done_atoms = set()
-            for con in gamma:
+            for con in sorted(gamma, key=str):
 
                 atoms = con.asp_goal_format(idx)
 
-                atoms_str = ', ' + ', '.join(atoms)
+                atoms_str = ', ' + ', '.join(sorted(atoms))
 
                 # here I want ',atom1,atom2,...'
                 if atoms_str not in done_atoms:
@@ -251,10 +257,13 @@ class Planner:
 
             goals_rules.append(rule)
 
+        goals_rules = sorted(goals_rules)
+
         # now we only need the assertion that the checklist is sat
         n = len(aut_path) - 1
         times = [f'T{i}' for i in range(1, n)]
         vehicles = [f'vehicle({actor}).\n' for actor in actor_ids]
+        vehicles = sorted(vehicles)
 
         goals = [f'goal{i}(T{i})' for i in range(1, n)]
 

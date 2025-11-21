@@ -9,6 +9,8 @@ archive/
 # ignore all experiment output folders
 experiments_src/**/out/
 
+tmp
+
 
 
 # unignore the generated parser files
