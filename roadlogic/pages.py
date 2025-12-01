@@ -6,6 +6,8 @@ import shutil
 import time
 import json
 
+from json.decoder import JSONDecodeError
+
 from pathlib import Path
 from nicegui import app, ui
 
@@ -111,8 +113,12 @@ def create(global_output_folder: str, default_map_file: str) -> None:
                 extra_rules =  "".join(rf.readlines())
 
             additional_parameters_as_dict = {}
-            with open(additional_parameters_file, "r") as rf:
-                additional_parameters_as_dict = json.load(rf)
+            try:
+                with open(additional_parameters_file, "r") as rf:
+                    additional_parameters_as_dict = json.load(rf)
+            except JSONDecodeError as json_error:
+                # This happens if the file is empty
+                pass
 
             n_scenarios = 1 if "n_scenarios" not in additional_parameters_as_dict else additional_parameters_as_dict["n_scenarios"]
 
