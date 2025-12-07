@@ -4,7 +4,6 @@ import uuid
 import shutil
 import sys
 
-from contextlib import contextmanager
 from nicegui import ui, app
 
 # SOME DEFAULT VALUES

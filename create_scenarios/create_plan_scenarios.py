@@ -27,8 +27,6 @@ from planning.Planner import Planner
 @click.option('--constants-override', type=click.Path(exists=True), required=False)
 @click.option('--step-length', type=int, default=100)
 @click.option('--rule-injection', type=click.Path(exists=True), required=False)
-
-
 def main(osc_file, n, output_folder, cr_scenario, step_length, constants_override=None, rule_injection=None):
     
     # print(translate.__file__)
