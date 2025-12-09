@@ -1,5 +1,5 @@
 import itertools
-from planning.intermediate_structure.Constraint import Constraint, Relation, Modifier
+from planning.intermediate_structure.Constraint import RelativeConstraint, Relation, Modifier, AbsoluteConstraint
 import networkx as nx
 import matplotlib.pyplot as plt
 import z3
@@ -332,7 +332,7 @@ class TranslationGraph(object):
             transition_constraints = set()
 
             # Just some syntactic sugar in case I only add one constraint. This way I can drop the list brackets.
-            if type(constraints) == Constraint:
+            if isinstance(constraints, RelativeConstraint):
                 transition_constraints.add(constraints)
 
         self.__graph.add_edge(v1, v2, object=transition_constraints)
@@ -343,12 +343,16 @@ class TranslationGraph(object):
 
         for edge in self.graph.edges:
             for con in self.graph.edges[edge]['object']:
-                con: Constraint
+                if isinstance(con, RelativeConstraint):
+                    con: RelativeConstraint
 
-                if con.actor_1 == original_name:
-                    con.actor_1 = new_name
-                if con.actor_2 == original_name:
-                    con.actor_2 = new_name
+                    if con.actor_1 == original_name:
+                        con.actor_1 = new_name
+                    if con.actor_2 == original_name:
+                        con.actor_2 = new_name
+                elif isinstance(con,AbsoluteConstraint):
+                    if con.actor == original_name:
+                        con.actor=new_name
 
     def prune(self):
         # The parallel composition gives us unreachable nodes. These can be safely removed.
@@ -422,30 +426,30 @@ if __name__ == '__main__':
         p = Modifier.POSITION
 
         # 1st transition
-        c1 = Constraint(a, b, l, Relation.EQ)
-        c2 = Constraint(a, b, p, Relation.L, -20)
-        c3 = Constraint(a, b, p, Relation.G, -10)
+        c1 = RelativeConstraint(a, b, l, Relation.EQ)
+        c2 = RelativeConstraint(a, b, p, Relation.L, -20)
+        c3 = RelativeConstraint(a, b, p, Relation.G, -10)
 
         constraints1 = {c1, c2, c3}
         print(constraints1)
 
         # 2nd transition
-        c4 = Constraint(a, b, l, Relation.L)
+        c4 = RelativeConstraint(a, b, l, Relation.L)
 
         constraints2 = {c4}
         print(constraints2)
 
         # 3rd transition
-        c5 = Constraint(a, b, p, Relation.G, 1)
-        c6 = Constraint(a, b, p, Relation.L, 10)
+        c5 = RelativeConstraint(a, b, p, Relation.G, 1)
+        c6 = RelativeConstraint(a, b, p, Relation.L, 10)
 
         constraints3 = {c5, c6}
         print(constraints2)
 
         # 4th transition
-        c7 = Constraint(a, b, p, Relation.G, 5)
-        c8 = Constraint(a, b, p, Relation.L, 10)
-        c9 = Constraint(a, b, l, Relation.EQ)
+        c7 = RelativeConstraint(a, b, p, Relation.G, 5)
+        c8 = RelativeConstraint(a, b, p, Relation.L, 10)
+        c9 = RelativeConstraint(a, b, l, Relation.EQ)
 
         constraints4 = {c7, c8}
         print(constraints3)
@@ -463,8 +467,8 @@ if __name__ == '__main__':
 
         # now I create some play graph to test the operators.
         # This 3-graph structure is what an atomic looks like in the intermediate structure.
-        constraints5 = Constraint('a', 'b', Modifier.POSITION, Relation.GEQ)
-        constraints6 = Constraint('a2', 'b2', Modifier.POSITION, Relation.LEQ)
+        constraints5 = RelativeConstraint('a', 'b', Modifier.POSITION, Relation.GEQ)
+        constraints6 = RelativeConstraint('a2', 'b2', Modifier.POSITION, Relation.LEQ)
 
         test_graph_2 = TranslationGraph()
         test_graph_2.add_node('x', initial=True)

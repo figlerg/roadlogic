@@ -770,11 +770,12 @@ class LANE(CustomizedCriMeBase):
         return self.value
 
     def _compute_lane_index_map(self, anchor_lanelet_id):
-        index_map = {anchor_lanelet_id: 0}
+        anchor = 1
+        index_map = {anchor_lanelet_id: anchor}
 
         # Traverse right
         current_id = anchor_lanelet_id
-        idx = 1
+        idx = anchor+1
         while True:
             lanelet = self.sce.lanelet_network.find_lanelet_by_id(current_id)
             next_adj = lanelet.adj_left if self._should_flip else lanelet.adj_right
@@ -787,7 +788,7 @@ class LANE(CustomizedCriMeBase):
 
         # Traverse left
         current_id = anchor_lanelet_id
-        idx = -1
+        idx = anchor-1
         while True:
             lanelet = self.sce.lanelet_network.find_lanelet_by_id(current_id)
             next_adj = lanelet.adj_right if self._should_flip else lanelet.adj_left

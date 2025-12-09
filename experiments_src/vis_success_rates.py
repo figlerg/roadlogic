@@ -110,13 +110,39 @@ def main(pattern, names, out, mode):
 
         pct = pos / tot * 100 if tot else 0
 
-        m = re.match(r"exp_(\d+)(_[a-z])?$", base)
-        exp_id = (m.group(1) + (m.group(2) or "")) if m else base
+        # m = re.match(r"exp_(\d+)(_[a-z])?$", base)
+        # exp_id = (m.group(1) + (m.group(2) or "")) if m else base
+
+        # disp = name_map.get(base, base)
+        # labels.append(f"{exp_id} • {disp}")
+        # # labels.append(f"{disp}")
+        # percents.append(pct)
+        # totals.append(tot)
+
+        # match exp_001, exp_001_b, exp_002_c, etc.
+        m = re.match(r"exp_(\d+)(?:_([a-z]))?$", base)
+        if m:
+            num = m.group(1)      # "001"
+            suff = m.group(2)     # "b", "c", or None
+
+            if suff is None:
+                # vanilla → baseline
+                exp_label = f"{num}-b"
+            elif suff == "b":
+                # variability → refined
+                exp_label = f"{num}-r"
+            else:
+                # other suffixes if needed
+                exp_label = f"{num}-{suff}"
+        else:
+            exp_label = base
 
         disp = name_map.get(base, base)
-        labels.append(f"{exp_id} • {disp}")
+        labels.append(f"{exp_label} • {disp}")
+
         percents.append(pct)
         totals.append(tot)
+
 
     x = np.arange(len(labels))
 
