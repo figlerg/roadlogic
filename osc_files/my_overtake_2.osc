@@ -1,21 +1,20 @@
 scenario overtake:
-    p: path
     car1: car
     ego: car
 
     do parallel(duration:  [3s..20s]):
 
-        c0: car1.drive(p)
+        c0: car1.drive()
 
         c1: serial:
 
-            alpha: ego.drive(p) with:
+            alpha: ego.drive() with:
                 lane(same_as:car1, at:start)
                 lane(same_as:car1, at:end)
                 position([10m..20m], behind:car1, at:start)
 
 
-            A: ego.drive(p) with:
+            A: ego.drive() with:
                 lane(same_as:car1, at:start)
                 lane(left_of:car1, at:end)
 
