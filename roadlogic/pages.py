@@ -16,6 +16,7 @@ from nicegui import app, ui, background_tasks
 # Note this is a Click command object, not a regular python function
 # See: https://stackoverflow.com/questions/48619517/call-a-click-command-from-code
 
+from gui.mixed_traffic_scenario import scenario_editor
 from create_scenarios.create_plan_scenarios import main as generate_osc_scenario
 from cli import cli as roadloagic_cli
 
@@ -335,6 +336,7 @@ def create(global_output_folder: str, default_map_file: str) -> None:
                     progressbar.visible = False
                     ui.button('Generate!', on_click=lambda e: start_generation(session_id, e.sender, input_grid, progressbar, output_grid, osc_editor, rule_injection_editor, input_n))
 
+
     def _ensure_folders_exists(session_id: str):
         
         # TODO This should be wrapped in an object most likely
@@ -390,6 +392,28 @@ def create(global_output_folder: str, default_map_file: str) -> None:
             # Visualize the output grid based on the content of the file
             output_grid(session_id)
 
+    @ui.page('/test')
+    def show_scenario_editor():
+        """
+        Generate the page that allows to manually generate scenarios (currently, using an hardcoded map)
+        The setup follow this logic:
+        - Create buttons using nicegui and give them know and predefined ids
+        - Pass the ids of the buttons to the logic that renders the plugin
+        
+        """
+        with ui.expansion(value=True).classes('w-full') as expansion:
+            # Show a nice title for the expansion
+            with expansion.add_slot('header'):
+                ui.label(f'Scenario Editor').classes('text-h4')
+
+            async def get_scenario_data(the_id):
+                # Run the JS code to access the global data collected by the plugin under the plugin ID
+                time = await ui.run_javascript('Date()')
+                ui.notify(f'Browser time: {time} - ID {the_id}')
+
+            # Build the content of the expansion
+            with ui.card().classes('w-full').style('padding: 20px') as container:
+                scenario_editor(default_map_file, container)
 
     @ui.page('/')
     def landing_page():
