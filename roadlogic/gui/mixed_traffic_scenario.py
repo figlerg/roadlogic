@@ -151,6 +151,7 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
                                                             "generate_button_id",
                                                             "add_vehicle_button_id",
                                                             "reset_button_id",
+                                                            "show_dialog_button_id",
                                                             "initial_state_ids",
                                                             "goal_area_ids",
                                                             "scenario_data",
@@ -214,9 +215,13 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
             var the_generate_button  = document.getElementById(this.props.generate_button_id)
             var the_add_vehicle_button  = document.getElementById(this.props.add_vehicle_button_id)
             var the_reset_button = document.getElementById(this.props.reset_button_id)
+            var the_show_dialog_button = document.getElementById(this.props.show_dialog_button_id)
+            // make sure this is not visible
+            the_show_dialog_button.style.visibility = 'hidden';
 
             // Create an global object storing data about the scenario.
             the_figure.scenario_data = {}
+            the_figure.modal_data = {}
             
             // Create an object to store the visibility of the vehicles
             var player_visibility_flags= []
@@ -262,6 +267,7 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
 
                 // Add the data
                 the_figure.scenario_data[index] = {
+                    "vehicle_model" : initial_scenario_data[index + "_vehicle_model"],
                     "initial_state": {
                         "x" : initial_scenario_data[index + "_x_is"],
                         "y" : initial_scenario_data[index + "_y_is"],
@@ -269,7 +275,8 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
                     }, 
                     "goal_area" : {
                         "x" : initial_scenario_data[index + "_x_ga"],
-                        "y" : initial_scenario_data[index + "_y_ga"]
+                        "y" : initial_scenario_data[index + "_y_ga"],
+                        "t" : initial_scenario_data[index + "_t_ga"]
                     }
                 }
 
@@ -317,56 +324,6 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
 
                 // Remove any control associated to this player?
             };
-
-            // Build the modal/panel with the buttons used to configure the scenario variables
-
-            // A reusable tooltip control pane
-            const tooltip_id = "control-tooltip_for_" + the_figure_id
-            // Define the container
-            var tooltip = d3.select("body").append("div")
-                    .attr("id", tooltip_id)
-                    .attr("class", "mpld3-tooltip")
-                    .style("position", "absolute")
-                    .style("z-index", "400")
-                    .style("visibility", "hidden")
-                    .style("color", "black")
-                    .style("background-color", "white")
-                    .style("border-style", "solid")
-                    .style("box-shadow", "5px 5px 5px black");
-            
-            // Access the tooltip as actual DOM element and not via the d3 library
-            var the_tooltip = document.getElementById(tooltip_id)
-            console.log("the_tooltip: " + the_tooltip)
-
-            // Manually set the content of the tooltip
-            the_tooltip.innerHTML = ` 
-            <table>
-                <thead>
-                    <tr><th colspan="2" class="text-center">Vehicle's Parameters</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>Speed</th>
-                        <td>
-                            <label id="speed-selector-label" for="speed-selector">?? Km/h</label>
-                            <input type="range" id="speed-selector" name="speed-selector" min="0" max="90"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Color</th>
-                        <td id="vehicle-color"></td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <a id="remove-btn" class="btn btn-info" role="button">Remove this vehicle</a>
-                        </td>
-                        <td>
-                            <a id="close-vehicle-parameter-dialog" class="btn btn-info" role="button" onclick="tooltip.style('visibility', 'hidden');">Close Dialog</a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>`;
-            
             
             // Drag and Drop common functionalities            
             var drag_started = function(d) {
@@ -379,18 +336,46 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
             }
 
             var add_controls = function(index) {
-                // Configure the vehicle-related functionalities
-                console.log("Add control to vehicle " + index)
-
-                //update the global variable - Necessary?
-                current_vehicle = index;
-                
-                // We attach the tooltip to the initial state
                 var initial_state_obj = initial_state_objs[index];
                 var goal_area_obj = goal_area_objs[index];
                     
-                console.log("initial_state_obj " + initial_state_obj)
-                console.log("goal_area_obj " + goal_area_obj)
+                initial_state_obj.elements()
+                    .on("click", function(d, i){
+                        // Trigger a click event on this button
+                
+                        // Data for the modal dialog box
+                        the_figure.modal_data = {}
+                        the_figure.modal_data["vehicle"] = index
+                        the_figure.modal_data["vehicle_model"] = the_figure.scenario_data[index]["vehicle_model"]
+                        the_figure.modal_data["color"] = {
+                            "r" : (colors[index][0] * 255.0).toFixed(1),
+                            "g" : (colors[index][1] * 255.0).toFixed(1),
+                            "b" : (colors[index][2] * 255.0).toFixed(1)
+                        }
+                        the_figure.modal_data["initial_state"] = {}
+                        the_figure.modal_data["initial_state"]["v"] = the_figure.scenario_data[index]["initial_state"]["v"]
+
+                        // Show the modal dialog
+                        the_show_dialog_button.click()
+                    });
+
+                goal_area_obj.elements()
+                    .on("click", function(d, i){
+                        // Trigger a click event on this button
+                
+                        // Data for the modal dialog box
+                        the_figure.modal_data = {}
+                        the_figure.modal_data["vehicle"] = index
+                        the_figure.modal_data["color"] = {
+                            "r" : (colors[index][0] * 255.0).toFixed(1),
+                            "g" : (colors[index][1] * 255.0).toFixed(1),
+                            "b" : (colors[index][2] * 255.0).toFixed(1)
+                        }
+                        the_figure.modal_data["goal_area"] = {}
+
+                        // Show the modal dialog
+                        the_show_dialog_button.click()
+                    });
 
                 // We attach the dragging and dropping functionalities to both the initial_state and goal_area
                             
@@ -468,7 +453,8 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
         };
     """
 
-    def __init__(self, figure_id: str, container_id: str, generate_button_id: str, add_vehicle_button_id: str, reset_button_id: str,
+    def __init__(self, figure_id: str, container_id: str,
+                 generate_button_id: str, add_vehicle_button_id: str, reset_button_id: str, show_dialog_button_id: str,
                  initial_state_points: list, goal_area_points: list, scenario_data: dict, colors: list):
         
         def get_collections_of_ids(collections_of_points):
@@ -490,6 +476,7 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
                       "generate_button_id": generate_button_id,
                       "add_vehicle_button_id": add_vehicle_button_id,
                       "reset_button_id": reset_button_id,
+                      "show_dialog_button_id": show_dialog_button_id,
                       "initial_state_ids": get_collections_of_ids(initial_state_points),
                       "goal_area_ids": get_collections_of_ids(goal_area_points),
                       "scenario_data": scenario_data,
@@ -501,6 +488,82 @@ async def generate_the_scenario(scenario_editor_unique_id):
     scenario_data = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data")
     # Invoke the logic to generate the scenario using that data
     ui.notify(f'Generate scenario using {scenario_data}')
+
+async def update_goal_area_and_close_dialog(scenario_editor_unique_id: str, vehicle_index: int, dialog: ui.dialog, time_slider: ui.slider):
+    # Close and update the value of the shared data
+    time = float(time_slider.value)
+    # the_figure.scenario_data[index]["initial_state"]["v"]
+    await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data[{vehicle_index}]['goal_area']['t'] = {time}")
+    dialog.close()
+
+async def update_input_state_and_close_dialog(scenario_editor_unique_id: str, vehicle_index: int, dialog: ui.dialog, velocity_slider: ui.slider, vehicle_model_select: ui.select):
+    velocity = float(velocity_slider.value)
+    await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data[{vehicle_index}]['initial_state']['v'] = {velocity}")
+    vehicle_model = vehicle_model_select.value
+    await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data[{vehicle_index}]['vehicle_model'] = '{vehicle_model}'")
+    dialog.close()
+
+async def create_the_modal_dialog(scenario_editor_unique_id):
+    modal_data = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').modal_data")
+    
+    # Do not show anything if there's nothing to show
+    if "initial_state" not in modal_data and "goal_area" not in modal_data:
+        return
+
+    with ui.dialog() as dialog, ui.card():
+        # Visualize the initial state of the vehicle
+        vehicle_index = int(modal_data['vehicle'])
+
+        if "initial_state" in modal_data:
+            # Title
+            ui.label("Edit the Initial State").classes('text-h6')
+            
+            with ui.grid(columns=2) as grid:
+                # Extract Vehicle and Color
+                ui.label(f"Vehicle")
+                ui.label(f"{vehicle_index}").style(f"background-color: rgb({modal_data['color']['r']}, {modal_data['color']['g']}, {modal_data['color']['b']})")
+                ui.label(f"Model")
+                vehicle_model_select = ui.select(options=["car", "truck"], value=modal_data['vehicle_model'])
+                # Leave some blank space
+                ui.label('')
+                ui.label('')
+                # Extract Speed
+                ui.label(f"Initial Velocity (Km/h)")
+                # ui.label(f"{modal_data['initial_state']['v']} Km/h")
+                velocity_slider = ui.slider(min=0, max=200, value=float(modal_data['initial_state']['v'])).props('label-always')
+            
+            ui.button("Save", on_click=lambda : update_input_state_and_close_dialog(scenario_editor_unique_id, vehicle_index, dialog, velocity_slider, vehicle_model_select))
+        elif "goal_area" in modal_data:
+            # Title
+            ui.label("Edit the Goal Area").classes('text-h6')
+            with ui.grid(columns=2) as grid:
+                # Extract Vehicle and Color
+                ui.label(f"Vehicle")
+                ui.label(f"{vehicle_index}").style(f"background-color: rgb({modal_data['color']['r']}, {modal_data['color']['g']}, {modal_data['color']['b']})")
+                # Leave some blank space
+                ui.label('')
+                ui.label('')
+                # Extract Speed
+                ui.label(f"Time (sec)")
+                # ui.label(f"{modal_data['initial_state']['v']} Km/h")
+                time_slider = ui.slider(min=0.0, max=60.0, step=0.1, value=0.0).props('label-always')
+            
+            ui.button("Save", on_click=lambda : update_input_state_and_close_dialog(scenario_editor_unique_id, vehicle_index, dialog, time_slider))
+        
+    
+    dialog.open()
+
+    # // Data for the modal dialog box
+    #                     the_figure.modal_data = {}
+    #                     the_figure.modal_data["vehicle"] = index
+    #                     the_figure.modal_data["color"] = {
+    #                         "r" : (colors[index][0] * 255.0).toFixed(1);
+    #                         "g" : (colors[index][1] * 255.0).toFixed(1);
+    #                         "b" : (colors[index][2] * 255.0).toFixed(1);
+    #                     }
+    #                     the_figure.modal_data["initial_state"] = {}
+    #                     the_figure.modal_data["initial_state"]["v"] = the_figure.scenario_data[index]["initial_state"]["v"]
+
 
 # TODO Move this to an util module
 def get_colors():
@@ -523,7 +586,15 @@ def scenario_editor(map_file: str, container: ui.element):
         generate_button = ui.button("Generate", on_click=lambda : generate_the_scenario(scenario_editor_unique_id))
         add_vehicle_button = ui.button("Add Vehicle")
         reset_button = ui.button("Reset")
+    # This dialog allows to visualize and update the parameters of the selected vehicle
+    show_dialog_button = ui.button("Show Editor", on_click=lambda : create_the_modal_dialog(scenario_editor_unique_id))
+    # Pretend this is invisible
+    show_dialog_button.style("opacity: 0")
+    # We cannot use the following, as it completely disable the button
+    # show_dialog_button.visible = False
     
+    
+
     # Setting the size of the plot is tricky, it depends on the road shape
     fig, ax = plt.subplots(figsize=(10, 2))
     try:
@@ -558,9 +629,12 @@ def scenario_editor(map_file: str, container: ui.element):
             scenario_data[f"{driver_index}_x_is"] = bottom_left_corner[0] + driver_index * 2.0
             scenario_data[f"{driver_index}_y_is"] = bottom_left_corner[1]
             scenario_data[f"{driver_index}_v_is"] = 0.0
+
             scenario_data[f"{driver_index}_vehicle_model"] = "car"
+
             scenario_data[f"{driver_index}_x_ga"] = bottom_left_corner[0] + driver_index * 2.0
             scenario_data[f"{driver_index}_y_ga"] = bottom_left_corner[1] -2.0
+            scenario_data[f"{driver_index}_t_ga"] = 0.0
 
             # We plot the markers to ensure they are included in the plugin as currently generate markers on the fly is not possible
             # Round marker - Initial State
@@ -587,6 +661,7 @@ def scenario_editor(map_file: str, container: ui.element):
                                                            generate_button_id=generate_button.html_id,
                                                            add_vehicle_button_id=add_vehicle_button.html_id,
                                                            reset_button_id=reset_button.html_id,
+                                                           show_dialog_button_id = show_dialog_button.html_id,
                                                            initial_state_points=initial_state_points,
                                                            goal_area_points=goal_area_points,
                                                            scenario_data=scenario_data,
