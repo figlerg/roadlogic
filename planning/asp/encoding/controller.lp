@@ -14,10 +14,10 @@
 
     % turning and braking together should be limited
     :- holds(state(V, loc(_,_), dyn(Vel_lon, Vel_lat)), t), 
-        holds(state(V, loc(_,_), dyn(Vel_lon2, _)), t-1), time(t-1),
+        holds(state(V, loc(_,_), dyn(Vel_lon2, _)), t-1),
         Vel_lat!=0, Vel_lon2 - Vel_lon > max_braking_speed_while_turning. 
 
     % turning and accelerating together should be limited
     :- holds(state(V, loc(_,_), dyn(Vel_lon, Vel_lat)), t), 
-        holds(state(V, loc(_,_), dyn(Vel_lon2, _)), t-1), time(t-1),
+        holds(state(V, loc(_,_), dyn(Vel_lon2, _)), t-1),
         Vel_lat!=0, Vel_lon2 - Vel_lon < max_acceleration_while_turning. 

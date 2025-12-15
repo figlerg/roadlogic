@@ -337,11 +337,13 @@ class Planner:
         # we only need to assert that the last goal is satisfied which, by construction, implicitly means that all previous goals are also satisfied
         n = len(aut_path) - 1
         # use the following two lines of code instead of the 3rd line of code if you want to implement the part "t > T3 + 1" from the original encoding
-        goal = f"goal(t) :- goal{n - 1}(t), goal{n - 1}(t-1), goal{n - 1}(t-2).\n"
+        # goal = f"goal(t) :- goal{n - 1}(t), goal{n - 1}(t-1), goal{n - 1}(t-2).\n"
+        # FELIX: this is without any additional time steps.
+        goal = f"goal(t) :- goal{n - 1}(t).\n"
         goal_assertion = f":- query(t), not goal(t).\n"
         # use the following line of code only after target values for the difference (S2 - S1), for both phases B and C
         #    in the OS2 spec, are sampled from the ranges specified in the OS2 spec
-        #goal_assertion = f":- query(t), not goal{n-1}(t).\n"
+        # goal_assertion = f":- query(t), not goal{n-1}(t).\n"
 
 
         with open(instance_file_target, 'w') as f:

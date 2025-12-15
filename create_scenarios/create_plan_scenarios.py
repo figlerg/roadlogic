@@ -46,7 +46,8 @@ def main(osc_file, n, output_folder, cr_scenario, step_length, constants_overrid
     parent_folder = os.path.dirname(os.path.abspath(__file__))
     top_folder = os.path.dirname(parent_folder)
 
-    controller_file = os.path.join(parent_folder,'controller.lp')
+    # controller_file = os.path.join(parent_folder,'controller.lp')
+    controller_file = os.path.join(top_folder,'planning', 'asp', 'encoding', 'controller.lp')
     
     external_rule_files = [controller_file]
 
