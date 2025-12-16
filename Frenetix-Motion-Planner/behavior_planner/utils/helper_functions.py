@@ -29,7 +29,8 @@ from commonroad_route_planner.route_planner import RoutePlanner
 if typing.TYPE_CHECKING:
     from commonroad_route_planner.route import Route
     from commonroad_route_planner.route_generator import RouteGenerator
-from commonroad_dc.geometry.util import resample_polyline
+
+from commonroad_clcs.util import resample_polyline
 
 from cr_scenario_handler.utils.utils_coordinate_system import smooth_ref_path
 

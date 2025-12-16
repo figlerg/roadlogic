@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from commonroad.geometry.shape import Circle
 from commonroad.scenario.obstacle import DynamicObstacle
-from commonroad_dc.geometry.util import chaikins_corner_cutting, resample_polyline, compute_pathlength_from_polyline
-from commonroad_dc.geometry.util import compute_orientation_from_polyline
-from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+from commonroad_clcs.util import chaikins_corner_cutting, resample_polyline, compute_pathlength_from_polyline
+from commonroad_clcs.util import compute_orientation_from_polyline
+from commonroad_clcs.clcs import CurvilinearCoordinateSystem
 import cr_scenario_handler.utils.helper_functions as hf
 from cr_scenario_handler.utils.utils_coordinate_system import interpolate_angle
 

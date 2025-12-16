@@ -12,9 +12,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cr_scenario_handler.utils.helper_functions as hf
 from scipy.interpolate import splprep, splev
-from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
-from commonroad_dc.geometry.util import compute_pathlength_from_polyline, compute_curvature_from_polyline, \
+
+from commonroad_clcs.clcs import CurvilinearCoordinateSystem
+# from commonroad_dc.pycrccosy import CurvilinearCoordinateSystem
+# from commonroad_dc.geometry.util 
+from commonroad_clcs.util import compute_pathlength_from_polyline, compute_curvature_from_polyline, \
     compute_orientation_from_polyline, resample_polyline, chaikins_corner_cutting
+from commonroad_clcs.ref_path_processing.factory import ProcessorFactory
+from commonroad_clcs.config import (
+    CLCSParams,
+    ProcessingOption,
+    ResamplingOption
+)
 from commonroad.common.util import make_valid_orientation
 
 
@@ -224,9 +233,26 @@ class CoordinateSystem:
         return self._ref_curv_dd
 
     @reference.setter
-    def reference(self, reference):
+    def reference(self, ref_path):
         """set reference path and creates Curvilinear Coordinate System from given reference"""
-        self._ccosy = CurvilinearCoordinateSystem(reference)
+        # initialize CLCS params
+        params = CLCSParams()
+
+        # pre-process reference path: Here we smooth the path using curve subdivision and resample is adaptively
+        params.processing_option = ProcessingOption.CURVE_SUBDIVISION
+        params.subdivision.max_curvature = 0.15
+        params.resampling.option = ResamplingOption.ADAPTIVE
+        ref_path_processor = ProcessorFactory.create_processor(params)
+        ref_path = ref_path_processor(ref_path)
+
+
+        # *************** Construct CLCS
+        params.logging_level = "info"
+        self._ccosy = CurvilinearCoordinateSystem(
+            reference_path=ref_path,
+            params=params,
+            preprocess_path=False
+        )
         self._reference = np.asarray(self.ccosy.reference_path())
 
     @property
