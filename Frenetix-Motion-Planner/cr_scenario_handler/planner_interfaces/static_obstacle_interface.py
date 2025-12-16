@@ -12,7 +12,7 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.scenario import Scenario
-from commonroad_route_planner.route_planner import RoutePlanner
+import commonroad_route_planner.fast_api.fast_api as fast_api
 
 import cr_scenario_handler.utils.multiagent_logging as lh
 from behavior_planner.behavior_module import BehaviorModule
@@ -141,13 +141,14 @@ class StaticObstaclePlannerInterface(FrenetPlannerInterface):
         self.route_planner = None
 
         # Keep this for backward compatibility
-        self.route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
-                                              planning_problem=planning_problem,
-                                              scenario=scenario,
-                                              extended_search=False)
-        shortest_route = self.route_planner.plan_routes().retrieve_shortest_route(retrieve_shortest=True)
-        reference_path = extend_ref_path_both_ends(shortest_route.reference_path)
-        self.reference_path = smooth_ref_path(reference_path)
+        # self.route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
+        #                                       planning_problem=planning_problem,
+        #                                       scenario=scenario,
+        #                                       extended_search=False)
+        # shortest_route = self.route_planner.plan_routes().retrieve_shortest_route(retrieve_shortest=True)
+        # reference_path = extend_ref_path_both_ends(shortest_route.reference_path)
+        reference_path = fast_api.generate_reference_path_from_lanelet_network_and_planning_problem(lanelet_network=scenario.lanelet_network, planning_problem=planning_problem)
+        self.reference_path = smooth_ref_path(reference_path.reference_path)
 
         self.goal_area = gc.get_goal_area_shape_group(planning_problem=planning_problem, scenario=scenario)
 

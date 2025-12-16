@@ -12,7 +12,9 @@ from commonroad.geometry.shape import Rectangle
 from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.scenario import Scenario
-from commonroad_route_planner.route_planner import RoutePlanner
+# from commonroad_route_planner.route_planner import RoutePlanner
+# https://commonroad.in.tum.de/tools/route-planner
+import commonroad_route_planner.fast_api.fast_api as fast_api
 
 import cr_scenario_handler.utils.multiagent_logging as lh
 from behavior_planner.behavior_module import BehaviorModule
@@ -94,24 +96,29 @@ class FrenetPlannerInterface(PlannerInterface):
         self.desired_velocity = None
         self.occlusion_module = None
         self.behavior_module = None
-        self.route_planner = None
+        # self.route_planner = None
 
         # Set reference path
         if not self.config_sim.behavior.use_behavior_planner:
-            self.route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
-                                              planning_problem=planning_problem,
-                                              scenario=scenario,
-                                              extended_search=False)
-            shortest_route = self.route_planner.plan_routes().retrieve_shortest_route(retrieve_shortest=True)
-
+            # https://gitlab.lrz.de/tum-cps/commonroad-route-planner/-/blob/main/tutorial/example_usage.py?ref_type=heads
+            # self.route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
+            #                                   planning_problem=planning_problem,
+            #                                   scenario=scenario,
+            #                                   extended_search=False)
+            # shortest_route = self.route_planner.plan_routes().retrieve_shortest_route(retrieve_shortest=True)
+            # reference_path = extend_ref_path_both_ends(shortest_route.reference_path)
             # # Init route extendor
             # route_extendor: RouteExtendor = RouteExtendor(shortest_route, extrapolation_length=50)
             #
             # # Extend reference path at start and end
             # route_extendor.extend_reference_path_at_start_and_end()
-            reference_path = extend_ref_path_both_ends(shortest_route.reference_path)
 
-            self.reference_path = smooth_ref_path(reference_path)
+            reference_path = fast_api.generate_reference_path_from_lanelet_network_and_planning_problem(
+                lanelet_network=scenario.lanelet_network,
+                planning_problem=planning_problem
+            )
+
+            self.reference_path = smooth_ref_path(reference_path.reference_path)
 
         else:
             config_sim.behavior.dt = config_planner.planning.dt
