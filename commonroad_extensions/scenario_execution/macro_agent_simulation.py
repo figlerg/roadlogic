@@ -88,9 +88,12 @@ from commonroad_extensions.scenario_execution.stitched_execution import custom_v
 
 from shapely.geometry import Point
 
+import matplotlib.pyplot as plt        
+import math
+
 class MacroAgent(Agent):
     """
-    This agent can replan and change its goal during the simulation
+    This agent can replan and change its goal during the simulation.
     """
 
     def _setup_planning_problem(self):
@@ -132,8 +135,9 @@ class MacroAgent(Agent):
         self._create_collision_object(x_0, initial_state.time_step)
 
         # Create a "local" planning problem to get to the next goal state, and use it to initialize the 
-        # Planners and other 
+        # Planners and other components.
         sub_goal_region = GoalRegion([self.original_planning_problem.goal.state_list[self.current_goal_index]])
+
         self.planning_problem = PlanningProblem(self.original_planning_problem.planning_problem_id, initial_state, sub_goal_region)
 
         # Base initialization of the planner interface and planner
@@ -155,10 +159,45 @@ class MacroAgent(Agent):
         # This updates the reference path (as the refernce path is linked to the planner_interface.reference path!)
         self.planner_interface = planner_interface(self.id, self.config_planner, self.config, self.scenario,
                                                    self.planning_problem, self.log_path, self.mod_path)
+        # TODO: Make the goal area longer
+        def scale_goal_area_by(planning_problem: PlanningProblem):
+            """
+            Make the goal area twice as long, but keep the position of the left side as it was originally            
+            """
+            original_goal_state = planning_problem.goal.state_list[0]
+            new_goal_state = deepcopy(original_goal_state)
+            original_goal_position: Rectangle = original_goal_state.position
+            origina_center = original_goal_position.center
+            new_center = np.array([origina_center[0] + math.cos(original_goal_position.orientation) * original_goal_position.length / 2.0, 
+                                origina_center[1] + math.sin(original_goal_position.orientation) * original_goal_position.length / 2.0])
+            new_goal_position = Rectangle(length= 2.0 * original_goal_position.length, width=original_goal_position.width, orientation=original_goal_position.orientation, center=new_center)
+            # copy all attributes but position
+            new_goal_state.position = new_goal_position
+            new_goal_region = GoalRegion([new_goal_state])
+            return PlanningProblem(planning_problem.planning_problem_id, planning_problem.initial_state, new_goal_region)
+        
+            # def plot_me():
+            #     plt.figure()
 
-        self.agent_state = AgentState(planning_problem=self.planning_problem, reference_path=self.reference_path,
+            #     xs, ys = original_goal_position.shapely_object.exterior.xy
+            #     plt.plot(xs, ys, color="red")
+            #     plt.plot(origina_center[0], origina_center[1], "o", color="red")
+
+            #     xs, ys = new_goal_position.shapely_object.exterior.xy
+            #     plt.plot(xs, ys, color="blue")
+            #     plt.plot(new_center[0], new_center[1], "o", color="blue")
+
+            #     plt.savefig("tmp-plot.png")
+
+        planning_problem_with_scaled_goal_area = scale_goal_area_by(self.planning_problem)
+
+
+        # Tell the agent to check completion with the new goal area
+        self.agent_state = AgentState(planning_problem=planning_problem_with_scaled_goal_area, reference_path=self.reference_path,
                                       coordinate_system=self.coordinate_system)
         
+        
+
         if self.planning_problem.initial_state.time_step == 0:
             self.agent_state.log_running(0)
 
