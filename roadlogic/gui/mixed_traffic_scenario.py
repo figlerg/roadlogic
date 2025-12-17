@@ -9,7 +9,7 @@
 #
 import mpld3
 import uuid
-
+import os
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -134,328 +134,25 @@ def generate_scenario_designer(scenario: Scenario, generate_button_html_id, scen
 
 # Basic plugin to bind to the generate button
 
+def read_plugin_js(local_file_name):
+    directory_containing_this_script = os.path.dirname(os.path.realpath(__file__))
+    file_name = os.path.join(directory_containing_this_script, local_file_name)
+
+    with open(file_name, "r") as js_file:
+        return "\n".join(js_file.readlines())
+
+
 class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
     """
     Based on NewScenarioDragAndDrop
     """
 
-    JAVASCRIPT = r"""
-        mpld3.register_plugin("roadlogic_scenario_editor", RoadLogicScenarioEditor);
-
-        RoadLogicScenarioEditor.prototype = Object.create(mpld3.Plugin.prototype);
-
-        RoadLogicScenarioEditor.prototype.constructor = RoadLogicScenarioEditor;
-
-        RoadLogicScenarioEditor.prototype.requiredProps = ["figure_id",
-                                                            "container_id",
-                                                            "generate_button_id",
-                                                            "add_vehicle_button_id",
-                                                            "reset_button_id",
-                                                            "show_dialog_button_id",
-                                                            "initial_state_ids",
-                                                            "goal_area_ids",
-                                                            "scenario_data",
-                                                            "colors"
-                                                            ];
-
-        RoadLogicScenarioEditor.prototype.defaultProps = {alpha_fill:0.6,
-                                                        alpha_stroke:0.6,
-                                                        hoffset:0,
-                                                        voffset:10};
-        
-        // http://stackoverflow.com/questions/5525071/how-to-wait-until-an-element-exists
-        function waitForElm(selector) {
-            return new Promise(resolve => {
-                if (document.getElementById(selector)) {
-                    return resolve(document.getElementById(selector));
-                }
-
-                const observer = new MutationObserver(mutations => {
-                    if (document.getElementById(selector)) {
-                        observer.disconnect();
-                        resolve(document.getElementById(selector));
-                    }
-                });
-
-                // If you get "parameter 1 is not of type 'Node'" error, see https://stackoverflow.com/a/77855838/492336
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true
-                });
-            });
-        }
-
-        function RoadLogicScenarioEditor(fig, props){
-            mpld3.Plugin.call(this, fig, props);
-            // Ensure during dragging the markers are clearly and always visible; otherwise, their opacity should be 0.6
-            mpld3.insert_css("#" + props.figure_id + " path.dragging",
-                             {"fill-opacity": "1.0 !important",
-                              "stroke-opacity": "1.0 !important"});
-        };
-
-        RoadLogicScenarioEditor.prototype.draw = async function(){
-
-            // "global" variable to know which vehicle is selected
-            var current_vehicle;
-
-            // Look up and bind to the container and the generate button
-            // The figure corresponding to this plugin
-            const the_figure_id = this.props.figure_id
-            var the_figure = document.getElementById(the_figure_id)
-
-            // Those are the default data about the vehicles
-            var initial_scenario_data = this.props.scenario_data;
-
-            // Wait until the container that should contain this figure is ready
-            var the_container = await waitForElm(this.props.container_id)
-            // Move the figure inside the container
-            the_container.insertBefore(the_figure, the_container.firstChild)
-            
-            // Find the buttons and link the functions
-            var the_generate_button  = document.getElementById(this.props.generate_button_id)
-            var the_add_vehicle_button  = document.getElementById(this.props.add_vehicle_button_id)
-            var the_reset_button = document.getElementById(this.props.reset_button_id)
-            var the_show_dialog_button = document.getElementById(this.props.show_dialog_button_id)
-            // make sure this is not visible
-            the_show_dialog_button.style.visibility = 'hidden';
-
-            // Create an global object storing data about the scenario.
-            the_figure.scenario_data = {}
-            the_figure.modal_data = {}
-            
-            // Create an object to store the visibility of the vehicles
-            var player_visibility_flags= []
-
-            // Get a reference of each of the marker objects. We store data directly inside them
-            // The objects are initialized with the provided initial values
-            var initial_state_objs = [];
-            var goal_area_objs = []; 
-
-            
-            // Values data must be initialized here
-            for( let i = 0; i < this.props.initial_state_ids.length; i++){
-                var initial_state_obj = mpld3.get_element(this.props.initial_state_ids[i])
-                initial_state_obj.data = [ initial_scenario_data[i + "_x_is"], initial_scenario_data[i + "_y_is"] ];
-                initial_state_objs.push(initial_state_obj);
-                
-                var goal_area_obj = mpld3.get_element(this.props.goal_area_ids[i])
-                goal_area_obj.data = [ initial_scenario_data[i + "_x_ga"], initial_scenario_data[i + "_y_ga"] ];
-                goal_area_objs.push(goal_area_obj);
-                
-                player_visibility_flags[i] = initial_scenario_data[i + "_is_visible"];
-            }
-
-            // Not sure this is needed
-            var colors = this.props.colors;
-            
-            var make_player_visible = function(index){
-                // Change visibility of the markers for the vehicle index
-                player_visibility_flags[index] = true;
-                
-                initial_state_objs[index].data = [ initial_scenario_data[index + "_x_is"], initial_scenario_data[index + "_y_is"] ];
-                // TODO Link 0.6 to this.props
-                initial_state_objs[index].pathsobj
-                        .style("visibility", "visible")
-                        .style("stroke-opacity", 0.6)
-                        .style("fill-opacity", 0.6);
-                goal_area_objs[index].data = [ initial_scenario_data[index + "_x_ga"], initial_scenario_data[index + "_y_ga"] ];
-                // TODO Link 0.6 to this.props
-                goal_area_objs[index].pathsobj
-                        .style("visibility", "visible")
-                        .style("stroke-opacity", 0.6)
-                        .style("fill-opacity", 0.6);
-
-                // Add the data
-                the_figure.scenario_data[index] = {
-                    "vehicle_model" : initial_scenario_data[index + "_vehicle_model"],
-                    "initial_state": {
-                        "x" : initial_scenario_data[index + "_x_is"],
-                        "y" : initial_scenario_data[index + "_y_is"],
-                        "v" : initial_scenario_data[index + "_v_is"]
-                    }, 
-                    "goal_area" : {
-                        "x" : initial_scenario_data[index + "_x_ga"],
-                        "y" : initial_scenario_data[index + "_y_ga"],
-                        "t" : initial_scenario_data[index + "_t_ga"]
-                    }
-                }
-
-                add_controls(index);
-            };
-            
-            the_add_vehicle_button.onclick = function(){
-                // Take the first nonvisible vehicle and make it visible.
-                for( let player_index = 0; player_index < player_visibility_flags.length; player_index++){
-                    if (player_visibility_flags[player_index] == false){
-                        make_player_visible(player_index);
-                        break;
-                    }
-                }
-                // Ensure button is enabled/disabled correctly
-                the_add_vehicle_button.classList.add("disabled");
-                for( let player_index = 0; player_index < player_visibility_flags.length; player_index++){
-                    if (player_visibility_flags[player_index] == false){
-                        the_add_vehicle_button.classList.remove("disabled");
-                    }
-                }
-            }
-
-            var hide_player = function(index){
-                // Change visibility of the markers
-                player_visibility_flags[index] = false;
-
-                // Hide and move back to the initial position the markers                
-                var is_obj = initial_state_objs[index];
-
-
-                is_obj.pathsobj.style("visibility", "hidden");
-                is_obj.pathsobj.attr("transform", "translate("+is_obj.offsetcoords.x(is_obj.data[0])+","+is_obj.offsetcoords.y(is_obj.data[1])+")");
-               
-                var ga_obj = goal_area_objs[index];
-                // ga_obj.data = [ initial_scenario_data[index + "_x_ga"], initial_scenario_data[index + "_y_ga"] ]
-                ga_obj.pathsobj.style("visibility", "hidden");
-                ga_obj.pathsobj.attr("transform", "translate("+ga_obj.offsetcoords.x(ga_obj.data[0])+","+ga_obj.offsetcoords.y(ga_obj.data[1])+")");
-                
-                // After removing a vehicle, then the add vehicle button is definitively active
-                the_add_vehicle_button.classList.remove("disabled")
-                                
-                // Remove the data
-                delete the_figure.scenario_data[index]
-
-                // Remove any control associated to this player?
-            };
-            
-            // Drag and Drop common functionalities            
-            var drag_started = function(d) {
-                d3.event.sourceEvent.stopPropagation();
-                d3.select(this).classed("dragging", true);
-            }
-
-            var drag_ended = function(d) {
-                d3.select(this).classed("dragging", false);
-            }
-
-            var add_controls = function(index) {
-                var initial_state_obj = initial_state_objs[index];
-                var goal_area_obj = goal_area_objs[index];
-                    
-                initial_state_obj.elements()
-                    .on("click", function(d, i){
-                        // Trigger a click event on this button
-                
-                        // Data for the modal dialog box
-                        the_figure.modal_data = {}
-                        the_figure.modal_data["vehicle"] = index
-                        the_figure.modal_data["vehicle_model"] = the_figure.scenario_data[index]["vehicle_model"]
-                        the_figure.modal_data["color"] = {
-                            "r" : (colors[index][0] * 255.0).toFixed(1),
-                            "g" : (colors[index][1] * 255.0).toFixed(1),
-                            "b" : (colors[index][2] * 255.0).toFixed(1)
-                        }
-                        the_figure.modal_data["initial_state"] = {}
-                        the_figure.modal_data["initial_state"]["v"] = the_figure.scenario_data[index]["initial_state"]["v"]
-
-                        // Show the modal dialog
-                        the_show_dialog_button.click()
-                    });
-
-                goal_area_obj.elements()
-                    .on("click", function(d, i){
-                        // Trigger a click event on this button
-                
-                        // Data for the modal dialog box
-                        the_figure.modal_data = {}
-                        the_figure.modal_data["vehicle"] = index
-                        the_figure.modal_data["color"] = {
-                            "r" : (colors[index][0] * 255.0).toFixed(1),
-                            "g" : (colors[index][1] * 255.0).toFixed(1),
-                            "b" : (colors[index][2] * 255.0).toFixed(1)
-                        }
-                        the_figure.modal_data["goal_area"] = {}
-
-                        // Show the modal dialog
-                        the_show_dialog_button.click()
-                    });
-
-                // We attach the dragging and dropping functionalities to both the initial_state and goal_area
-                            
-                var initial_state_drag = d3.drag()
-                    .subject(function(d) {
-                                // Ensure we always refer to the stored stat of the object
-                                return {
-                                        x: initial_state_obj.ax.x(the_figure.scenario_data[index]["initial_state"]["x"]),
-                                        y: initial_state_obj.ax.y(the_figure.scenario_data[index]["initial_state"]["y"])
-                                }; 
-                            }
-                        )
-                    .on("start", drag_started)
-                    .on("drag", function(d) {
-                                    // As long as we are dragging d ... 
-                                    d.x = initial_state_obj.ax.x.invert(d3.event.x);
-                                    d.y = initial_state_obj.ax.y.invert(d3.event.y);
-                                    // Apply the translation to the element we are dragging to move it around
-                                    d3.select(this).attr("transform", "translate(" + [d3.event.x, d3.event.y] + ")");
-                                    // Update the scenario data
-                                    the_figure.scenario_data[index]["initial_state"]["x"] = d.x
-                                    the_figure.scenario_data[index]["initial_state"]["y"] = d.y
-                                }
-                        )
-                    .on("end", drag_ended);
-                
-                var goal_area_drag = d3.drag()
-                    .subject(function(d) {
-                                // Ensure we always refer to the stored stat of the object
-                                return {
-                                        x: initial_state_obj.ax.x(the_figure.scenario_data[index]["goal_area"]["x"]),
-                                        y: initial_state_obj.ax.y(the_figure.scenario_data[index]["goal_area"]["y"])
-                                };
-                            } 
-                        )
-                    .on("start", drag_started)
-                    .on("drag", function(d) {
-                            // As long as we are dragging d ... 
-                            // TODO Update the inputs elements corresponding to d (d.id might be stored somewhere)
-                            d.x = goal_area_obj.ax.x.invert(d3.event.x);
-                            d.y = goal_area_obj.ax.y.invert(d3.event.y);
-                            // Apply the translation to the element we are dragging to move it around
-                            d3.select(this).attr("transform", "translate(" + [d3.event.x, d3.event.y] + ")");
-                            //console.log("GA Dragged to " + d.x + ", " + d.y)
-                            // Refresh the form - Assume this elements are there!
-                            the_figure.scenario_data[index]["goal_area"]["x"] = d.x
-                            the_figure.scenario_data[index]["goal_area"]["y"] = d.y
-                        }
-                    )
-                    .on("end", drag_ended);
-                
-                initial_state_obj.elements()
-                    .style("cursor", "default")
-                    .call(initial_state_drag);
-                
-                goal_area_obj.elements()
-                    .style("cursor", "default")
-                    .call(goal_area_drag);
-            }
-
-            var reset_scenario = function(){
-                for( let player_index = 0; player_index < player_visibility_flags.length; player_index++){
-                    // TODO Should hide_player remove the controls for dragging and tooltip?
-                    hide_player(player_index)
-                    if ( initial_scenario_data[player_index + "_is_visible"] ){
-                        make_player_visible(player_index)
-                    }
-                }
-            }
-
-            the_reset_button.onclick = reset_scenario
-            
-            // Invoke the scenario initialization
-            reset_scenario()
-        };
-    """
+    JAVASCRIPT = read_plugin_js("roadlogic_scenario_editor.js")
 
     def __init__(self, figure_id: str, container_id: str,
                  generate_button_id: str, add_vehicle_button_id: str, reset_button_id: str, show_dialog_button_id: str,
-                 initial_state_points: list, goal_area_points: list, scenario_data: dict, colors: list):
+                 add_waypoint_button_id: str, select_player_id: str, update_select_button_id: str,
+                 initial_state_points: list, waypoints: list, scenario_data: dict, colors: list):
         
         def get_collections_of_ids(collections_of_points):
             collections_of_ids = []
@@ -477,8 +174,11 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
                       "add_vehicle_button_id": add_vehicle_button_id,
                       "reset_button_id": reset_button_id,
                       "show_dialog_button_id": show_dialog_button_id,
+                      "add_waypoint_button_id": add_waypoint_button_id,
+                      "select_player_id": select_player_id,
+                      "update_select_button_id": update_select_button_id,
                       "initial_state_ids": get_collections_of_ids(initial_state_points),
-                      "goal_area_ids": get_collections_of_ids(goal_area_points),
+                      "waypoint_ids": get_collections_of_ids(waypoints),
                       "scenario_data": scenario_data,
                       "colors": colors
                       }
@@ -502,6 +202,21 @@ async def update_input_state_and_close_dialog(scenario_editor_unique_id: str, ve
     vehicle_model = vehicle_model_select.value
     await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data[{vehicle_index}]['vehicle_model'] = '{vehicle_model}'")
     dialog.close()
+
+async def update_the_select(scenario_editor_unique_id: str, select_player: ui.select):
+    # Get the data about scenario, it contains only the visible players
+    scenario_data = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data")
+    visible_vehicles = [vehicle_index for vehicle_index in scenario_data.keys()]
+    # Update the select option
+    selected_value = select_player.value if select_player.value in visible_vehicles else "None"
+    select_player.set_options(["None"] + visible_vehicles, value=selected_value)
+    select_player.update()
+
+async def toggle_add_waypoint_button(select_player: ui.select, add_waypoint_button: ui.button):
+    if select_player.value != "None":
+        add_waypoint_button.enable()
+    else:
+        add_waypoint_button.disable()
 
 async def create_the_modal_dialog(scenario_editor_unique_id):
     modal_data = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').modal_data")
@@ -585,14 +300,21 @@ def scenario_editor(map_file: str, container: ui.element):
     with ui.button_group():
         generate_button = ui.button("Generate", on_click=lambda : generate_the_scenario(scenario_editor_unique_id))
         add_vehicle_button = ui.button("Add Vehicle")
+        with ui.button_group():
+            add_waypoint_button = ui.button("Add Waypoint")
+            select_player = ui.select(['option 1', 'option 2'], on_change= lambda e : toggle_add_waypoint_button(e.sender, add_waypoint_button))
+
         reset_button = ui.button("Reset")
+
     # This dialog allows to visualize and update the parameters of the selected vehicle
     show_dialog_button = ui.button("Show Editor", on_click=lambda : create_the_modal_dialog(scenario_editor_unique_id))
     # Pretend this is invisible
     show_dialog_button.style("opacity: 0")
     # We cannot use the following, as it completely disable the button
     # show_dialog_button.visible = False
-    
+    update_select_button = ui.button("Update Select", on_click=lambda: update_the_select(scenario_editor_unique_id, select_player))
+    update_select_button.style("opacity: 0")
+
     
 
     # Setting the size of the plot is tricky, it depends on the road shape
@@ -612,7 +334,7 @@ def scenario_editor(map_file: str, container: ui.element):
         
         # Generate the placeholder/markers - independently as they cannot be easily modified later!
         initial_state_points = list()
-        goal_area_points = list()
+        waypoints = list()
         colors = list()
         scenario_data = dict()
 
@@ -632,38 +354,41 @@ def scenario_editor(map_file: str, container: ui.element):
 
             scenario_data[f"{driver_index}_vehicle_model"] = "car"
 
-            scenario_data[f"{driver_index}_x_ga"] = bottom_left_corner[0] + driver_index * 2.0
-            scenario_data[f"{driver_index}_y_ga"] = bottom_left_corner[1] -2.0
-            scenario_data[f"{driver_index}_t_ga"] = 0.0
-
             # We plot the markers to ensure they are included in the plugin as currently generate markers on the fly is not possible
             # Round marker - Initial State
             x_is = float(scenario_data[f"{driver_index}_x_is"])
             y_is = float(scenario_data[f"{driver_index}_y_is"])
+
             initial_state_points.append(ax.plot(x_is, y_is, 'o', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
-            # Squared marker - Goal State
-            x_ga = float(scenario_data[f"{driver_index}_x_ga"])
-            y_ga = float(scenario_data[f"{driver_index}_y_ga"])
-            goal_area_points.append(ax.plot(x_ga, y_ga, 's', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
+            
+            # Squared marker - Waypoints
+            # TODO Define variable instead of 3
+            for waypoint_index in range(3):
+                # TODO create all the waypoints here
+                scenario_data[f"{driver_index}_{waypoint_index}_wp_x"] = bottom_left_corner[0] + driver_index * 2.0
+                scenario_data[f"{driver_index}_{waypoint_index}_wp_y"] = bottom_left_corner[1] -2.0
+                scenario_data[f"{driver_index}_{waypoint_index}_wp_t"] = 0.0
+                scenario_data[f"{driver_index}_{waypoint_index}_wp_is_visible"] = False
+
+                x_wp = float(scenario_data[f"{driver_index}_{waypoint_index}_wp_x"])
+                y_wp = float(scenario_data[f"{driver_index}_{waypoint_index}_wp_y"])
+
+                waypoints.append(ax.plot(x_wp, y_wp, 's', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
+
             # Remember the color of the player as well
             colors.append(color)
         
-        #
-        #
-        # Status I can show and hide vehicles' initial and final states but cannot drag and drop them across the map
-        #       Also the tooltip is not visible/does not show
-        #   TODO: First make sure that drag works, then make sure that tool tip can be seen, finally add inputs via tool tips
-        #
-        #
-
         mpld3.plugins.connect(fig, RoadLogicScenarioEditor(figure_id=scenario_editor_unique_id, 
                                                            container_id=container.html_id,
                                                            generate_button_id=generate_button.html_id,
                                                            add_vehicle_button_id=add_vehicle_button.html_id,
                                                            reset_button_id=reset_button.html_id,
                                                            show_dialog_button_id = show_dialog_button.html_id,
+                                                           add_waypoint_button_id=add_waypoint_button.html_id,
+                                                           select_player_id=select_player.html_id,
+                                                           update_select_button_id=update_select_button.html_id,
                                                            initial_state_points=initial_state_points,
-                                                           goal_area_points=goal_area_points,
+                                                           waypoints=waypoints,
                                                            scenario_data=scenario_data,
                                                            colors=colors))
         
