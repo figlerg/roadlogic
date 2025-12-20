@@ -81,7 +81,7 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     var the_add_waypoint_button = document.getElementById(this.props.add_waypoint_button_id)
     the_add_waypoint_button.classList.add("disabled");
 
-    var select_player  = document.getElementById(this.props.select_player_id)
+    // var select_player  = document.getElementById(this.props.select_player_id)
     // https://stackoverflow.com/questions/5416767/get-selected-value-text-from-select-on-change
     // select_player.onchange = function(event){
         // var selectElement = event.target;
@@ -101,9 +101,28 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
 
     // Communication with the server side is done by invoking JS functions and capturing their results, as per nicegui model
     // We achieve them by storing into known objects the data about the scenario.
-    the_figure.scenario_data = {} // Scenario data
-    the_figure.modal_data = {} // Data used to render the modal dialog
+    the_figure.scenario_data = {} // Scenario data. Note: this is a plain js object, not a dictionary
+    the_figure.modal_data = {} // Data used to render the modal dialog. Note: this is a plain js object, not a dictionary
     
+    const n_vehicles = this.props.initial_state_ids.length
+    const n_waypoints_per_vehicle = this.props.waypoint_ids.length / n_vehicles
+
+    var update_generate_button = function(){
+        // This button is disabled if there are no players or if any player is invalid
+        // An invalid player is a player with no waypoints
+        the_generate_button.classList.add("disabled");
+        active_vehicles = Object.keys(the_figure.scenario_data).length
+        if (active_vehicles > 0 ){
+            for (var vehicle_key in the_figure.scenario_data) {
+                if (Object.keys(the_figure.scenario_data[vehicle_key]["waypoints"]).length == 0){
+                    return
+                }
+            }
+            // If all the players have at least a waypoint, we can generate the scenario
+            the_generate_button.classList.remove("disabled");
+        }
+    }
+
     // Create an object to store the visibility of the vehicles
     // This might not be needed if we store visibility flag on the initial_state_objects
     var player_visibility_flags= []
@@ -112,14 +131,9 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     // The objects are initialized with the provided initial values
     var initial_state_objs = [];
     // This is a squared matrix of size vehicles X waypoints
-    var waypoint_objs = []; 
+    var waypoint_objs = {}; 
 
-    const n_vehicles = this.props.initial_state_ids.length
-    const n_waypoints_per_vehicle = this.props.waypoint_ids.length / n_vehicles
-
-    console.log("N VEHICLES " + n_vehicles)
-    console.log("N WAYPOINT PER VEHICLE " +  n_waypoints_per_vehicle)
-
+    
     for( let i = 0; i < n_vehicles; i++){
         // Associate to the marker representing the initial state additional data
         var initial_state_obj = mpld3.get_element(this.props.initial_state_ids[i])
@@ -131,14 +145,16 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
         var waypoints_of_vehicle = []
         for(let j = 0; j < n_waypoints_per_vehicle; j++){
             // Associate to the marker representing the j_th waypoint of the i_th vehicle additional data
-            var waypoint_obj = mpld3.get_element(this.props.waypoint_ids[i + j])
+            var waypoint_obj = mpld3.get_element(this.props.waypoint_ids[i * n_vehicles + j])
+
             // TODO Include time, make this generic with attributes
             waypoint_obj.data = [ initial_scenario_data[i + "_" + j + "_wp_x"], initial_scenario_data[i + "_" + j + "_wp_y"] ]
             waypoint_obj.visible = initial_scenario_data[i + "_" + j + "_wp_is_visible"]
+
             waypoints_of_vehicle.push(waypoint_obj)
         }
         
-        waypoint_objs.push(waypoints_of_vehicle)
+        waypoint_objs[i] = waypoints_of_vehicle
 
         // This can be replaced by initial_state_obj.visible
         player_visibility_flags[i] = initial_scenario_data[i + "_is_visible"];
@@ -147,7 +163,8 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     the_update_select_button.click()
 
     // Not sure this is needed
-    var colors = this.props.colors;
+    var colors = this.props.colors
+    var select_player_id = this.props.select_player_id
     
     var make_waypoint_visible_for_player = function(player_index, waypoint_index){
         // Visualize the waypoint in the default position
@@ -161,11 +178,13 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
                 .style("stroke-opacity", 0.6)
                 .style("fill-opacity", 0.6)
         // Initialize the value for this
-        the_figure.scenario_data[index].waypoints[waypoint_index] = {
+        the_figure.scenario_data[player_index]["waypoints"][waypoint_index] = {
                 "x" : waypoint_objs[player_index][waypoint_index].data[0],
                 "y" : waypoint_objs[player_index][waypoint_index].data[1],
                 "t" : 0 // TODO Set the time as the max(time for time in waypoints) + 1 
         }
+        // Ensure we can 
+        update_generate_button()
     }
 
     var make_player_visible = function(player_index){
@@ -190,23 +209,23 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
             }, 
             "waypoints": []
         }
-        // Attach the control logic to the vehicle initial state and waypoints
-        add_controls(player_index)
-        // Refresh the select
+        // Force a refresh the vehicle select control
         the_update_select_button.click()
+        // Check whether generation is enabled
+        update_generate_button()
     }
     
     the_add_vehicle_button.onclick = function(){
         // Take the first nonvisible vehicle and make it visible.
-        var selected_player_index;
+        // Also atta
         for( let player_index = 0; player_index < player_visibility_flags.length; player_index++){
             if (player_visibility_flags[player_index] == false){
-                make_player_visible(player_index);
-                selected_player_index = player_index;
+                make_player_visible(player_index)
+                add_controls(player_index)
                 break;
             }
         }
-        // Ensure button is enabled/disabled correctly
+        // Ensure add vehicle button is enabled/disabled correctly
         the_add_vehicle_button.classList.add("disabled");
         for( let player_index = 0; player_index < player_visibility_flags.length; player_index++){
             if (player_visibility_flags[player_index] == false){
@@ -215,22 +234,44 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
         }
     }
 
-    var hide_player = function(index){
+    the_add_waypoint_button.onclick = function(){
+        // Get the index of the selected vehicle
+        var player_index = document.getElementById(select_player_id).getElementsByTagName('input')[0].value;
+
+        // Take the first nonvisible waypoint of this vehicle and make it visible.
+        for( let wp_index = 0; wp_index < n_waypoints_per_vehicle; wp_index++){
+            if (waypoint_objs[player_index][wp_index].visible == false){
+                make_waypoint_visible_for_player(player_index, wp_index)
+                break
+            }
+        }
+    }
+
+    the_figure.hide_waypoint = function(vehicle_index, waypoint_index){
+        var wp_obj = waypoint_objs[vehicle_index][waypoint_index];
+        wp_obj.pathsobj.style("visibility", "hidden");
+        wp_obj.pathsobj.attr("transform", "translate("+wp_obj.offsetcoords.x(wp_obj.data[0])+","+wp_obj.offsetcoords.y(wp_obj.data[1])+")");
+        wp_obj.visible = false
+        // Remove the data of the waypoint
+        if (vehicle_index in this.scenario_data && this.scenario_data[vehicle_index] && waypoint_index in this.scenario_data[vehicle_index]["waypoints"]){
+            delete this.scenario_data[vehicle_index]["waypoints"][waypoint_index]
+        } 
+        update_generate_button()
+    }
+
+    // Expose this function
+    the_figure.hide_player = function(index){
         // Change visibility of the markers
         player_visibility_flags[index] = false;
 
-        // Hide and move back to the initial position the markers                
+        // Hide and move back to the initial position and all the waypoints                
         var is_obj = initial_state_objs[index];
         is_obj.pathsobj.style("visibility", "hidden");
         is_obj.pathsobj.attr("transform", "translate("+is_obj.offsetcoords.x(is_obj.data[0])+","+is_obj.offsetcoords.y(is_obj.data[1])+")");
         is_obj.visible = false
         
-        for(let j = 0; j < n_waypoints_per_vehicle; j++){
-            var wp_obj = waypoint_objs[index][j];
-            // ga_obj.data = [ initial_scenario_data[index + "_x_ga"], initial_scenario_data[index + "_y_ga"] ]
-            wp_obj.pathsobj.style("visibility", "hidden");
-            wp_obj.pathsobj.attr("transform", "translate("+wp_obj.offsetcoords.x(wp_obj.data[0])+","+wp_obj.offsetcoords.y(wp_obj.data[1])+")");
-            wp_obj.visible = false
+        for(let wp_index = 0; wp_index < n_waypoints_per_vehicle; wp_index++){
+            this.hide_waypoint(index, wp_index)
         }
         
         // After removing a vehicle, then the add vehicle button is definitively active
@@ -241,6 +282,9 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
 
         // Update the select
         the_update_select_button.click()
+
+        //
+        update_generate_button()
     }
     
     // Drag and Drop common functionalities            
@@ -253,59 +297,79 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
         d3.select(this).classed("dragging", false);
     }
 
-    var add_controls = function(index) {
-        var initial_state_obj = initial_state_objs[index];
-        var waypoints = waypoint_objs[index];
-            
+    // Function to attach drag and drop to markers
+    var add_controls = function(player_index) {
+        var initial_state_obj = initial_state_objs[player_index]
+        var vehicle_waypoints_objs = waypoint_objs[player_index]
+        
+        // When the initial state or the any waypoint is clicked
+        // Show the modal dialog to edit its properties
+        // Configure the modal box data before showing the modal dialog
         initial_state_obj.elements()
             .on("click", function(d, i){
-                // Trigger a click event on this button
-        
-                // Data for the modal dialog box
+                // The modal dialog shows the vehicle initial speed and model based on the state of the scenario
                 the_figure.modal_data = {}
-                the_figure.modal_data["vehicle"] = index
-                the_figure.modal_data["vehicle_model"] = the_figure.scenario_data[index]["vehicle_model"]
+                //
+                the_figure.modal_data["vehicle_index"] = player_index
+                //
+                the_figure.modal_data["vehicle_model"] = the_figure.scenario_data[player_index]["vehicle_model"]
+                //
                 the_figure.modal_data["color"] = {
-                    "r" : (colors[index][0] * 255.0).toFixed(1),
-                    "g" : (colors[index][1] * 255.0).toFixed(1),
-                    "b" : (colors[index][2] * 255.0).toFixed(1)
+                    "r" : (colors[player_index][0] * 255.0).toFixed(1),
+                    "g" : (colors[player_index][1] * 255.0).toFixed(1),
+                    "b" : (colors[player_index][2] * 255.0).toFixed(1)
                 }
+                // TODO Simplify with Type = Initial State and then only attributes
                 the_figure.modal_data["initial_state"] = {}
-                the_figure.modal_data["initial_state"]["v"] = the_figure.scenario_data[index]["initial_state"]["v"]
+                // Initial position. Will not be editable.
+                the_figure.modal_data["initial_state"]["x"] = the_figure.scenario_data[player_index]["initial_state"]["x"]
+                the_figure.modal_data["initial_state"]["y"] = the_figure.scenario_data[player_index]["initial_state"]["y"]
+                // the_figure.modal_data["initial_state"]["orientation"] = the_figure.scenario_data[player_index]["initial_state"]["orientation"]
+                // the_figure.modal_data["initial_state"]["timestep"] = the_figure.scenario_data[player_index]["initial_state"]["timestep"]
+                // Initial speed
+                the_figure.modal_data["initial_state"]["v"] = the_figure.scenario_data[player_index]["initial_state"]["v"]
+                // the_figure.modal_data["initial_state"]["acceleration"] = the_figure.scenario_data[player_index]["initial_state"]["acceleration"]
 
                 // Show the modal dialog
                 the_show_dialog_button.click()
             });
 
-        for(let j = 0; j < n_waypoints_per_vehicle; j++){
-            var wp_obj = waypoint_objs[index][j];
+        for( let wp_index = 0; wp_index < vehicle_waypoints_objs.length; wp_index++){
+            var wp_obj = vehicle_waypoints_objs[wp_index];
+
             wp_obj.elements()
                 .on("click", function(d, i){
-                    // Trigger a click event on this button
-            
                     // Data for the modal dialog box
                     the_figure.modal_data = {}
-                    the_figure.modal_data["vehicle"] = index
+                    //
+                    the_figure.modal_data["vehicle_index"] = player_index
+                    the_figure.modal_data["waypoint_index"] = wp_index
+                    //
                     the_figure.modal_data["color"] = {
-                        "r" : (colors[index][0] * 255.0).toFixed(1),
-                        "g" : (colors[index][1] * 255.0).toFixed(1),
-                        "b" : (colors[index][2] * 255.0).toFixed(1)
+                        "r" : (colors[player_index][0] * 255.0).toFixed(1),
+                        "g" : (colors[player_index][1] * 255.0).toFixed(1),
+                        "b" : (colors[player_index][2] * 255.0).toFixed(1)
                     }
-                    the_figure.modal_data["waypoint_id"] = j
+                    //
                     the_figure.modal_data["waypoint"] = {}
+                    the_figure.modal_data["waypoint"]["x"] = the_figure.scenario_data[player_index]["waypoints"][wp_index]["x"]
+                    the_figure.modal_data["waypoint"]["y"] = the_figure.scenario_data[player_index]["waypoints"][wp_index]["y"]
+                    the_figure.modal_data["waypoint"]["t"] = the_figure.scenario_data[player_index]["waypoints"][wp_index]["t"]
+                    // the_figure.modal_data["waypoint"]["v"] = the_figure.scenario_data[player_index]["waypoints"][waypoint_index]["v"]
 
                     // Show the modal dialog
                     the_show_dialog_button.click()
                 });
             }
-        // We attach the dragging and dropping functionalities to both the initial_state and goal_area
+
+        // We attach the dragging and dropping functionalities to both the initial_state and waypoints
                     
         var initial_state_drag = d3.drag()
             .subject(function(d) {
                         // Ensure we always refer to the stored stat of the object
                         return {
-                                x: initial_state_obj.ax.x(the_figure.scenario_data[index]["initial_state"]["x"]),
-                                y: initial_state_obj.ax.y(the_figure.scenario_data[index]["initial_state"]["y"])
+                                x: initial_state_obj.ax.x(the_figure.scenario_data[player_index]["initial_state"]["x"]),
+                                y: initial_state_obj.ax.y(the_figure.scenario_data[player_index]["initial_state"]["y"])
                         }; 
                     }
                 )
@@ -317,50 +381,51 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
                             // Apply the translation to the element we are dragging to move it around
                             d3.select(this).attr("transform", "translate(" + [d3.event.x, d3.event.y] + ")");
                             // Update the scenario data
-                            the_figure.scenario_data[index]["initial_state"]["x"] = d.x
-                            the_figure.scenario_data[index]["initial_state"]["y"] = d.y
+                            the_figure.scenario_data[player_index]["initial_state"]["x"] = d.x
+                            the_figure.scenario_data[player_index]["initial_state"]["y"] = d.y
                         }
                 )
             .on("end", drag_ended);
-        
-        // var goal_area_drag = d3.drag()
-        //     .subject(function(d) {
-        //                 // Ensure we always refer to the stored stat of the object
-        //                 return {
-        //                         x: initial_state_obj.ax.x(the_figure.scenario_data[index]["goal_area"]["x"]),
-        //                         y: initial_state_obj.ax.y(the_figure.scenario_data[index]["goal_area"]["y"])
-        //                 };
-        //             } 
-        //         )
-        //     .on("start", drag_started)
-        //     .on("drag", function(d) {
-        //             // As long as we are dragging d ... 
-        //             // TODO Update the inputs elements corresponding to d (d.id might be stored somewhere)
-        //             d.x = goal_area_obj.ax.x.invert(d3.event.x);
-        //             d.y = goal_area_obj.ax.y.invert(d3.event.y);
-        //             // Apply the translation to the element we are dragging to move it around
-        //             d3.select(this).attr("transform", "translate(" + [d3.event.x, d3.event.y] + ")");
-        //             //console.log("GA Dragged to " + d.x + ", " + d.y)
-        //             // Refresh the form - Assume this elements are there!
-        //             the_figure.scenario_data[index]["goal_area"]["x"] = d.x
-        //             the_figure.scenario_data[index]["goal_area"]["y"] = d.y
-        //         }
-        //     )
-        //     .on("end", drag_ended);
-        
         initial_state_obj.elements()
             .style("cursor", "default")
             .call(initial_state_drag);
-        
-        // goal_area_obj.elements()
-        //     .style("cursor", "default")
-        //     .call(goal_area_drag);
+
+        for( let wp_index = 0; wp_index < vehicle_waypoints_objs.length; wp_index++){
+            var wp_obj = vehicle_waypoints_objs[wp_index];
+            var waypoint_drag = d3.drag()
+                .subject(function(d) {
+                            // Ensure we always refer to the stored stat of the object
+                            return {
+                                    x: wp_obj.ax.x(the_figure.scenario_data[player_index]["waypoints"][wp_index]["x"]),
+                                    y: wp_obj.ax.y(the_figure.scenario_data[player_index]["waypoints"][wp_index]["y"])
+                            };
+                        } 
+                    )
+                .on("start", drag_started)
+                .on("drag", function(d) {
+                        // As long as we are dragging d ... 
+                        // TODO Update the inputs elements corresponding to d (d.id might be stored somewhere)
+                        d.x = wp_obj.ax.x.invert(d3.event.x);
+                        d.y = wp_obj.ax.y.invert(d3.event.y);
+                        // Apply the translation to the element we are dragging to move it around
+                        d3.select(this).attr("transform", "translate(" + [d3.event.x, d3.event.y] + ")");
+                        //console.log("GA Dragged to " + d.x + ", " + d.y)
+                        // Refresh the form - Assume this elements are there!
+                        the_figure.scenario_data[player_index]["waypoints"][wp_index]["x"] = d.x
+                        the_figure.scenario_data[player_index]["waypoints"][wp_index]["y"] = d.y
+                    }
+                )
+                .on("end", drag_ended);
+            wp_obj.elements()
+                .style("cursor", "default")
+                .call(waypoint_drag);
+        }
     }
 
     var reset_scenario = function(){
         for( let player_index = 0; player_index < player_visibility_flags.length; player_index++){
             // TODO Should hide_player remove the controls for dragging and tooltip?
-            hide_player(player_index)
+            the_figure.hide_player(player_index)
             if ( initial_scenario_data[player_index + "_is_visible"] ){
                 make_player_visible(player_index)
             }
@@ -373,4 +438,6 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     
     // Invoke the scenario initialization
     reset_scenario()
-};
+    // Check whether generation is enabled
+    update_generate_button()
+}
