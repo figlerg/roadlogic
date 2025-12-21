@@ -161,7 +161,7 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
 
     def __init__(self, figure_id: str, container_id: str,
                  generate_button_id: str, add_vehicle_button_id: str, reset_button_id: str, show_dialog_button_id: str,
-                 add_waypoint_button_id: str, select_player_id: str, update_select_button_id: str,
+                 add_waypoint_button_id: str, selected_vehicle_id: str, 
                  initial_state_points: list, waypoints: list, scenario_data: dict, colors: list):
         
         def get_collections_of_ids(collections_of_points):
@@ -185,8 +185,8 @@ class RoadLogicScenarioEditor(mpld3.plugins.PluginBase):
                       "reset_button_id": reset_button_id,
                       "show_dialog_button_id": show_dialog_button_id,
                       "add_waypoint_button_id": add_waypoint_button_id,
-                      "select_player_id": select_player_id,
-                      "update_select_button_id": update_select_button_id,
+                      "selected_vehicle_id": selected_vehicle_id,
+                    #   "update_select_button_id": update_select_button_id,
                       "initial_state_ids": get_collections_of_ids(initial_state_points),
                       "waypoint_ids": get_collections_of_ids(waypoints),
                       "scenario_data": scenario_data,
@@ -201,57 +201,166 @@ from commonroad.scenario.lanelet import Lanelet
 from commonroad.geometry.shape import Rectangle
 from commonroad.common.file_writer import XMLFileWriter
 
-async def generate_the_scenario(scenario_editor_unique_id, base_commonroad_scenario: Scenario):
-    # Read the scenario data as dictionary
-    # try:
-        scenario_data: dict = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data")
-        # Extract the planning problems of the vehicles
-        scenario = deepcopy(base_commonroad_scenario)
-        planning_problem_list = []
-        for vehicle_index, vehicle_data in scenario_data.items():
-            planning_problem_id = scenario.generate_object_id()
-            initial_position_x = scenario_data[vehicle_index]["initial_state"]["x"]
-            initial_position_y = scenario_data[vehicle_index]["initial_state"]["y"]
-            initial_velocity = scenario_data[vehicle_index]["initial_state"]["v"]
-            initial_lanelet: Lanelet = scenario.lanelet_network.find_lanelet_by_id(scenario.lanelet_network.find_lanelet_by_position([np.array([initial_position_x, initial_position_y])])[0][0])
-            initial_orientation = initial_lanelet.orientation_by_position(np.array([initial_position_x, initial_position_y]))
-            initial_acceleration = 0.0
-            initial_yaw_rate = 0.0
-            initial_slip_angle = 0.0
-            initial_time_step = 0
-            initial_state = InitialState(time_step=initial_time_step, 
-                        position=np.array([initial_position_x, initial_position_y]),
-                        orientation=initial_orientation, 
-                        velocity=initial_velocity, 
-                        acceleration=initial_acceleration,
-                        yaw_rate=initial_yaw_rate,
-                        slip_angle=initial_slip_angle)
-            goal_states = []
-            for waypoint in vehicle_data["waypoints"]:
-                waypoint_time_step = int(waypoint["t"] / scenario.dt)
-                waypoint_x = waypoint["x"]
-                waypoint_y = waypoint["y"]
-                waypoint_lanelet: Lanelet = scenario.lanelet_network.find_lanelet_by_id(scenario.lanelet_network.find_lanelet_by_position([np.array([waypoint_x, waypoint_y])])[0][0])
-                waypoint_orientation = waypoint_lanelet.orientation_by_position(np.array([waypoint_x, waypoint_y]))
-                waypoint_rect = Rectangle(1., 2., np.array([waypoint_x, waypoint_y]), waypoint_orientation)  # work, but may mess with timing because too long
-                # Allow a +/- 2 sec slack
-                goal_state = ExtendedPMState(time_step=Interval(max(0, waypoint_time_step-20), waypoint_time_step+20), position=waypoint_rect, velocity=None)
-                goal_states.append(goal_state)
-            
-            goal_states = sorted(goal_states, key=lambda gs : gs.time_step.start)
 
-            goal_region = GoalRegion(goal_states)
-            planning_problem_list.append(PlanningProblem(planning_problem_id, initial_state, goal_region))
-        # Generate the scenario XML file or report an error
-        planning_problem_set = PlanningProblemSet(planning_problem_list)
-        # TODO Fix this one
-        random_file_name = os.path.join(os.path.abspath('.'), "roadlogic", "output", f"{uuid.uuid4()}.xml")
-        print(f"Scenario stored at: {random_file_name}")
-        XMLFileWriter(scenario=scenario, planning_problem_set=planning_problem_set).write_to_file(random_file_name, check_validity=True)
-        # Let use download
-        ui.download.file(random_file_name, filename="scenario.xml")
-    # except Exception as exc:
-        # ui.notify(f'Cannot generate the scenario. Exception {exc}')
+#### Bad practice
+from cli import cli as roadloagic_cli
+import shutil
+#########
+
+
+def create_scenario_and_planning_problems(scenario_data: dict, base_commonroad_scenario: Scenario):
+    """
+    Create a scenario and a set of planning problems from the data collected in the scenario_data dictionary.
+    It might fail if the data are invalid, for instance, if the vehicles or the way points are not completely in the road
+    """
+    scenario = deepcopy(base_commonroad_scenario)
+    planning_problem_list = []
+    for vehicle_index, vehicle_data in scenario_data.items():
+        planning_problem_id = scenario.generate_object_id()
+        initial_position_x = scenario_data[vehicle_index]["initial_state"]["x"]
+        initial_position_y = scenario_data[vehicle_index]["initial_state"]["y"]
+        initial_velocity = scenario_data[vehicle_index]["initial_state"]["v"]
+        initial_lanelet: Lanelet = scenario.lanelet_network.find_lanelet_by_id(scenario.lanelet_network.find_lanelet_by_position([np.array([initial_position_x, initial_position_y])])[0][0])
+        initial_orientation = initial_lanelet.orientation_by_position(np.array([initial_position_x, initial_position_y]))
+        initial_acceleration = 0.0
+        initial_yaw_rate = 0.0
+        initial_slip_angle = 0.0
+        initial_time_step = 0
+        initial_state = InitialState(time_step=initial_time_step, 
+                    position=np.array([initial_position_x, initial_position_y]),
+                    orientation=initial_orientation, 
+                    velocity=initial_velocity, 
+                    acceleration=initial_acceleration,
+                    yaw_rate=initial_yaw_rate,
+                    slip_angle=initial_slip_angle)
+        goal_states = []
+        for waypoint in vehicle_data["waypoints"]:
+            waypoint_time_step = int(waypoint["t"] / scenario.dt)
+            waypoint_x = waypoint["x"]
+            waypoint_y = waypoint["y"]
+            waypoint_lanelet: Lanelet = scenario.lanelet_network.find_lanelet_by_id(scenario.lanelet_network.find_lanelet_by_position([np.array([waypoint_x, waypoint_y])])[0][0])
+            waypoint_orientation = waypoint_lanelet.orientation_by_position(np.array([waypoint_x, waypoint_y]))
+            waypoint_rect = Rectangle(1., 2., np.array([waypoint_x, waypoint_y]), waypoint_orientation)  # work, but may mess with timing because too long
+            # Allow a +/- 2 sec slack
+            goal_state = ExtendedPMState(time_step=Interval(max(0, waypoint_time_step-20), waypoint_time_step+20), position=waypoint_rect, velocity=None)
+            goal_states.append(goal_state)
+        
+        goal_states = sorted(goal_states, key=lambda gs : gs.time_step.start)
+
+        goal_region = GoalRegion(goal_states)
+        planning_problem_list.append(PlanningProblem(planning_problem_id, initial_state, goal_region))
+    # Generate the scenario XML file or report an error
+    planning_problem_set = PlanningProblemSet(planning_problem_list)
+
+    return scenario, planning_problem_set
+
+async def execute_the_scenario(output_view: ui.refreshable, global_output_folder: str, scenario_editor_unique_id, base_commonroad_scenario: Scenario):
+    try:
+        session_id = uuid.uuid4()
+
+        scenario_data: dict = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data")
+        scenario, planning_problems_set = create_scenario_and_planning_problems(scenario_data, base_commonroad_scenario)
+
+        # TODO Wrap this into a ScenarioEditingSession object
+        execution_folder = os.path.join(global_output_folder, str(session_id))
+        output_folder = os.path.join(execution_folder, "out")
+        scenarios_folder = os.path.join(output_folder, "cr_scenarios")
+        simulations_folder = os.path.join(output_folder, "cr_simulations")
+        
+        # create all the folders. By definition they should not exist
+        os.makedirs(scenarios_folder, exist_ok=False)
+        os.makedirs(simulations_folder, exist_ok=False)
+        
+        # Execute, Compute metrics, Plot, and Animate
+        scenario_name = f"scenario"
+        scenario_file = os.path.join(scenarios_folder, f"manual-{scenario_name}.xml")
+        # Write the commonroad scenario to the file
+        XMLFileWriter(scenario, planning_problems_set).write_to_file(scenario_file)
+
+        arguments = list()
+        scenario_output_folder = os.path.join(f"{simulations_folder}", f"{scenario_name}")
+        arguments.extend(["--output-folder", f"{scenario_output_folder}"])
+        # Command to execute
+        arguments.extend(["execute-scenario"])
+        # scenarios_folder
+        # Use this file as input for the roadlogic cli
+        arguments.extend(["--scenario-file", f"{scenario_file}"])
+        arguments.extend(["--simulation-id", "00001"])
+        # Invoke the CLI
+        roadloagic_cli(arguments, standalone_mode=False)
+        
+        arguments = list()
+        scenario_output_folder = os.path.join(f"{simulations_folder}", f"{scenario_name}")
+        arguments.extend(["--output-folder", f"{scenario_output_folder}"])
+        # Command to execute
+        arguments.extend(["compute-metrics"])        
+        # selected_metrics
+        arguments.extend(["--metric", "LANE"])
+        arguments.extend(["--metric", "LONGPOS"])
+        # Folder containing the simulated scenario data
+        arguments.extend(["--simulation-folder", os.path.join(f"{scenario_output_folder}", "simulation_00001")])
+        arguments.extend(["--group-by", "SINGLE"])
+        # Invoke the CLI
+        roadloagic_cli(arguments, standalone_mode=False)
+
+        # Plot the scenarios
+        scenario_output_folder = os.path.join(f"{simulations_folder}", f"{scenario_name}")
+        simulation_00001_folder = os.path.join(f"{scenario_output_folder}", "simulation_00001")
+        plots_folder = os.path.join(f"{simulation_00001_folder}", "plots")
+        # Collect the arguments for plotting
+        arguments = list()
+        # Output the plots here
+        arguments.extend(["--output-folder", f"{plots_folder}"])
+        # Execute the command to plot the simulation
+        arguments.extend(["plot-simulation"])
+        # Take simulated scenario data from here
+        arguments.extend(["--simulation-folder", f"{simulation_00001_folder}"])
+        # Invoke the CLI
+        roadloagic_cli(arguments, standalone_mode=False)
+
+        # Collect the arguments for animating 
+        arguments = list()
+        # Output the plots here
+        arguments.extend(["--output-folder", f"{simulation_00001_folder}"])
+        # Execute the command to plot the simulation
+        arguments.extend(["animate-simulation"])
+        # Take simulated scenario data from here
+        arguments.extend(["--plots-folder", f"{plots_folder}"])
+        # Invoke the CLI
+        roadloagic_cli(arguments, standalone_mode=False)
+
+    except Exception as exc:
+        ui.notify(f"Cannot complete the generation. Exception {exc}")
+    finally:
+        output_view.refresh()
+        
+async def generate_the_scenario(output_view: ui.refreshable, global_output_folder: str, scenario_editor_unique_id, base_commonroad_scenario: Scenario):
+    # Read the scenario data as dictionary
+    try:
+        session_id = uuid.uuid4()
+
+        scenario_data: dict = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data")
+        scenario, planning_problems_set = create_scenario_and_planning_problems(scenario_data, base_commonroad_scenario)
+
+        # TODO Wrap this into a ScenarioEditingSession object
+        execution_folder = os.path.join(global_output_folder, str(session_id))
+        output_folder = os.path.join(execution_folder, "out")
+        scenarios_folder = os.path.join(output_folder, "cr_scenarios")
+        
+        # create all the folders. By definition they should not exist
+        os.makedirs(scenarios_folder, exist_ok=False)
+        
+        # Execute, Compute metrics, Plot, and Animate
+        scenario_name = f"scenario"
+        scenario_file = os.path.join(scenarios_folder, f"manual-{scenario_name}.xml")
+        # Write the commonroad scenario to the file
+        XMLFileWriter(scenario, planning_problems_set).write_to_file(scenario_file)
+        # Let the user download it
+        ui.download.file(scenario_file, filename="scenario.xml")
+    except Exception as exc:
+        ui.notify(f'Cannot generate the scenario. Exception {exc}')
+    finally:
+        output_view.refresh()
 
 async def update_input_state_and_close_dialog(scenario_editor_unique_id: str, vehicle_index: int, dialog: ui.dialog, velocity_slider: ui.slider, vehicle_model_select: ui.select):
     velocity = float(velocity_slider.value)
@@ -286,12 +395,6 @@ async def update_the_select(scenario_editor_unique_id: str, select_player: ui.se
     selected_value = select_player.value if select_player.value in visible_vehicles else "None"
     select_player.set_options(["None"] + visible_vehicles, value=selected_value)
     select_player.update()
-
-async def toggle_add_waypoint_button(select_player: ui.select, add_waypoint_button: ui.button):
-    if select_player.value != "None":
-        add_waypoint_button.enable()
-    else:
-        add_waypoint_button.disable()
 
 def setup_modal_for_initial_state(dialog: ui.dialog, scenario_editor_unique_id:str, modal_data: dict):
     # Title
@@ -366,93 +469,95 @@ async def create_the_modal_dialog(scenario_editor_unique_id):
     #                     the_figure.modal_data["initial_state"] = {}
     #                     the_figure.modal_data["initial_state"]["v"] = the_figure.scenario_data[index]["initial_state"]["v"]
 
-def scenario_editor(map_file: str, container: ui.element, max_vehicles = 3):
+def create_the_interactive_figure(scenario: Scenario, max_vehicles: int, max_waypoints_per_vehicle: int):
+    # Setting the size of the plot is tricky, it depends on the road shape
+    fig, ax = plt.subplots(figsize=(10, 2))
+    rnd = MPRenderer(ax=ax)
+    scenario.draw(rnd)
+    rnd.render(show=False)
+    fig.tight_layout()
+
+    # Keep the limits for the map
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    bottom_left_corner = [xlim[0], ylim[0]]
+    
+    # Generate the placeholder/markers - independently as they cannot be easily modified later!
+    initial_state_points = list()
+    waypoints = list()
+    colors = list()
+    scenario_data = dict()
+
+    vehicle_colors = get_colors()
+
+    # Initialize the scenario data with default values for initial state and goal state for all the vehicles
+    for driver_index in range(0, max_vehicles):
+        color = vehicle_colors[ driver_index ]
+        # TODO Do we really need scenario data? The original code used that to visualize existing scenarios, so it might be useful to keep it
+        
+        # Ensure the marker is not visible initially
+        scenario_data[f"{driver_index}_is_visible"] = False
+        # Show two lines of markers
+        scenario_data[f"{driver_index}_x_is"] = bottom_left_corner[0] + driver_index * 2.0
+        scenario_data[f"{driver_index}_y_is"] = bottom_left_corner[1]
+        scenario_data[f"{driver_index}_v_is"] = 0.0
+
+        scenario_data[f"{driver_index}_vehicle_model"] = "car"
+
+        # We plot the markers to ensure they are included in the plugin as currently generate markers on the fly is not possible
+        # Round marker - Initial State
+        x_is = float(scenario_data[f"{driver_index}_x_is"])
+        y_is = float(scenario_data[f"{driver_index}_y_is"])
+
+        initial_state_points.append(ax.plot(x_is, y_is, 'o', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
+        
+        # Squared marker - Waypoints
+        # TODO Define variable instead of 3
+        for waypoint_index in range(0, max_waypoints_per_vehicle):
+            # TODO create all the waypoints here
+            scenario_data[f"{driver_index}_{waypoint_index}_wp_x"] = bottom_left_corner[0] + driver_index * 2.0
+            scenario_data[f"{driver_index}_{waypoint_index}_wp_y"] = bottom_left_corner[1] -2.0
+            scenario_data[f"{driver_index}_{waypoint_index}_wp_t"] = 0.0
+            scenario_data[f"{driver_index}_{waypoint_index}_wp_is_visible"] = False
+
+            x_wp = float(scenario_data[f"{driver_index}_{waypoint_index}_wp_x"])
+            y_wp = float(scenario_data[f"{driver_index}_{waypoint_index}_wp_y"])
+
+            waypoints.append(ax.plot(x_wp, y_wp, 's', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
+
+        # Remember the color of the player as well
+        colors.append(color)
+
+    return fig, initial_state_points, waypoints, colors, scenario_data
+
+def scenario_editor(global_output_folder: str, map_file: str, container: ui.element, output_view: ui.refreshable, max_vehicles: int = 3, max_waypoints_per_vehicle: int = 3):
     """
-    Generate the scenario editing plugin and link it to the external buttons
+    Generate the scenario editing plugin including the links to the nicegui generated buttons
     """
     try:
-        # Render the figure
+        # Load the map
         scenario, _ = XMLFileReader(map_file).open()
-    
+        # Fix the unique id for this editor
         scenario_editor_unique_id = f"fig_{uuid.uuid4()}"
-
-
+        # Create all the nicegui controls (buttons, labels, etc.)
         with ui.button_group():
-            generate_button = ui.button("Generate", on_click=lambda : generate_the_scenario(scenario_editor_unique_id, scenario))
+            generate_button = ui.button("Generate", on_click=lambda : generate_the_scenario(output_view, global_output_folder, scenario_editor_unique_id, scenario))
+            execute_button = ui.button("Execute", on_click=lambda : execute_the_scenario(output_view, global_output_folder, scenario_editor_unique_id, scenario))
             add_vehicle_button = ui.button("Add Vehicle")
             with ui.button_group():
                 add_waypoint_button = ui.button("Add Waypoint")
-                select_player = ui.select([], on_change= lambda e : toggle_add_waypoint_button(e.sender, add_waypoint_button))
+                # select_player = ui.select([], on_change= lambda e : toggle_add_waypoint_button(e.sender, add_waypoint_button))
+                selected_vehicle = ui.label("No Selected Vehicle")
 
             reset_button = ui.button("Reset")
 
-        # This dialog allows to visualize and update the parameters of the selected vehicle
+        # Create the modal dialog that allows to visualize and edit the parameters of the selected vehicle
         show_dialog_button = ui.button("Show Editor", on_click=lambda : create_the_modal_dialog(scenario_editor_unique_id))
-        # Pretend this is invisible
         show_dialog_button.style("opacity: 0")
-        # We cannot use the following, as it completely disable the button
-        # show_dialog_button.visible = False
-        update_select_button = ui.button("Update Select", on_click=lambda: update_the_select(scenario_editor_unique_id, select_player))
-        update_select_button.style("opacity: 0")
 
-        # Setting the size of the plot is tricky, it depends on the road shape
-        fig, ax = plt.subplots(figsize=(10, 2))
-        rnd = MPRenderer(ax=ax)
-        scenario.draw(rnd)
-        rnd.render(show=False)
-        fig.tight_layout()
-
-        # Keep the limits for the map
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        bottom_left_corner = [xlim[0], ylim[0]]
+        # Create the figure and get a reference to all the visual objects managed by mpld3
+        fig, initial_state_points, waypoints, colors, scenario_data = create_the_interactive_figure(scenario, max_vehicles, max_waypoints_per_vehicle)
         
-        # Generate the placeholder/markers - independently as they cannot be easily modified later!
-        initial_state_points = list()
-        waypoints = list()
-        colors = list()
-        scenario_data = dict()
-
-        vehicle_colors = get_colors()
-
-        # Initialize the scenario data with default values for initial state and goal state for all the vehicles
-        for driver_index in range(0, max_vehicles):
-            color = vehicle_colors[ driver_index ]
-            # TODO Do we really need scenario data? The original code used that to visualize existing scenarios, so it might be useful to keep it
-            
-            # Ensure the marker is not visible initially
-            scenario_data[f"{driver_index}_is_visible"] = False
-            # Show two lines of markers
-            scenario_data[f"{driver_index}_x_is"] = bottom_left_corner[0] + driver_index * 2.0
-            scenario_data[f"{driver_index}_y_is"] = bottom_left_corner[1]
-            scenario_data[f"{driver_index}_v_is"] = 0.0
-
-            scenario_data[f"{driver_index}_vehicle_model"] = "car"
-
-            # We plot the markers to ensure they are included in the plugin as currently generate markers on the fly is not possible
-            # Round marker - Initial State
-            x_is = float(scenario_data[f"{driver_index}_x_is"])
-            y_is = float(scenario_data[f"{driver_index}_y_is"])
-
-            initial_state_points.append(ax.plot(x_is, y_is, 'o', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
-            
-            # Squared marker - Waypoints
-            # TODO Define variable instead of 3
-            for waypoint_index in range(3):
-                # TODO create all the waypoints here
-                scenario_data[f"{driver_index}_{waypoint_index}_wp_x"] = bottom_left_corner[0] + driver_index * 2.0
-                scenario_data[f"{driver_index}_{waypoint_index}_wp_y"] = bottom_left_corner[1] -2.0
-                scenario_data[f"{driver_index}_{waypoint_index}_wp_t"] = 0.0
-                scenario_data[f"{driver_index}_{waypoint_index}_wp_is_visible"] = False
-
-                x_wp = float(scenario_data[f"{driver_index}_{waypoint_index}_wp_x"])
-                y_wp = float(scenario_data[f"{driver_index}_{waypoint_index}_wp_y"])
-
-                waypoints.append(ax.plot(x_wp, y_wp, 's', color= color, mec='k', ms=15, mew=1, alpha=0.0, zorder=52)[0])
-
-            # Remember the color of the player as well
-            colors.append(color)
-
         mpld3.plugins.connect(fig, RoadLogicScenarioEditor(figure_id=scenario_editor_unique_id, 
                                                            container_id=container.html_id,
                                                            generate_button_id=generate_button.html_id,
@@ -460,8 +565,7 @@ def scenario_editor(map_file: str, container: ui.element, max_vehicles = 3):
                                                            reset_button_id=reset_button.html_id,
                                                            show_dialog_button_id = show_dialog_button.html_id,
                                                            add_waypoint_button_id=add_waypoint_button.html_id,
-                                                           select_player_id=select_player.html_id,
-                                                           update_select_button_id=update_select_button.html_id,
+                                                           selected_vehicle_id=selected_vehicle.html_id,
                                                            initial_state_points=initial_state_points,
                                                            waypoints=waypoints,
                                                            scenario_data=scenario_data,
@@ -472,6 +576,7 @@ def scenario_editor(map_file: str, container: ui.element, max_vehicles = 3):
         ui.add_body_html(mpld3.fig_to_html(fig, figid=scenario_editor_unique_id))
         
     finally:
-        plt.close(fig)
+        pass
+        # plt.close(fig)
 
     

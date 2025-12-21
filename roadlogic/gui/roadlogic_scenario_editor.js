@@ -33,8 +33,7 @@ RoadLogicScenarioEditor.prototype.requiredProps = ["figure_id",
                                                         "reset_button_id",
                                                         "show_dialog_button_id",
                                                         "add_waypoint_button_id",
-                                                        "select_player_id",
-                                                        "update_select_button_id",
+                                                        "selected_vehicle_id",
                                                         "initial_state_ids",
                                                         "waypoint_ids",
                                                         "scenario_data",
@@ -71,26 +70,16 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     // Logic to generate the scenario is triggered by this button. Currently, the logic runs on the server side
     var the_generate_button  = document.getElementById(this.props.generate_button_id)
 
-    // Generate the XML and let the user download it.
-    // var the_download_button  = document.getElementById(this.props.download_button_id)
-
     // Introduce a new vehicle in the scenario (up to max_vehicles, currently 8)
     var the_add_vehicle_button  = document.getElementById(this.props.add_vehicle_button_id)
     
     // Add a waypoint for the selected player if any
     var the_add_waypoint_button = document.getElementById(this.props.add_waypoint_button_id)
+    // Disabled this by default
     the_add_waypoint_button.classList.add("disabled");
 
-    // var select_player  = document.getElementById(this.props.select_player_id)
-    // https://stackoverflow.com/questions/5416767/get-selected-value-text-from-select-on-change
-    // select_player.onchange = function(event){
-        // var selectElement = event.target;
-        // var value = selectElement.value;
-        // console.log(value);
-    // }
-
-    var the_update_select_button  = document.getElementById(this.props.update_select_button_id)
-    the_update_select_button.visibility = 'hidden'
+    // var the_update_select_button  = document.getElementById(this.props.update_select_button_id)
+    // the_update_select_button.visibility = 'hidden'
 
     // Reset the scenario to its initial state, as recorded by initial_scenario_data
     var the_reset_button = document.getElementById(this.props.reset_button_id)
@@ -103,7 +92,8 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     // We achieve them by storing into known objects the data about the scenario.
     the_figure.scenario_data = {} // Scenario data. Note: this is a plain js object, not a dictionary
     the_figure.modal_data = {} // Data used to render the modal dialog. Note: this is a plain js object, not a dictionary
-    
+    the_figure.selected_vehicle_id = null
+
     const n_vehicles = this.props.initial_state_ids.length
     const n_waypoints_per_vehicle = this.props.waypoint_ids.length / n_vehicles
 
@@ -133,7 +123,6 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
     // This is a squared matrix of size vehicles X waypoints
     var waypoint_objs = {}; 
 
-    
     for( let i = 0; i < n_vehicles; i++){
         // Associate to the marker representing the initial state additional data
         var initial_state_obj = mpld3.get_element(this.props.initial_state_ids[i])
@@ -159,13 +148,27 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
         // This can be replaced by initial_state_obj.visible
         player_visibility_flags[i] = initial_scenario_data[i + "_is_visible"];
     }
-    // Refresh the select
-    the_update_select_button.click()
 
     // Not sure this is needed
     var colors = this.props.colors
-    var select_player_id = this.props.select_player_id
+    var label_showing_selected_vehicle_id = document.getElementById(this.props.selected_vehicle_id)
+    var default_label_showing_selected_vehicle = label_showing_selected_vehicle_id.innerHTML
+
+
+    var select_vehicle_id = function(player_index){
+        // Clicking on the initial state of the vehicle selects the vehicle for further operations
+        the_figure.selected_vehicle_id = player_index
+        // Update the label - TODO Update the Colors
+        label_showing_selected_vehicle_id.innerHTML = "Vehicle " + player_index + " Selected"
+        const r = (colors[player_index][0] * 255.0).toFixed(1)
+        const g = (colors[player_index][1] * 255.0).toFixed(1)
+        const b = (colors[player_index][2] * 255.0).toFixed(1)
+        label_showing_selected_vehicle_id.style.background = "rgb(" + r + "," + g + "," + b +" )"
+        //
+        update_add_waypoint_button()
+    }
     
+
     var make_waypoint_visible_for_player = function(player_index, waypoint_index){
         // Visualize the waypoint in the default position
         // TODO How to handle initial position of the waypoints from other scenarios?!
@@ -210,7 +213,7 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
             "waypoints": []
         }
         // Force a refresh the vehicle select control
-        the_update_select_button.click()
+        // the_update_select_button.click()
         // Check whether generation is enabled
         update_generate_button()
     }
@@ -236,12 +239,11 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
 
     the_add_waypoint_button.onclick = function(){
         // Get the index of the selected vehicle
-        var player_index = document.getElementById(select_player_id).getElementsByTagName('input')[0].value;
-
+        var vehicle_index = the_figure.selected_vehicle_id
         // Take the first nonvisible waypoint of this vehicle and make it visible.
         for( let wp_index = 0; wp_index < n_waypoints_per_vehicle; wp_index++){
-            if (waypoint_objs[player_index][wp_index].visible == false){
-                make_waypoint_visible_for_player(player_index, wp_index)
+            if (waypoint_objs[vehicle_index][wp_index].visible == false){
+                make_waypoint_visible_for_player(vehicle_index, wp_index)
                 break
             }
         }
@@ -280,11 +282,15 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
         // Remove the data
         delete the_figure.scenario_data[index]
 
-        // Update the select
-        the_update_select_button.click()
-
-        //
+        // If we hide the currently selected player, we need to reset the state and the button
+        if (the_figure.selected_vehicle_id == index){
+            the_figure.selected_vehicle_id = null
+            // Update the label - TODO Update the Colors
+            label_showing_selected_vehicle_id.innerHTML = default_label_showing_selected_vehicle
+        }
+        // Ensure consistency of GUI
         update_generate_button()
+        update_add_waypoint_button()
     }
     
     // Drag and Drop common functionalities            
@@ -297,16 +303,29 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
         d3.select(this).classed("dragging", false);
     }
 
-    // Function to attach drag and drop to markers
+    var update_add_waypoint_button = function(){
+        // Enable or disable the add waypoint button
+        if( the_figure.selected_vehicle_id == null){
+            // No player is currently selected, the button must be disabled
+            the_add_waypoint_button.classList.add("disabled")
+            label_showing_selected_vehicle_id.style.background = "white"
+        } else {
+            // A player is currently selected, the button must be enabled
+            the_add_waypoint_button.classList.remove("disabled")
+        }        
+    }
+
+    // Function to attach mouse events to the markers
     var add_controls = function(player_index) {
         var initial_state_obj = initial_state_objs[player_index]
         var vehicle_waypoints_objs = waypoint_objs[player_index]
-        
-        // When the initial state or the any waypoint is clicked
-        // Show the modal dialog to edit its properties
-        // Configure the modal box data before showing the modal dialog
+    
+        // Double Clicking on the Initial State should open the modal dialog
         initial_state_obj.elements()
-            .on("click", function(d, i){
+            .on("click", function(d, i ){
+                select_vehicle_id(player_index)
+            })
+            .on("dblclick", function(d, i){
                 // The modal dialog shows the vehicle initial speed and model based on the state of the scenario
                 the_figure.modal_data = {}
                 //
@@ -338,7 +357,10 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
             var wp_obj = vehicle_waypoints_objs[wp_index];
 
             wp_obj.elements()
-                .on("click", function(d, i){
+                .on("click", function(d, i ){
+                    select_vehicle_id(player_index)
+                })
+                .on("dblclick", function(d, i){
                     // Data for the modal dialog box
                     the_figure.modal_data = {}
                     //
@@ -366,6 +388,7 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
                     
         var initial_state_drag = d3.drag()
             .subject(function(d) {
+                        select_vehicle_id(player_index)
                         // Ensure we always refer to the stored stat of the object
                         return {
                                 x: initial_state_obj.ax.x(the_figure.scenario_data[player_index]["initial_state"]["x"]),
@@ -394,6 +417,7 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
             var wp_obj = vehicle_waypoints_objs[wp_index];
             var waypoint_drag = d3.drag()
                 .subject(function(d) {
+                            select_vehicle_id(player_index)
                             // Ensure we always refer to the stored stat of the object
                             return {
                                     x: wp_obj.ax.x(the_figure.scenario_data[player_index]["waypoints"][wp_index]["x"]),
@@ -431,7 +455,7 @@ RoadLogicScenarioEditor.prototype.draw = async function(){
             }
         }
         // Refresh the select
-        the_update_select_button.click()
+        // the_update_select_button.click()
     }
 
     the_reset_button.onclick = reset_scenario

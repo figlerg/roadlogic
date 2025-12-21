@@ -401,19 +401,46 @@ def create(global_output_folder: str, default_map_file: str) -> None:
         - Pass the ids of the buttons to the logic that renders the plugin
         
         """
+        @ui.refreshable
+        def output_view() -> None:
+            """
+            Build the input panel, titled Scenario Editor. Content is read from the storage (i.e., files) based on the session_id
+            """
+            # Look up in the global_output_folder the sessions that contain manual_scenario.xml files
+            manually_generated_session_ids = []
+            for session_id_folder in [s for s in os.listdir(global_output_folder) if os.path.isdir(os.path.join(global_output_folder, s))]:
+                target_file = os.path.join(global_output_folder, session_id_folder, "out", "cr_scenarios", "manual-scenario.xml")
+                if os.path.exists(target_file ):
+                    manually_generated_session_ids.append(session_id_folder)
+
+            with ui.expansion().classes('w-full') as expansion:
+                with expansion.add_slot('header'):
+                    ui.label(f'Generated Scenarios ({len(manually_generated_session_ids)})').classes('text-h4')
+                with ui.grid(columns=2).classes('w-full').style('padding: 20px'):
+                    # Left Column shows scenarios
+                    with ui.grid(columns=2).classes('w-full'):
+                        # Link the files for each scenario, thus building a view over the various folders/files
+                        for session_id in manually_generated_session_ids:
+                            with ui.card(): # .classes('col-span-full'):
+                                # TODO Add monitoring results, validity checks
+                                # TODO Optionally Add logs, APS outputs, 
+                                ui.label(f'Scenario').classes('text-h6')
+                                ui.button('Scenario XML', on_click=lambda: ui.download.from_url(f'/rawfiles/{session_id}/out/cr_simulations/scenario/simulation_00001/scenario.xml'))
+                                ui.link('Scenario Animation', f'/rawfiles/{session_id}/out/cr_simulations/scenario/simulation_00001/simulation.gif', new_tab=True)
+
+        # Input section shows the visual/interactive editor
         with ui.expansion(value=True).classes('w-full') as expansion:
             # Show a nice title for the expansion
             with expansion.add_slot('header'):
                 ui.label(f'Scenario Editor').classes('text-h4')
 
-            async def get_scenario_data(the_id):
-                # Run the JS code to access the global data collected by the plugin under the plugin ID
-                time = await ui.run_javascript('Date()')
-                ui.notify(f'Browser time: {time} - ID {the_id}')
-
             # Build the content of the expansion
             with ui.card().classes('w-full').style('padding: 20px') as container:
-                scenario_editor(default_map_file, container)
+                # Pass the output view, so we can call refresh once generation if completed
+                scenario_editor(global_output_folder, default_map_file, container, output_view)
+        
+        # Render the output view
+        output_view()
 
     @ui.page('/')
     def landing_page():
