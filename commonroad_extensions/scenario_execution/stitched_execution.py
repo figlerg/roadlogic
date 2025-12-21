@@ -434,14 +434,21 @@ class CustomFrenetPlannerInterface(FrenetPlannerInterface):
 
             if precomputed_reference_path is None:
                 # Regular case
-                self.route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
-                                                planning_problem=planning_problem,
-                                                scenario=scenario,
-                                                extended_search=False)
-                shortest_route = self.route_planner.plan_routes().retrieve_shortest_route(retrieve_shortest=True)
-
-                planned_reference_path = np.copy(shortest_route.reference_path)
+                # self.route_planner = RoutePlanner(lanelet_network=scenario.lanelet_network,
+                #                                 planning_problem=planning_problem,
+                #                                 scenario=scenario,
+                #                                 extended_search=False)
                 
+                # TODO
+                # shortest_route = self.route_planner.plan_routes().retrieve_shortest_route(retrieve_shortest=True)
+
+                # planned_reference_path = np.copy(shortest_route.reference_path)
+                reference_path = fast_api.generate_reference_path_from_lanelet_network_and_planning_problem(
+                    lanelet_network=scenario.lanelet_network,
+                    planning_problem=planning_problem
+                )
+
+                planned_reference_path = smooth_ref_path(reference_path.reference_path)                
                 # The original code is broken. At the beginning of the lanelet, the points may be too close
                 # so the extendion computes reference paths with size in the order of 1M unnecessarily blocking the execution
                 def extend_path_linearly(points, extension_length=50, max_points=200, at_start=True):
@@ -522,7 +529,8 @@ from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.state import InitialState
 
-from commonroad_route_planner.route_planner import RoutePlanner
+# from commonroad_route_planner.route_planner import RoutePlanner
+import commonroad_route_planner.fast_api.fast_api as fast_api
 
 import cr_scenario_handler.utils.multiagent_logging as lh
 import cr_scenario_handler.utils.goalcheck as gc
