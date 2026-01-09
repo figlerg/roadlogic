@@ -24,6 +24,8 @@ from commonroad.visualization.mp_renderer import MPDrawParams, MPRenderer
 
 from matplotlib import rcParams
 import xml.etree.ElementTree as ET
+import shutil
+
 
 
 # LaTeX-friendly settings (vector fonts, serif)
@@ -104,6 +106,20 @@ def remap_commonroad_ids(path_in: str, path_out: str):
 
     tree.write(path_out, encoding="UTF-8", xml_declaration=True)
 
+def remap_commonroad_ids_inplace(path: str, keep_backup: bool = True):
+    tmp_path = path + ".tmp"
+    bak_path = path + ".bak"
+
+    # write remapped XML to tmp
+    remap_commonroad_ids(path, tmp_path)
+
+    # optional backup
+    if keep_backup:
+        if not os.path.exists(bak_path):
+            shutil.copy2(path, bak_path)
+
+    # atomic replace
+    os.replace(tmp_path, path)
 
 
 
@@ -258,7 +274,6 @@ def visualize_the_scenario(executed_scenario: Scenario,
 
 if __name__ == "__main__":
 
-    
     ### PLOT 1: overtake scenario
     scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_scenario.xml")
     executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_executed_scenario.xml")
@@ -268,36 +283,36 @@ if __name__ == "__main__":
 
     output_file = os.path.join("paper/02_trajectory_vis/01_overtake_trajectory.pdf")
 
-    target_time_step = 90 # Last timestep
-    
+    target_time_step = 90  # Last timestep
+
     # Plot the past shaded boxes at those timesteps
-    plot_at_times = [10, 20, 30, 40, 50, 60,70, 80]
+    plot_at_times = [10, 20, 30, 40, 50, 60, 70, 80]
 
     # Plot the figure to file
     visualize_the_scenario(executed_scenario, planning_problem_set, output_file, target_time_step, plot_at_times)
 
 
 
-
     ### PLOT 2: overtake scenario (fake overtake)
-    
-    # take the original xmls and rewrite ugly ids. puts them into the main folder
-    scenario_file_src = os.path.join("paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/scenario.xml")
-    executed_scenario_file_src = os.path.join("paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/executed_scenario.xml")
-    scenario_file = os.path.join("paper/02_trajectory_vis/02_fake_overtake_scenario.xml")
-    executed_scenario_file = os.path.join("paper/02_trajectory_vis/02_fake_overtake_executed_scenario.xml")
-    remap_commonroad_ids(scenario_file_src, scenario_file)
-    remap_commonroad_ids(executed_scenario_file_src, executed_scenario_file)
+    # Remap in place in the simulation folder so animations keep working with better labels
+    scenario_file_src = os.path.join(
+        "paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/scenario.xml"
+    )
+    executed_scenario_file_src = os.path.join(
+        "paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/executed_scenario.xml"
+    )
 
+    remap_commonroad_ids_inplace(scenario_file_src)
+    remap_commonroad_ids_inplace(executed_scenario_file_src)
 
-    _, planning_problem_set = XMLFileReader(scenario_file).open()
-    executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
+    _, planning_problem_set = XMLFileReader(scenario_file_src).open()
+    executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
     output_file = os.path.join("paper/02_trajectory_vis/02_fake_overtake_trajectory.png")
     # output_file = os.path.join("paper/02_trajectory_vis/02_fake_overtake_trajectory.pdf")
 
-    target_time_step = 68 # Last timestep
-    
+    target_time_step = 68  # Last timestep
+
     # Plot the past shaded boxes at those timesteps
     plot_at_times = [10, 20, 30, 40, 50, 60]
 
@@ -307,17 +322,8 @@ if __name__ == "__main__":
 
 
     ### PLOT 3: diversity comparison
-    # take the original xmls and rewrite ugly ids. puts them into the main folder
-    # paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/executed_scenario.xml
-    # paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__max_braking_speed_while_turning_4__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/executed_scenario.xml
-    # paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/executed_scenario.xml
-    # paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/scenario.xml
-    # paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__max_braking_speed_while_turning_4__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/scenario.xml
-    # paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/scenario.xml
 
-
-        ### PLOT 3a
-
+    ### PLOT 3a
     scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
@@ -331,16 +337,12 @@ if __name__ == "__main__":
         "simulation_00001/executed_scenario.xml"
     )
 
-    scenario_file = os.path.join("paper/02_trajectory_vis/03a_similarity_scenario.xml")
-    executed_scenario_file = os.path.join("paper/02_trajectory_vis/03a_similarity_executed_scenario.xml")
+    remap_commonroad_ids_inplace(scenario_file_src)
+    remap_commonroad_ids_inplace(executed_scenario_file_src)
 
-    remap_commonroad_ids(scenario_file_src, scenario_file)
-    remap_commonroad_ids(executed_scenario_file_src, executed_scenario_file)
+    _, planning_problem_set = XMLFileReader(scenario_file_src).open()
+    executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    _, planning_problem_set = XMLFileReader(scenario_file).open()
-    executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
-
-    # output_file = os.path.join("paper/02_trajectory_vis/03a_similarity_trajectory.png")
     output_file = os.path.join("paper/02_trajectory_vis/03a_similarity_trajectory.pdf")
 
     target_time_step = 80
@@ -354,8 +356,9 @@ if __name__ == "__main__":
         plot_at_times
     )
 
-        ### PLOT 3b
 
+
+    ### PLOT 3b
     scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__"
@@ -369,20 +372,16 @@ if __name__ == "__main__":
         "simulation_00001/executed_scenario.xml"
     )
 
-    scenario_file = os.path.join("paper/02_trajectory_vis/03b_similarity_scenario.xml")
-    executed_scenario_file = os.path.join("paper/02_trajectory_vis/03b_similarity_executed_scenario.xml")
+    remap_commonroad_ids_inplace(scenario_file_src)
+    remap_commonroad_ids_inplace(executed_scenario_file_src)
 
-    remap_commonroad_ids(scenario_file_src, scenario_file)
-    remap_commonroad_ids(executed_scenario_file_src, executed_scenario_file)
+    _, planning_problem_set = XMLFileReader(scenario_file_src).open()
+    executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    _, planning_problem_set = XMLFileReader(scenario_file).open()
-    executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
-
-    # output_file = os.path.join("paper/02_trajectory_vis/03b_similarity_trajectory.png")
     output_file = os.path.join("paper/02_trajectory_vis/03b_similarity_trajectory.pdf")
 
     target_time_step = 23
-    plot_at_times = [5,14]
+    plot_at_times = [5, 14]
 
     visualize_the_scenario(
         executed_scenario,
@@ -393,8 +392,8 @@ if __name__ == "__main__":
     )
 
 
-        ### PLOT 3c
 
+    ### PLOT 3c
     scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
@@ -408,16 +407,12 @@ if __name__ == "__main__":
         "simulation_00001/executed_scenario.xml"
     )
 
-    scenario_file = os.path.join("paper/02_trajectory_vis/03c_similarity_scenario.xml")
-    executed_scenario_file = os.path.join("paper/02_trajectory_vis/03c_similarity_executed_scenario.xml")
+    remap_commonroad_ids_inplace(scenario_file_src)
+    remap_commonroad_ids_inplace(executed_scenario_file_src)
 
-    remap_commonroad_ids(scenario_file_src, scenario_file)
-    remap_commonroad_ids(executed_scenario_file_src, executed_scenario_file)
+    _, planning_problem_set = XMLFileReader(scenario_file_src).open()
+    executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    _, planning_problem_set = XMLFileReader(scenario_file).open()
-    executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
-
-    # output_file = os.path.join("paper/02_trajectory_vis/03c_similarity_trajectory.png")
     output_file = os.path.join("paper/02_trajectory_vis/03c_similarity_trajectory.pdf")
 
     target_time_step = 75
@@ -432,21 +427,27 @@ if __name__ == "__main__":
     )
 
 
-        ### PLOT 3d
 
-    scenario_file_src = "paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/scenario.xml"
-    executed_scenario_file_src = "paper/02_trajectory_vis/03_similarity/out/cr_simulations/scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/simulation_00001/executed_scenario.xml"
+    ### PLOT 3d
+    scenario_file_src = (
+        "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+        "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
+        "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+        "simulation_00001/scenario.xml"
+    )
+    executed_scenario_file_src = (
+        "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+        "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
+        "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+        "simulation_00001/executed_scenario.xml"
+    )
 
-    scenario_file = os.path.join("paper/02_trajectory_vis/03d_similarity_scenario.xml")
-    executed_scenario_file = os.path.join("paper/02_trajectory_vis/03d_similarity_executed_scenario.xml")
+    remap_commonroad_ids_inplace(scenario_file_src)
+    remap_commonroad_ids_inplace(executed_scenario_file_src)
 
-    remap_commonroad_ids(scenario_file_src, scenario_file)
-    remap_commonroad_ids(executed_scenario_file_src, executed_scenario_file)
+    _, planning_problem_set = XMLFileReader(scenario_file_src).open()
+    executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    _, planning_problem_set = XMLFileReader(scenario_file).open()
-    executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
-
-    # output_file = os.path.join("paper/02_trajectory_vis/03d_similarity_trajectory.png")
     output_file = os.path.join("paper/02_trajectory_vis/03d_similarity_trajectory.pdf")
 
     target_time_step = 75
@@ -464,45 +465,45 @@ if __name__ == "__main__":
 
 
 
-### fetch the animations
-import shutil
 
-dst_root = os.path.join("paper", "animations")
-os.makedirs(dst_root, exist_ok=True)
+    ### fetch the animations
 
-# Use exact source paths (no base_dir/scenario_dir splitting)
-PLOTS = {
-    "Fig_1": "paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/simulation.gif",
-    "Fig_4": "paper/01_model_vis/model_vis_plots/anim_stitched.gif",
+    dst_root = os.path.join("paper", "animations")
+    os.makedirs(dst_root, exist_ok=True)
 
-    "Fig_9":  "paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif",
+    # Use exact source paths (no base_dir/scenario_dir splitting)
+    PLOTS = {
+        "Fig_1": "paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/simulation.gif",
+        "Fig_4": "paper/01_model_vis/model_vis_plots/anim_stitched.gif",
 
-    "Fig_7a": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-             "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
-             "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
-             "simulation_00001/simulation.gif",
+        "Fig_9":  "paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif",
 
-    # ignore 3b
+        "Fig_7a": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+                "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
+                "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+                "simulation_00001/simulation.gif",
 
-    "Fig_7c": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-             "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
-             "max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/"
-             "simulation_00001/simulation.gif",
+        # ignore 3b
 
-    "Fig_7b": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-             "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
-             "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
-             "simulation_00001/simulation.gif",
-}
+        "Fig_7c": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+                "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
+                "max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/"
+                "simulation_00001/simulation.gif",
 
-copied = 0
-for fig_name, src in PLOTS.items():
-    if not os.path.exists(src):
-        print(f"[fetch_gifs] missing: {src}")
-        continue
+        "Fig_7b": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+                "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
+                "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+                "simulation_00001/simulation.gif",
+    }
 
-    dst = os.path.join(dst_root, f"{fig_name}.gif")
-    shutil.copy2(src, dst)
-    copied += 1
+    copied = 0
+    for fig_name, src in PLOTS.items():
+        if not os.path.exists(src):
+            print(f"[fetch_gifs] missing: {src}")
+            continue
 
-print(f"[fetch_gifs] copied {copied}/{len(PLOTS)} animation files to {dst_root}")
+        dst = os.path.join(dst_root, f"{fig_name}.gif")
+        shutil.copy2(src, dst)
+        copied += 1
+
+    print(f"[fetch_gifs] copied {copied}/{len(PLOTS)} animation files to {dst_root}")
