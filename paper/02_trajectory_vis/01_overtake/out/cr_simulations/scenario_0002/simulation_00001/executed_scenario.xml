@@ -6,7 +6,7 @@
     <gpsLongitude>999.0</gpsLongitude>
   </location>
   <scenarioTags/>
-  <lanelet id="3">
+  <lanelet id="13">
     <leftBound>
       <point>
         <x>-10.0</x>
@@ -214,7 +214,7 @@
     <adjacentLeft ref="2" drivingDir="same"/>
     <laneletType>unknown</laneletType>
   </lanelet>
-  <lanelet id="2">
+  <lanelet id="12">
     <leftBound>
       <point>
         <x>-10.0</x>
@@ -423,7 +423,7 @@
     <adjacentRight ref="3" drivingDir="same"/>
     <laneletType>unknown</laneletType>
   </lanelet>
-  <lanelet id="1">
+  <lanelet id="11">
     <leftBound>
       <point>
         <x>-10.0</x>
@@ -633,7 +633,7 @@
     <adjacentRight ref="2" drivingDir="same"/>
     <laneletType>urban</laneletType>
   </lanelet>
-  <dynamicObstacle id="6645615">
+  <dynamicObstacle id="1">
     <type>car</type>
     <shape>
       <rectangle>
@@ -3426,7 +3426,7 @@
       </state>
     </trajectory>
   </dynamicObstacle>
-  <dynamicObstacle id="1667330609">
+  <dynamicObstacle id="2">
     <type>car</type>
     <shape>
       <rectangle>
