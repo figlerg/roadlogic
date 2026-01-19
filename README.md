@@ -69,6 +69,7 @@ STEP_LENGTH=1;          # number of discarded plans before selecting the next. h
 
 #  exp_reset_out "$EXP" -> reset the folder by deleting files in EXP/out/
 
+# actual planning module
 make generate-osc-scenarios \
     OSC_N="$N" \
     OSC_FILE="$EXP/in/spec.osc" \
@@ -77,15 +78,19 @@ make generate-osc-scenarios \
     STEP_LENGTH="$STEP_LENGTH" \
     RULE_INJECTION="$EXP/in/rule_injection.lp"
 
+
+# simulate in commonroad (no visualization)
 make execute-all-scenarios \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations"
 
+# compute metrics for the monitor
 make -j 8 \
     SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
     OUTPUT_FOLDER=$EXP/out/cr_simulations \
     compute-selected-metrics-for-all-scenarios
 
+# compute monitoring results with the metrics (witnesses satisfaction)
 make generate-summary \
     SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/cr_simulations" \
