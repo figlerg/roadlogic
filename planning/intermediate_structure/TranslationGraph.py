@@ -148,19 +148,20 @@ class TranslationGraph(object):
                 edge1 = (loc[0], loc2[0])  # First component of loc are states originally in g1.
                 edge2 = (loc[1], loc2[1])  # Vice versa for g2.
 
-                # 3 cases: (a,b) -> (c,d) iff there is either a->c in g1 or b->d in g2.
-                # We distinguish also whether both edges exist!
                 if edge1 in g1.edges and edge2 in g2.edges:
                     constraints = g1.edges[edge1]['object'].union(g2.edges[edge2]['object'])
                     out.add_transition(loc, loc2, constraints)
 
-                if edge1 in g1.edges and (not edge2 in g2.edges):
+                # we must allow stuttering on both sides: we can progress either in one component or both at the same time
+
+                if edge1 in g1.edges and edge2[0] == edge2[1]:
                     constraints = g1.edges[edge1]['object']
                     out.add_transition(loc, loc2, constraints)
 
-                if (not edge1 in g1.edges) and edge2 in g2.edges:
+                if edge2 in g2.edges and edge1[0] == edge1[1]:
                     constraints = g2.edges[edge2]['object']
                     out.add_transition(loc, loc2, constraints)
+
 
         out.prune()
         return out

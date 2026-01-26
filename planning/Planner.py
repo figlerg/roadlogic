@@ -300,7 +300,10 @@ class Planner:
             rule = f'goal{i}(t) :- '
             if i > 1:
                 # serialization of the goals: goal_i, i >1, can be true only if goal_{i-1} is true
-                rule = rule + f'goal{i-1}(t), '
+                if edge_actor_ids:
+                    rule = rule + f'goal{i-1}(t), '
+                else:
+                    rule = rule + f'goal{i-1}(t)'
 
             # TODO this is probably not good yet. I just place all actors in the order of their appearance
             idx = {}
