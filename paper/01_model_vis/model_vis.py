@@ -100,16 +100,59 @@ def update_frame(frame):
     plt.title(f"Fluents at time: {frame}")
 
     plt.savefig(os.path.join(plots_folder, f"{frame:04d}.pdf"), format="pdf", bbox_inches='tight')
-    plt.savefig(os.path.join(plots_folder, f"{frame:04d}.jpg"), format="jpg", bbox_inches='tight')
+    plt.savefig(os.path.join(plots_folder, f"{frame:04d}.jpg"), format="jpg", bbox_inches='tight',dpi=300)
     # plt.savefig(os.path.join(plots_folder, f"{frame:04d}_original_names.pdf"), format="pdf", bbox_inches='tight')
-    # plt.savefig(os.path.join(plots_folder, f"{frame:04d}_original_names.jpg"), format="jpg", bbox_inches='tight')
+    # plt.savefig(os.path.join(plots_folder, f"{frame:04d}_original_names.jpg"), format="jpg", bbox_inches='tight',dpi=300)
 
 
-# Create the figure and animation
-fig = plt.figure()
-ani = animation.FuncAnimation(fig, update_frame, frames=len(time_points), interval=1000, repeat=False)
+# # Create the figure and animation
+# fig = plt.figure()
+# ani = animation.FuncAnimation(fig, update_frame, frames=len(time_points), interval=1000, repeat=False)
 
-# https://www.geeksforgeeks.org/how-to-save-matplotlib-animation/
-writervideo = animation.FFMpegWriter(fps=1)
+# # https://www.geeksforgeeks.org/how-to-save-matplotlib-animation/
+# writervideo = animation.FFMpegWriter(fps=1)
+# ani.save(os.path.join(plots_folder, f'anim.gif'))
 
-ani.save(os.path.join(plots_folder, f'anim.gif'))
+# from matplotlib.animation import PillowWriter
+
+# writervideo = PillowWriter(fps=1)
+
+# ani.save(
+#     os.path.join(plots_folder, "anim_tight.gif"),
+#     writer=writervideo,
+#     dpi=300,
+#     savefig_kwargs=dict(bbox_inches="tight", pad_inches=0.0)
+# )
+
+##
+
+# import imageio.v3 as iio
+# import os, re
+
+# pattern = re.compile(r"^\d{4}\.jpg$")  # only 0000.jpg, 0001.jpg, ...
+# frame_files = sorted(f for f in os.listdir(plots_folder) if pattern.match(f))
+
+# frames = [iio.imread(os.path.join(plots_folder, f)) for f in frame_files]
+# iio.imwrite(os.path.join(plots_folder, "anim_stitched.gif"), frames, duration=1.0, loop=0)
+
+import imageio.v3 as iio
+import os, re
+import numpy as np
+
+pattern = re.compile(r"^\d{4}\.jpg$")
+frame_files = sorted(f for f in os.listdir(plots_folder) if pattern.match(f))
+
+frames = [iio.imread(os.path.join(plots_folder, f)) for f in frame_files]
+
+# pad all frames to the same size (max H,W)
+max_h = max(im.shape[0] for im in frames)
+max_w = max(im.shape[1] for im in frames)
+
+padded = []
+for im in frames:
+    h, w = im.shape[:2]
+    out = np.full((max_h, max_w, im.shape[2]), 255, dtype=im.dtype)  # white background
+    out[:h, :w] = im
+    padded.append(out)
+
+iio.imwrite(os.path.join(plots_folder, "anim_stitched.gif"), padded, duration=750.0, loop=0,plugin="pillow")
