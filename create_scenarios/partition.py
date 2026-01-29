@@ -6,7 +6,7 @@ import os
 
 # Default values from constants.lp
 default_dict = {
-    'max_lane': 1,
+    'max_lane': 3,
     'max_segment': 300,
     'max_velocity_change_lon': 8,
     'max_velocity_lon': 12,
@@ -78,7 +78,8 @@ def partition(constants: dict, out_path: str, init_distance_actor='car1') -> str
                 added.append(k)
 
             if val and k == 'init_distance':
-                f.write(f"init(state({init_distance_actor}, loc(init_distance,0), dyn(1, 0))).\n\n")
+                middle_lane = 2  # this changed elsewhere and I synchronized here from 0 to 2 (for lanes 1,2,3 now). I don't remember exactly why this is hardcoded here
+                f.write(f"init(state({init_distance_actor}, loc(init_distance,{middle_lane}), dyn(1, 0))).\n\n")
         f.write("\n")
 
         # Default parameters section
