@@ -1,0 +1,34 @@
+{
+  "total_runs": 10,
+  "num_positive_traces": 10,
+  "successful_runs": 10,
+  "num_timeout": 0,
+  "percent_positive_traces": 100.0,
+  "average_cost": 9.999999999976694e-05,
+  "positive traces": [
+    "scenario_0001",
+    "scenario_0002",
+    "scenario_0003",
+    "scenario_0004",
+    "scenario_0005",
+    "scenario_0006",
+    "scenario_0007",
+    "scenario_0008",
+    "scenario_0009",
+    "scenario_0010"
+  ],
+  "negative traces": [],
+  "no monitoring results": [],
+  "costs": {
+    "scenario_0001": 9.999999999976694e-05,
+    "scenario_0002": 9.999999999976694e-05,
+    "scenario_0003": 9.999999999976694e-05,
+    "scenario_0004": 9.999999999976694e-05,
+    "scenario_0005": 9.999999999976694e-05,
+    "scenario_0006": 9.999999999976694e-05,
+    "scenario_0007": 9.999999999976694e-05,
+    "scenario_0008": 9.999999999976694e-05,
+    "scenario_0009": 9.999999999976694e-05,
+    "scenario_0010": 9.999999999976694e-05
+  }
+}
