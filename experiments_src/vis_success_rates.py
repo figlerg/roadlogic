@@ -98,7 +98,7 @@ def plot_outcome(ax, x, labels, outcome_triplets, mode):
 
 def plot_timing(ax, x, labels, df, mode, fig):
     if df is None or df.empty:
-        ax.text(0.5, 0.5, "No timing data", ha="center", va="center")
+        ax.text(0.5, 0.5, "No timing data found", ha="center", va="center")
         return
 
     colors = {
@@ -111,47 +111,50 @@ def plot_timing(ax, x, labels, df, mode, fig):
 
     bottom = np.zeros(len(df))
     for step in df.columns:
-        ax.bar(x, df[step].values, 0.7, bottom=bottom,
+        heights = df[step].values
+        ax.bar(x, heights, width=0.7, bottom=bottom,
                color=colors.get(step, "gray"), label=step)
-        bottom += df[step].values
+        bottom += heights
 
     total_times = df.sum(axis=1).astype(int)
     max_total = max(total_times) if len(total_times) else 0
-    ax.set_ylim(0, max_total * 1.35)
-    ax.set_yticks([10000])
+    ax.set_ylim(0, max_total * 1.25)
 
     for i, t in enumerate(total_times):
         hrs, rem = divmod(t, 3600)
         mins, secs = divmod(rem, 60)
-        label = (
-            f"{hrs}h{mins:02d}m" if hrs else
-            f"{mins}m{secs:02d}s" if mins else
-            f"{secs}s"
+        label_time = (
+            f"{hrs}h{mins:02d}m" if hrs
+            else f"{mins}m{secs:02d}s" if mins
+            else f"{secs}s"
         )
-        ax.text(i, t + max_total * 0.02, label,
-                ha="center", va="bottom", fontsize=6.5)
+        ax.text(i, t + max_total * 0.02, label_time,
+                ha="center", va="bottom", fontsize=6.5, color="#333")
 
     ax.set_ylabel("Time (s)")
     ax.grid(axis="y", linestyle="--", alpha=0.3)
 
-    alias = {
+    alias_short = {
         "sampling": "Var.",
         "plan": "Plan",
         "execute": "Exec.",
         "instrument": "Instr.",
         "monitor": "Mon.",
     }
-
     h, lab = ax.get_legend_handles_labels()
-    lab = [alias.get(s, s) for s in lab]
+    lab = [alias_short.get(s, s) for s in lab]
 
-    ax.legend(h, lab,
-              loc="upper center",
-              bbox_to_anchor=(0.5, 1.55),
-              ncol=len(lab),
-              frameon=True,
-              fontsize=6.5,
-              handlelength=1.0)
+    ax.legend(
+        h, lab,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.35),
+        ncol=len(lab),
+        frameon=True,
+        handlelength=1.0,
+        columnspacing=0.9,
+        borderaxespad=0.0,
+        fontsize=6.5,
+    )
 
     if mode in ("combined", "combined_outcome"):
         fig.subplots_adjust(top=0.86)
@@ -161,7 +164,6 @@ def plot_timing(ax, x, labels, df, mode, fig):
     if mode == "timing":
         ax.set_xticks(x)
         ax.set_xticklabels(labels, rotation=35, ha="right", fontsize=6.5)
-
 
 # ============================================================
 # === MAIN ====================================================
