@@ -1,7 +1,7 @@
 # new stuff for keeping the artifact clean
 experiments_src/logs
 experiments_src/vis
-paper/01_model_vis/overtake/out
+paper/**/out
 
 
 
