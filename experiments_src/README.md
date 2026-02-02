@@ -8,7 +8,5 @@ different specs are in
 - 7 drive past static obstacle
 
 explanations to the naming:
-- no suffix means that we run the vanilla pipeline. I take low N because the plans don't vary at all here 
-- the suffix "b" means that I run the partitioning experiment
-- the suffix "c" means that I run the partitioning experiment with the rule injection for car1. I leave out those experiments where car1 absolutely needs to change lane. this makes exp_004 a bit obsolete, I just leave it here to have also the vanilla case + fixed lane
-- the suffix "d" means that I use the heuristic BASIC during creation to increase diversity
+- no suffix means that we run the vanilla pipeline. I take low N because the plans don't vary at all here. This is the **"base"** variant of the paper.
+- the suffix "b" means that I run the partitioning experiment. This is the **"refined"** variant of the paper.
