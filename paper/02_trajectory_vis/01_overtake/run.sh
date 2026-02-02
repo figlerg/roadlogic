@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source "$experiments_src/common.sh"
+source "experiments_src/common.sh"
 
 EXP=paper/02_trajectory_vis/exp_002_e
 N=3
