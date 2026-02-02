@@ -1,5 +1,0 @@
-{"step":"generate-osc-scenarios","seconds":353,"status":"ok","started_at":"2025-11-12T13:28:46+01:00","finished_at":"2025-11-12T13:34:39+01:00"}
-{"step":"execute-all-scenarios","seconds":47,"status":"ok","started_at":"2025-11-12T13:34:39+01:00","finished_at":"2025-11-12T13:35:26+01:00"}
-{"step":"compute-metrics","seconds":38,"status":"ok","started_at":"2025-11-12T13:35:26+01:00","finished_at":"2025-11-12T13:36:04+01:00"}
-{"step":"generate-summary","seconds":9,"status":"ok","started_at":"2025-11-12T13:36:04+01:00","finished_at":"2025-11-12T13:36:13+01:00"}
-{"step":"compute similarity","seconds":4,"status":"ok","started_at":"2025-11-12T13:36:13+01:00","finished_at":"2025-11-12T13:36:17+01:00"}

@@ -1,6 +1,0 @@
-{"step":"create_variability_instances","seconds":0,"status":"ok","started_at":"2025-11-12T15:46:52+01:00","finished_at":"2025-11-12T15:46:52+01:00"}
-{"step":"variability_experiments","seconds":2044,"status":"ok","started_at":"2025-11-12T15:46:52+01:00","finished_at":"2025-11-12T16:20:56+01:00"}
-{"step":"execute-all-scenarios","seconds":528,"status":"ok","started_at":"2025-11-12T16:20:56+01:00","finished_at":"2025-11-12T16:29:44+01:00"}
-{"step":"compute-metrics","seconds":567,"status":"ok","started_at":"2025-11-12T16:29:44+01:00","finished_at":"2025-11-12T16:39:11+01:00"}
-{"step":"generate-summary","seconds":95,"status":"ok","started_at":"2025-11-12T16:39:11+01:00","finished_at":"2025-11-12T16:40:46+01:00"}
-{"step":"compute similarity","seconds":4,"status":"ok","started_at":"2025-11-12T16:40:46+01:00","finished_at":"2025-11-12T16:40:50+01:00"}
