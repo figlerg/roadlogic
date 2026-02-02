@@ -56,7 +56,7 @@ padding_distance_left = 10  # start a bit inside the road. Note: I also made the
 warnings.warn(f"Padding distance of size {padding_distance_left} enabled (road is extended on the left). This is reflected in the monitors. It should be revisited once we move on from our test maps.")
 
 no_lanes = 3
-warnings.warn("The mapping from asp-model to planning problem is unfinished: It currently expects exactly three lanes. TODO enable a check which only maps to existing lanes.")
+warnings.warn(f"The mapping from asp-model to planning problem is still in proof-of-concept stage. We enforce exactly {no_lanes} lanes in our experiments.")
 
 # ad 2
 
