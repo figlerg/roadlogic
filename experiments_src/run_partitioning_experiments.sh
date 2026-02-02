@@ -8,6 +8,8 @@ bash experiments_src/exp_007_b/run.sh
 
 bash experiments_src/extract_summaries.sh # get the summaries out and gather them in the logs folder
 
+
+# parameter variation pics
 python experiments_src/vis_success_rates.py \
   --pattern "experiments_src/logs/exp_*_b.json" \
   --mode timing \
@@ -22,3 +24,12 @@ python experiments_src/vis_success_rates.py \
   --pattern "experiments_src/logs/exp_*_b.json" \
   --out "experiments_src/vis/vis_partitioning_combined.pdf"
 
+python experiments_src/vis_success_rates.py \
+  --pattern "experiments_src/logs/exp_*_b.json" \
+  --out "experiments_src/vis/vis_partitioning_outcome.pdf" \
+  --mode outcome
+
+python experiments_src/vis_success_rates.py \
+  --pattern "experiments_src/logs/exp_*_b.json" \
+  --out "experiments_src/vis/vis_partitioning_combined_outcome.pdf" \
+  --mode combined_outcome \
