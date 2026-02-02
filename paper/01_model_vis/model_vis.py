@@ -16,7 +16,8 @@ mpl.rcParams.update({
 
 
 plots_folder = "paper/01_model_vis/model_vis_plots"
-plan_path = "paper/01_model_vis/predicates.pkl"
+# plan_path = "paper/01_model_vis/predicates.pkl"
+plan_path = "paper/01_model_vis/overtake/out/serialized_models/0001.pkl"
 
 
 
@@ -105,24 +106,24 @@ def update_frame(frame):
     # plt.savefig(os.path.join(plots_folder, f"{frame:04d}_original_names.jpg"), format="jpg", bbox_inches='tight',dpi=300)
 
 
-# # Create the figure and animation
-# fig = plt.figure()
-# ani = animation.FuncAnimation(fig, update_frame, frames=len(time_points), interval=1000, repeat=False)
+# Create the figure and animation
+fig = plt.figure()
+ani = animation.FuncAnimation(fig, update_frame, frames=len(time_points), interval=1000, repeat=False)
 
-# # https://www.geeksforgeeks.org/how-to-save-matplotlib-animation/
-# writervideo = animation.FFMpegWriter(fps=1)
-# ani.save(os.path.join(plots_folder, f'anim.gif'))
+# https://www.geeksforgeeks.org/how-to-save-matplotlib-animation/
+writervideo = animation.FFMpegWriter(fps=1)
+ani.save(os.path.join(plots_folder, f'anim.gif'))
 
-# from matplotlib.animation import PillowWriter
+from matplotlib.animation import PillowWriter
 
-# writervideo = PillowWriter(fps=1)
+writervideo = PillowWriter(fps=1)
 
-# ani.save(
-#     os.path.join(plots_folder, "anim_tight.gif"),
-#     writer=writervideo,
-#     dpi=300,
-#     savefig_kwargs=dict(bbox_inches="tight", pad_inches=0.0)
-# )
+ani.save(
+    os.path.join(plots_folder, "anim_tight.gif"),
+    writer=writervideo,
+    dpi=300,
+    savefig_kwargs=dict(bbox_inches="tight", pad_inches=0.0)
+)
 
 ##
 

@@ -8,6 +8,7 @@ def file_hash(path, chunk_size=8192):
     return h.hexdigest()
 
 target = "paper/01_model_vis/predicates.pkl"
+# target = "paper/01_model_vis/overtake/out/serialized_models/0001.pkl"
 target_hash = file_hash(target)
 
 path_to_experiments_repo = os.path.expanduser("/home/figlerg/dev/")

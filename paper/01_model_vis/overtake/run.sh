@@ -3,7 +3,7 @@ set -euo pipefail
 source "experiments_src/common.sh"
 
 EXP=paper/01_model_vis/overtake
-N=1
+N=3
 STEP_LENGTH=20
 
 run_vanilla_experiment "$EXP" "$N" "$STEP_LENGTH"
