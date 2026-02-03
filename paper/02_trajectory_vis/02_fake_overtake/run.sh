@@ -7,6 +7,9 @@ EXP=paper/02_trajectory_vis/02_fake_overtake
 N=1
 STEP_LENGTH=60
 
-run_vanilla_experiment "$EXP" "$N" "$STEP_LENGTH"
+CONSTANTS=paper/02_trajectory_vis/02_fake_overtake/constants.lp
+
+run_vanilla_experiment "$EXP" "$N" "$STEP_LENGTH" "CONSTANTS_OVERRIDE=$CONSTANTS"
+
 
 bash $EXP/animate.sh
