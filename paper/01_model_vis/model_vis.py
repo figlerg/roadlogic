@@ -16,8 +16,8 @@ mpl.rcParams.update({
 
 
 plots_folder = "paper/01_model_vis/model_vis_plots"
-# plan_path = "paper/01_model_vis/predicates.pkl"
-plan_path = "paper/01_model_vis/overtake/out/serialized_models/0001.pkl"
+plan_path = "paper/01_model_vis/predicates.pkl"
+# plan_path = "paper/01_model_vis/overtake/out/serialized_models/0001.pkl"
 
 
 
