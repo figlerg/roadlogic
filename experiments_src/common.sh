@@ -37,7 +37,11 @@ mkdir -p "$dir"
 # --- VANILLA PIPELINE -------------------------------------------------------
 run_vanilla_experiment() {
   EXP="$1"; N="$2"; STEP_LENGTH="$3"
+  shift 3
+  EXTRA_ARGS=("$@")
+
   exp_reset_out "$EXP"
+
 
   time_step "generate-osc-scenarios" \
   make generate-osc-scenarios \
@@ -46,7 +50,8 @@ run_vanilla_experiment() {
     OUTPUT_FOLDER="$EXP/out/cr_simulations" \
     SCENARIOS_FOLDER="$EXP/out" \
     STEP_LENGTH="$STEP_LENGTH" \
-    RULE_INJECTION="$EXP/in/rule_injection.lp"
+    RULE_INJECTION="$EXP/in/rule_injection.lp" \
+    "${EXTRA_ARGS[@]}"
 
   time_step "execute-all-scenarios" \
   make execute-all-scenarios \
