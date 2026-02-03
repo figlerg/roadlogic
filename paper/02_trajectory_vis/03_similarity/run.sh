@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source "$(dirname "$0")/../common.sh"
+source "experiments_src/common.sh"
 
-EXP=experiments_src/exp_005_b
+# EXP=experiments_src/exp_005_b
+EXP=paper/02_trajectory_vis/03_similarity
 N=50
 # seed 1 also was good
 # seed 42 is the default one

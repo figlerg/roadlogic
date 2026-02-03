@@ -4,5 +4,5 @@
 
 
 #program base.
-init(state(obstacle,loc(30,0),dyn(0,0))).
+init(state(obstacle,loc(30,2),dyn(0,0))).
 
