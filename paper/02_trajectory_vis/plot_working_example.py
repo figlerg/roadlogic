@@ -275,13 +275,19 @@ def visualize_the_scenario(executed_scenario: Scenario,
 if __name__ == "__main__":
 
     ### PLOT 1: overtake scenario
-    scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_scenario.xml")
-    executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_executed_scenario.xml")
+    # scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_scenario.xml")
+    # executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_executed_scenario.xml")
+    scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/scenario.xml")
+    executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/executed_scenario.xml")
+
+    remap_commonroad_ids_inplace(scenario_file)
+    remap_commonroad_ids_inplace(executed_scenario_file)
 
     _, planning_problem_set = XMLFileReader(scenario_file).open()
     executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
 
-    output_file = os.path.join("paper/02_trajectory_vis/01_overtake_trajectory.pdf")
+    # output_file = os.path.join("paper/02_trajectory_vis/01_overtake_trajectory.pdf")
+    output_file = os.path.join("paper/figures/Fig_1.pdf")
 
     target_time_step = 90  # Last timestep
 
@@ -308,8 +314,7 @@ if __name__ == "__main__":
     _, planning_problem_set = XMLFileReader(scenario_file_src).open()
     executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    output_file = os.path.join("paper/02_trajectory_vis/02_fake_overtake_trajectory.png")
-    # output_file = os.path.join("paper/02_trajectory_vis/02_fake_overtake_trajectory.pdf")
+    output_file = os.path.join("paper/figures/Fig_9.pdf")
 
     target_time_step = 68  # Last timestep
 
@@ -327,13 +332,13 @@ if __name__ == "__main__":
     scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
-        "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+        "max_braking_speed_while_turning_2__max_lane_3__max_segment_300__safety_distance_5/"
         "simulation_00001/scenario.xml"
     )
     executed_scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
-        "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+        "max_braking_speed_while_turning_2__max_lane_3__max_segment_300__safety_distance_5/"
         "simulation_00001/executed_scenario.xml"
     )
 
@@ -343,7 +348,7 @@ if __name__ == "__main__":
     _, planning_problem_set = XMLFileReader(scenario_file_src).open()
     executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    output_file = os.path.join("paper/02_trajectory_vis/03a_similarity_trajectory.pdf")
+    output_file = os.path.join("paper/figures/Fig_7a.pdf")
 
     target_time_step = 80
     plot_at_times = [10, 20, 30, 40, 50, 70]
@@ -359,37 +364,37 @@ if __name__ == "__main__":
 
 
     ### PLOT 3b
-    scenario_file_src = os.path.join(
-        "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-        "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__"
-        "max_braking_speed_while_turning_4__max_lane_1__max_segment_300__safety_distance_5/"
-        "simulation_00001/scenario.xml"
-    )
-    executed_scenario_file_src = os.path.join(
-        "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-        "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__"
-        "max_braking_speed_while_turning_4__max_lane_1__max_segment_300__safety_distance_5/"
-        "simulation_00001/executed_scenario.xml"
-    )
+    # scenario_file_src = os.path.join(
+    #     "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+    #     "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__"
+    #     "max_braking_speed_while_turning_4__max_lane_3__max_segment_300__safety_distance_5/"
+    #     "simulation_00001/scenario.xml"
+    # )
+    # executed_scenario_file_src = os.path.join(
+    #     "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+    #     "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_2__"
+    #     "max_braking_speed_while_turning_4__max_lane_3__max_segment_300__safety_distance_5/"
+    #     "simulation_00001/executed_scenario.xml"
+    # )
 
-    remap_commonroad_ids_inplace(scenario_file_src)
-    remap_commonroad_ids_inplace(executed_scenario_file_src)
+    # remap_commonroad_ids_inplace(scenario_file_src)
+    # remap_commonroad_ids_inplace(executed_scenario_file_src)
 
-    _, planning_problem_set = XMLFileReader(scenario_file_src).open()
-    executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
+    # _, planning_problem_set = XMLFileReader(scenario_file_src).open()
+    # executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    output_file = os.path.join("paper/02_trajectory_vis/03b_similarity_trajectory.pdf")
+    # output_file = os.path.join("paper/figures/Fig_7b.pdf")
 
-    target_time_step = 23
-    plot_at_times = [5, 14]
+    # target_time_step = 23
+    # plot_at_times = [5, 14]
 
-    visualize_the_scenario(
-        executed_scenario,
-        planning_problem_set,
-        output_file,
-        target_time_step,
-        plot_at_times
-    )
+    # visualize_the_scenario(
+    #     executed_scenario,
+    #     planning_problem_set,
+    #     output_file,
+    #     target_time_step,
+    #     plot_at_times
+    # )
 
 
 
@@ -397,13 +402,13 @@ if __name__ == "__main__":
     scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
-        "max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/"
+        "max_braking_speed_while_turning_3__max_lane_3__max_segment_300__safety_distance_5/"
         "simulation_00001/scenario.xml"
     )
     executed_scenario_file_src = os.path.join(
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
-        "max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/"
+        "max_braking_speed_while_turning_3__max_lane_3__max_segment_300__safety_distance_5/"
         "simulation_00001/executed_scenario.xml"
     )
 
@@ -413,7 +418,7 @@ if __name__ == "__main__":
     _, planning_problem_set = XMLFileReader(scenario_file_src).open()
     executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    output_file = os.path.join("paper/02_trajectory_vis/03c_similarity_trajectory.pdf")
+    output_file = os.path.join("paper/figures/Fig_7c.pdf")
 
     target_time_step = 75
     plot_at_times = [10, 20, 30, 40, 50, 60, 70]
@@ -432,13 +437,13 @@ if __name__ == "__main__":
     scenario_file_src = (
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
-        "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+        "max_braking_speed_while_turning_2__max_lane_3__max_segment_300__safety_distance_5/"
         "simulation_00001/scenario.xml"
     )
     executed_scenario_file_src = (
         "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
         "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
-        "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
+        "max_braking_speed_while_turning_2__max_lane_3__max_segment_300__safety_distance_5/"
         "simulation_00001/executed_scenario.xml"
     )
 
@@ -448,7 +453,7 @@ if __name__ == "__main__":
     _, planning_problem_set = XMLFileReader(scenario_file_src).open()
     executed_scenario, _ = XMLFileReader(executed_scenario_file_src).open()
 
-    output_file = os.path.join("paper/02_trajectory_vis/03d_similarity_trajectory.pdf")
+    output_file = os.path.join("paper/figures/Fig_7b.pdf")
 
     target_time_step = 75
     plot_at_times = [10, 20, 30, 40, 50, 60, 70]
