@@ -8,3 +8,5 @@ N=50
 # seed 1 also was good
 # seed 42 is the default one
 run_variability_experiment "$EXP" "$N" "--random-seed" "1"
+
+bash paper/02_trajectory_vis/03_similarity/animate.sh

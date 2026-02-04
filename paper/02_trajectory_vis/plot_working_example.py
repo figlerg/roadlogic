@@ -491,48 +491,48 @@ if __name__ == "__main__":
     )
 
 
+    recreate_anims = False
 
+    if recreate_anims:
 
+        ### fetch the animations
 
+        dst_root = os.path.join("paper", "animations")
+        os.makedirs(dst_root, exist_ok=True)
 
-    ### fetch the animations
+        # Use exact source paths (no base_dir/scenario_dir splitting)
+        PLOTS = {
+            "Fig_1": "paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/simulation.gif",
+            "Fig_4": "paper/01_model_vis/model_vis_plots/anim_stitched.gif",
 
-    dst_root = os.path.join("paper", "animations")
-    os.makedirs(dst_root, exist_ok=True)
+            "Fig_9":  "paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif",
 
-    # Use exact source paths (no base_dir/scenario_dir splitting)
-    PLOTS = {
-        "Fig_1": "paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/simulation.gif",
-        "Fig_4": "paper/01_model_vis/model_vis_plots/anim_stitched.gif",
+            "Fig_7a": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+                    "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
+                    "max_braking_speed_while_turning_2__max_lane_3__max_segment_300__safety_distance_5/"
+                    "simulation_00001/simulation.gif",
 
-        "Fig_9":  "paper/02_trajectory_vis/02_fake_overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif",
+            # ignore 3b
 
-        "Fig_7a": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-                "scenario_change_dur_3__init_distance_11__max_acceleration_while_turning_0__"
-                "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
-                "simulation_00001/simulation.gif",
+            "Fig_7c": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+                    "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
+                    "max_braking_speed_while_turning_3__max_lane_3__max_segment_300__safety_distance_5/"
+                    "simulation_00001/simulation.gif",
 
-        # ignore 3b
+            "Fig_7b": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
+                    "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
+                    "max_braking_speed_while_turning_2__max_lane_3__max_segment_300__safety_distance_5/"
+                    "simulation_00001/simulation.gif",
+        }
 
-        "Fig_7c": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-                "scenario_change_dur_3__init_distance_16__max_acceleration_while_turning_0__"
-                "max_braking_speed_while_turning_3__max_lane_1__max_segment_300__safety_distance_5/"
-                "simulation_00001/simulation.gif",
+        copied = 0
+        for fig_name, src in PLOTS.items():
+            if not os.path.exists(src):
+                print(f"[fetch_gifs] missing: {src}")
+                continue
 
-        "Fig_7b": "paper/02_trajectory_vis/03_similarity/out/cr_simulations/"
-                "scenario_change_dur_3__init_distance_12__max_acceleration_while_turning_0__"
-                "max_braking_speed_while_turning_2__max_lane_1__max_segment_300__safety_distance_5/"
-                "simulation_00001/simulation.gif",
-    }
+            dst = os.path.join(dst_root, f"{fig_name}.gif")
+            shutil.copy2(src, dst)
+            copied += 1
 
-    copied = 0
-    for fig_name, src in PLOTS.items():
-        if not os.path.exists(src):
-            print(f"[fetch_gifs] missing: {src}")
-            continue
-
-        dst = os.path.join(dst_root, f"{fig_name}.gif")
-        shutil.copy2(src, dst)
-        copied += 1
-
-    print(f"[fetch_gifs] copied {copied}/{len(PLOTS)} animation files to {dst_root}")
+        print(f"[fetch_gifs] copied {copied}/{len(PLOTS)} animation files to {dst_root}")
