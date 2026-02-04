@@ -277,8 +277,32 @@ if __name__ == "__main__":
     ### PLOT 1: overtake scenario
     # scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_scenario.xml")
     # executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake_executed_scenario.xml")
+    # scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/scenario.xml")
+    # executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/executed_scenario.xml")
     scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/scenario.xml")
     executed_scenario_file = os.path.join("paper/02_trajectory_vis/01_overtake/out/cr_simulations/scenario_0002/simulation_00001/executed_scenario.xml")
+
+    remap_commonroad_ids_inplace(scenario_file)
+    remap_commonroad_ids_inplace(executed_scenario_file)
+
+    _, planning_problem_set = XMLFileReader(scenario_file).open()
+    executed_scenario, _ = XMLFileReader(executed_scenario_file).open()
+
+    # output_file = os.path.join("paper/02_trajectory_vis/01_overtake_trajectory.pdf")
+    output_file = os.path.join("paper/figures/Fig_1_alt.pdf")
+
+    target_time_step = 80  # Last timestep
+
+    # Plot the past shaded boxes at those timesteps
+    plot_at_times = [10, 20, 30, 40, 50, 60, 70]
+
+    # Plot the figure to file
+    visualize_the_scenario(executed_scenario, planning_problem_set, output_file, target_time_step, plot_at_times)
+
+
+    ### PLOT 1 ORIGINAL
+    scenario_file = os.path.join("paper/bckp/01_overtake_scenario.xml")
+    executed_scenario_file = os.path.join("paper/bckp/01_overtake_executed_scenario.xml")
 
     remap_commonroad_ids_inplace(scenario_file)
     remap_commonroad_ids_inplace(executed_scenario_file)
