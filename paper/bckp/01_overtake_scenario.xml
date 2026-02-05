@@ -5,7 +5,7 @@
     <gpsLatitude>999.0</gpsLatitude>
     <gpsLongitude>999.0</gpsLongitude>
   </location>
-  <scenarioTags/>
+  <scenarioTags />
   <lanelet id="13">
     <leftBound>
       <point>
@@ -211,7 +211,7 @@
         <y>-1.5</y>
       </point>
     </rightBound>
-    <adjacentLeft ref="2" drivingDir="same"/>
+    <adjacentLeft ref="12" drivingDir="same" />
     <laneletType>unknown</laneletType>
   </lanelet>
   <lanelet id="12">
@@ -419,8 +419,8 @@
         <y>1.5</y>
       </point>
     </rightBound>
-    <adjacentLeft ref="1" drivingDir="same"/>
-    <adjacentRight ref="3" drivingDir="same"/>
+    <adjacentLeft ref="11" drivingDir="same" />
+    <adjacentRight ref="13" drivingDir="same" />
     <laneletType>unknown</laneletType>
   </lanelet>
   <lanelet id="11">
@@ -630,7 +630,7 @@
       </point>
       <lineMarking>no_marking</lineMarking>
     </rightBound>
-    <adjacentRight ref="2" drivingDir="same"/>
+    <adjacentRight ref="12" drivingDir="same" />
     <laneletType>urban</laneletType>
   </lanelet>
   <planningProblem id="1">
