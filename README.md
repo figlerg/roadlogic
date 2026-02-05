@@ -6,6 +6,9 @@ The generated plans can be executed and evaluated through **CommonRoad** and the
 
 ---
 
+## Reproducibility Evaluation
+See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) and the PDF version [REPRODUCIBILITY.pdf](REPRODUCIBILITY.pdf).
+
 ## Overview
 
 RoadLogic provides:
@@ -20,6 +23,25 @@ RoadLogic provides:
 ---
 
 ## Installation
+### Docker
+To reproduce the figures in the paper, just use the Dockerfile. The experiments run for about 10h in total on my Dell Latitude with a 12th Gen Intel(R) Core(TM) i7-1265U. Your mileage may vary (and the computation time with it).
+
+- Inside this folder, run
+````docker build -t roadlogic-artifact .````
+
+- Run the container. 
+````docker run --rm -it --name roadlogic-artifact roadlogic-artifact````
+**Be careful:** remove ``--rm`` if you want the container to persist after usage.
+
+- Run the script to reproduce the Figures from the paper
+````bash paper/reproduce_experiments.sh````
+
+- This part takes about 10h.
+- Find the results under ````paper/figures````
+
+
+### Set up locally
+
 
 ```bash
 git clone https://github.com/figlerg/roadlogic.git
@@ -43,7 +65,7 @@ pip install -e .                           # roadlogic itself
 
 ---
 
-## Quick Start
+### Test
 
 ```bash
 python -m planning.Planner plans --osc2_file examples/my_overtake.osc -n 3 -a # run planning engine standalone
