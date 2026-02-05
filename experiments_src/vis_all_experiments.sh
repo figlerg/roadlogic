@@ -41,17 +41,17 @@ python experiments_src/vis_success_rates.py \
 
 
 
-# parameter variation plus fixed car1
-python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_*_c.json" \
-  --out "experiments_src/vis/vis_partitioning_fixedcar1_combined.pdf"
+# # parameter variation plus fixed car1
+# python experiments_src/vis_success_rates.py \
+#   --pattern "experiments_src/logs/exp_*_c.json" \
+#   --out "experiments_src/vis/vis_partitioning_fixedcar1_combined.pdf"
 
-python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_*_c.json" \
-  --mode success \
-  --out experiments_src/vis/vis_partitioning_fixedcar1_success.pdf
+# python experiments_src/vis_success_rates.py \
+#   --pattern "experiments_src/logs/exp_*_c.json" \
+#   --mode success \
+#   --out experiments_src/vis/vis_partitioning_fixedcar1_success.pdf
 
-python experiments_src/vis_success_rates.py \
-  --pattern "experiments_src/logs/exp_*_c.json" \
-  --mode timing \
-  --out experiments_src/vis/vis_partitioning_fixedcar1_timing.pdf
+# python experiments_src/vis_success_rates.py \
+#   --pattern "experiments_src/logs/exp_*_c.json" \
+#   --mode timing \
+#   --out experiments_src/vis/vis_partitioning_fixedcar1_timing.pdf
