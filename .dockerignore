@@ -1,0 +1,6 @@
+venv
+experiments_src/logs
+experiments_src/vis
+paper/**/out
+paper/01_model_vis/model_vis_plots/
+paper/figures/
