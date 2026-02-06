@@ -122,13 +122,20 @@ run_variability_experiment() {
 ````
 
 ## Example Usage
-For example, running the experiment 2 of our benchmark in the refined mode is as simple as running 
-````bash experiments_src/exp_002_b/run.sh````
+For example, running our working example from the paper is as simple as running 
+````tests/overtake/run.sh````
 It will
-- vary parameters of the ASP automatically
-- run the ASP planner, generating asp instance files, plans, plan animations, etc. in ````experiments_src/exp_002_b/out````
-- simulate in commonroad using Frenetix, generating simulation traces in ``experiments_src/exp_002/out/cr_simulations``
-- optionally we can call ``bash experiments_src/exp_002/animate.sh`` to create gif animations like ``experiments_src/exp_002/out/cr_simulations/scenario_0001/simulation_00001/simlation.gif``
+- run the ASP planner in the base configuration, generating asp instance files, plans, plan animations, etc. in ````tests/overtake/out````
+- simulate in commonroad using Frenetix, generating simulation traces in ``tests/overtake/out/cr_simulations``
+- optionally we can call ``bash tests/overtake/animate.sh`` to create gif animations like ``tests/overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif``.
+
+The two input files ``tests/overtake/in/spec.osc``and ``tests/overtake/in/rule_injection.lp`` define the specification. Feel free to try different scenarios. 
+- The ``spec.osc`` file is the OpenSCENARIO specification.
+- The ``rule_injection.lp`` is an optional way of adding constraints on the ASP level to further refine the output scenarios.
+
+
+This example is provided for illustration and exploration and is not used to generate any paper figures.
+
 
 ## Experiment Suite
 
