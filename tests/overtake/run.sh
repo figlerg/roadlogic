@@ -2,7 +2,7 @@
 set -euo pipefail
 source "experiments_src/common.sh"
 
-EXP=tests/overtake_scenario
+EXP=tests/overtake
 N=3
 STEP_LENGTH=1
 
