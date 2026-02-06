@@ -1,0 +1,5 @@
+{"step":"generate-osc-scenarios","seconds":796,"status":"ok","started_at":"2026-02-06T21:07:58+01:00","finished_at":"2026-02-06T21:21:14+01:00"}
+{"step":"execute-all-scenarios","seconds":33,"status":"ok","started_at":"2026-02-06T21:21:14+01:00","finished_at":"2026-02-06T21:21:47+01:00"}
+{"step":"compute-metrics","seconds":26,"status":"ok","started_at":"2026-02-06T21:21:47+01:00","finished_at":"2026-02-06T21:22:13+01:00"}
+{"step":"generate-summary","seconds":5,"status":"ok","started_at":"2026-02-06T21:22:13+01:00","finished_at":"2026-02-06T21:22:18+01:00"}
+{"step":"compute similarity","seconds":2,"status":"ok","started_at":"2026-02-06T21:22:18+01:00","finished_at":"2026-02-06T21:22:20+01:00"}
