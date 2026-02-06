@@ -1,7 +1,5 @@
 # Reproducibility Evaluation: Declarative Scenario-based Testing with RoadLogic (ICCPS26)
 
-# Running the artifact
-
 
 ## Quickstart
 This is the **bare minimum** fastest way to rerun the experiments. For an in-depth installation guide, see the README file.

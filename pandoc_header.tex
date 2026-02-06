@@ -1,0 +1,9 @@
+\usepackage{xcolor}
+\usepackage{soul}
+
+\definecolor{inlinecodebg}{RGB}{245,245,245}
+
+\let\oldtexttt\texttt
+\renewcommand{\texttt}[1]{%
+  \colorbox{inlinecodebg}{\oldtexttt{#1}}%
+}
