@@ -20,10 +20,6 @@ bash paper/01_model_vis/overtake/run.sh
 # create model frames
 python paper/01_model_vis/model_vis.py
 
-# collect to figure folder
-cp paper/01_model_vis/model_vis_plots/0004.pdf paper/figures/Fig_4a.pdf
-cp paper/01_model_vis/model_vis_plots/0007.pdf paper/figures/Fig_4b.pdf
-cp paper/01_model_vis/model_vis_plots/0009.pdf paper/figures/Fig_4c.pdf
 
 
 ### Figure 5,6,8
@@ -36,9 +32,18 @@ bash experiments_src/extract_summaries.sh # get the summaries out and gather the
 
 bash experiments_src/vis_all_experiments.sh # generate the timing plots
 
-cp experiments_src/vis/vis_vanilla_timing.pdf paper/figures/Fig_5.pdf
-cp experiments_src/vis/vis_partitioning_combined_outcome.pdf paper/figures/Fig_8.pdf
 
+### Copying the rest of the newly figures to the output folder
+
+# Figure 4
+cp paper/01_model_vis/model_vis_plots/0004.pdf paper/figures/Fig_4a.pdf
+cp paper/01_model_vis/model_vis_plots/0007.pdf paper/figures/Fig_4b.pdf
+cp paper/01_model_vis/model_vis_plots/0009.pdf paper/figures/Fig_4c.pdf
+
+# Figure 5
+cp experiments_src/vis/vis_vanilla_timing.pdf paper/figures/Fig_5.pdf
+
+# Figure 7
 cp experiments_src/exp_001/out/similarity/similarity_matrix.png paper/figures/Fig_7_1b.png
 cp experiments_src/exp_001_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_1r.png
 cp experiments_src/exp_002/out/similarity/similarity_matrix.png paper/figures/Fig_7_2b.png
@@ -54,4 +59,6 @@ cp experiments_src/exp_006_b/out/similarity/similarity_matrix.png paper/figures/
 cp experiments_src/exp_007/out/similarity/similarity_matrix.png paper/figures/Fig_7_7b.png
 cp experiments_src/exp_007_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_7r.png
 
+# Figure 8
+cp experiments_src/vis/vis_partitioning_combined_outcome.pdf paper/figures/Fig_8.pdf
 

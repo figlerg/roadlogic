@@ -5,13 +5,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     git \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/* \
     texlive-latex-base \
     texlive-latex-recommended \
     texlive-latex-extra \
     texlive-fonts-recommended \
     texlive-fonts-extra \
-    dvipng
+    dvipng \
+    && rm -rf /var/lib/apt/lists/*
 # latex is needed for the plots
 
 
