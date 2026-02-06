@@ -21,8 +21,8 @@ WORKDIR /artifact
 
 COPY . .
 
-# RUN python -m venv venv
-# ENV PATH="/artifact/venv/bin:$PATH"
+RUN python -m venv venv
+ENV PATH="/artifact/venv/bin:$PATH"
 
 RUN pip install -U pip wheel setuptools
 RUN pip install -e ./Frenetix-Motion-Planner

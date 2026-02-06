@@ -33,7 +33,7 @@ bash experiments_src/extract_summaries.sh # get the summaries out and gather the
 bash experiments_src/vis_all_experiments.sh # generate the timing plots
 
 
-### Copying the rest of the newly figures to the output folder
+### Copying the rest of the newly figures to the output folder (1 and 9 are created in place)
 
 # Figure 4
 cp paper/01_model_vis/model_vis_plots/0004.pdf paper/figures/Fig_4a.pdf
