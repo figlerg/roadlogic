@@ -11,10 +11,13 @@ This is the **bare minimum** fastest way to rerun the experiments. For an in-dep
 To reproduce the figures in the paper, just use the Dockerfile. The experiments run for about 10h in total on my Dell Latitude with a 12th Gen Intel(R) Core(TM) i7-1265U. Your mileage may vary (and the computation time with it).
 
 - Inside this folder, run
-````docker build -t roadlogic-artifact .````
+````docker build -t roadlogic-artifact .````  
+(For macOS with Apple Silicon: ````docker build --platform=linux/amd64 -t roadlogic-artifact .````)
 
 - Run the container. 
-````docker run --rm -it --name roadlogic-artifact roadlogic-artifact````
+````docker run --rm -it --name roadlogic-artifact roadlogic-artifact````  
+(For macOS with Apple Silicon:  
+````docker run --platform=linux/amd64 --rm -it --name roadlogic-artifact roadlogic-artifact````)  
 **Be careful:** remove ``--rm`` if you want the container to persist after usage.
 
 - Run the script to reproduce the Figures from the paper
@@ -22,10 +25,8 @@ To reproduce the figures in the paper, just use the Dockerfile. The experiments 
 
 - This part takes about 10h.
 - Find the results under ````paper/figures```` **inside the container**.
-- After completion, copy the generated figures to the host system at ``<PATH>`` with: 
-````bash
-docker cp roadlogic-artifact:/artifact/paper/figures <PATH>
-````
+- After completion, copy the generated figures to the host system at ``<PATH>`` with:  
+````docker cp roadlogic-artifact:/artifact/paper/figures <PATH>````
 
 
 ## Expected Reproducibility Outcomes
@@ -124,13 +125,16 @@ run_variability_experiment() {
 
 ## Example Usage
 For example, running our working example from the paper is as simple as running 
-````tests/overtake/run.sh````
-It will
+````tests/overtake/run.sh````  
+It will:
+
 - run the ASP planner in the base configuration, generating asp instance files, plans, plan animations, etc. in ````tests/overtake/out````
 - simulate in commonroad using Frenetix, generating simulation traces in ``tests/overtake/out/cr_simulations``
-- optionally we can call ``bash tests/overtake/animate.sh`` to create gif animations like ``tests/overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif``.
+- optionally we can call ``bash tests/overtake/animate.sh`` to create gif animations like  
+``tests/overtake/out/cr_simulations/scenario_0001/simulation_00001/simulation.gif``.
 
-The two input files ``tests/overtake/in/spec.osc``and ``tests/overtake/in/rule_injection.lp`` define the specification. Feel free to try different scenarios. 
+The two input files ``tests/overtake/in/spec.osc`` and ``tests/overtake/in/rule_injection.lp`` define the specification. Feel free to try different scenarios. 
+
 - The ``spec.osc`` file is the OpenSCENARIO specification.
 - The ``rule_injection.lp`` is an optional way of adding constraints on the ASP level to further refine the output scenarios.
 
@@ -168,6 +172,7 @@ This script executes all required experiments and plotting steps and writes the
 final figures to `paper/figures` **inside the Docker container**.
 
 To access them from the host system, either:
+
 - copy them out using `docker cp` (see quickstart), or
 - attach to the container and browse the filesystem (i.e. in VS Code).
 
