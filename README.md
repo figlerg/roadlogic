@@ -18,7 +18,7 @@ RoadLogic provides:
 * Execution interface for CommonRoad simulations
 * Integration with the Frenetix motion-planning library
 
-> **Status:** Active development — interfaces and APIs may change before the first stable release.
+> **Status:** This branch is frozen for reproducibility. Active development continues on the [main branch](https://github.com/figlerg/roadlogic).
 
 ---
 
@@ -76,11 +76,11 @@ bash experiments_src/exp_001/run.sh # run the experiments with their shell scrip
 
 ## Authors & Acknowledgments
 
-- Felix Gigler
-- Alessio Gambi
-- Dejan Nickovic
-- Cristinel Mateis
 - Ezio Bartocci
+- Alessio Gambi
+- Felix Gigler
+- Cristinel Mateis
+- Dejan Nickovic
 
 This repository is maintained by Felix Gigler and Alessio Gambi.
 
@@ -90,7 +90,16 @@ This repository is maintained by Felix Gigler and Alessio Gambi.
 
 If you use RoadLogic in academic work, please cite our forthcoming paper:
 
-> *To be added after acceptance.*
+````bibtex
+@inproceedings{bartocci2026roadlogic,
+  title     = {Declarative Scenario-based Testing with RoadLogic},
+  author    = {Bartocci, Ezio and Gambi, Alessio and Gigler, Felix and Mateis, Cristinel and Ni\v{c}kovi\'{c}, Dejan},
+  booktitle = {Proceedings of the 29th ACM International Conference on Hybrid Systems: Computation and Control (HSCC)},
+  year      = {2026},
+  note      = {To appear}
+}
+````
+Read the preprint [here](https://arxiv.org/pdf/2603.09455). Will be updated once the HSCC proceedings are available. 
 
 ---
 
