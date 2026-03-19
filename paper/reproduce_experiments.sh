@@ -44,20 +44,20 @@ cp paper/01_model_vis/model_vis_plots/0009.pdf paper/figures/Fig_4c.pdf
 cp experiments_src/vis/vis_vanilla_timing.pdf paper/figures/Fig_5.pdf
 
 # Figure 7
-cp experiments_src/exp_001/out/similarity/similarity_matrix.png paper/figures/Fig_7_1b.png
-cp experiments_src/exp_001_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_1r.png
-cp experiments_src/exp_002/out/similarity/similarity_matrix.png paper/figures/Fig_7_2b.png
-cp experiments_src/exp_002_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_2r.png
-cp experiments_src/exp_003/out/similarity/similarity_matrix.png paper/figures/Fig_7_3b.png
-cp experiments_src/exp_003_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_3r.png
-cp experiments_src/exp_004/out/similarity/similarity_matrix.png paper/figures/Fig_7_4b.png
-cp experiments_src/exp_004_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_4r.png
-cp experiments_src/exp_005/out/similarity/similarity_matrix.png paper/figures/Fig_7_5b.png
-cp experiments_src/exp_005_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_5r.png
-cp experiments_src/exp_006/out/similarity/similarity_matrix.png paper/figures/Fig_7_6b.png
-cp experiments_src/exp_006_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_6r.png
-cp experiments_src/exp_007/out/similarity/similarity_matrix.png paper/figures/Fig_7_7b.png
-cp experiments_src/exp_007_b/out/similarity/similarity_matrix.png paper/figures/Fig_7_7r.png
+cp experiments_src/exp_001/out/similarity/similarity_matrix.png paper/figures/Fig_6_1b.png
+cp experiments_src/exp_001_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_1r.png
+cp experiments_src/exp_002/out/similarity/similarity_matrix.png paper/figures/Fig_6_2b.png
+cp experiments_src/exp_002_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_2r.png
+cp experiments_src/exp_003/out/similarity/similarity_matrix.png paper/figures/Fig_6_3b.png
+cp experiments_src/exp_003_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_3r.png
+cp experiments_src/exp_004/out/similarity/similarity_matrix.png paper/figures/Fig_6_4b.png
+cp experiments_src/exp_004_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_4r.png
+cp experiments_src/exp_005/out/similarity/similarity_matrix.png paper/figures/Fig_6_5b.png
+cp experiments_src/exp_005_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_5r.png
+cp experiments_src/exp_006/out/similarity/similarity_matrix.png paper/figures/Fig_6_6b.png
+cp experiments_src/exp_006_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_6r.png
+cp experiments_src/exp_007/out/similarity/similarity_matrix.png paper/figures/Fig_6_7b.png
+cp experiments_src/exp_007_b/out/similarity/similarity_matrix.png paper/figures/Fig_6_7r.png
 
 # Figure 8
 cp experiments_src/vis/vis_partitioning_combined_outcome.pdf paper/figures/Fig_8.pdf

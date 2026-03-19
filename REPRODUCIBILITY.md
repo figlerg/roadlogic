@@ -215,12 +215,12 @@ Each functional outcome corresponds to one paper figure and is mapped below.
     extent of the grey timeout bars in the plot.
 
 - **[F4]**  
-  Recreates the plan similarity analysis outcome shown in Figure 7 of the paper.  
+  Recreates the plan similarity analysis outcome shown in Figure 6 of the paper.  
   Generated from similarity matrices computed for benchmark experiments
   `exp_001`–`exp_007` in both base and refined modes.  
   These matrices are produced during the benchmark runs and collected by
   `paper/reproduce_experiments.sh`.  
-  Outputs: `paper/figures/Fig_7_*.png`.
+  Outputs: `paper/figures/Fig_6_*.png`.
 
 - **[F5]**  
   Recreates the combined outcome comparison shown in Figure 8 of the paper.  
