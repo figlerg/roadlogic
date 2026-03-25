@@ -57,7 +57,7 @@ names_default = {
 def plot_success(ax, x, labels, percents, mode):
     ax.bar(x, percents, width=0.7, color="tab:blue", alpha=0.9)
     ax.set_ylabel(r"\% positive traces")
-    ax.set_ylim(0, max(percents) * 1.25 if percents else 100)
+    ax.set_ylim(0, max(percents) * 1.35 if percents else 100)
     ax.grid(axis="y", linestyle="--", alpha=0.3)
 
     if mode == "success":
@@ -73,11 +73,11 @@ def plot_outcome(ax, x, labels, outcome_triplets, mode):
     bottom = np.zeros(len(labels))
 
     ax.bar(x, pos_vals, 0.7, bottom=bottom,
-           color="#4C72B0", label="Positive")
+           color="#4C72B0", label="Sat")
     bottom += pos_vals
 
     ax.bar(x, cost_vals, 0.7, bottom=bottom,
-           color="#DD8452", label="Non-zero cost")
+           color="#DD8452", label="Unsat")
     bottom += cost_vals
 
     ax.bar(x, tout_vals, 0.7, bottom=bottom,
@@ -118,7 +118,7 @@ def plot_timing(ax, x, labels, df, mode, fig):
 
     total_times = df.sum(axis=1).astype(int)
     max_total = max(total_times) if len(total_times) else 0
-    ax.set_ylim(0, max_total * 1.25)
+    ax.set_ylim(0, max_total * 1.35)
 
     for i, t in enumerate(total_times):
         hrs, rem = divmod(t, 3600)
@@ -147,7 +147,7 @@ def plot_timing(ax, x, labels, df, mode, fig):
     ax.legend(
         h, lab,
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.35),
+        bbox_to_anchor=(0.5, 1.45),
         ncol=len(lab),
         frameon=True,
         handlelength=1.0,
@@ -296,6 +296,12 @@ def main(pattern, names, out, mode):
     if mode in ("combined", "combined_outcome"):
         ax2.set_xticks(x)
         ax2.set_xticklabels(labels, rotation=35, ha="right", fontsize=6.5)
+
+    # if mode == "combined_outcome":
+    #     ax2.legend(loc="upper center",
+    #         bbox_to_anchor=(0.5, 1.3),
+    #         ncol=3, frameon=True, fontsize=6.5)
+
 
     os.makedirs(os.path.dirname(out), exist_ok=True)
     plt.tight_layout(pad=0.6)
