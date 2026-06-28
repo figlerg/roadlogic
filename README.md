@@ -68,7 +68,7 @@ pip install -e .                           # roadlogic itself
 ### Test
 
 ```bash
-python -m planning.Planner plans --osc2_file examples/my_overtake.osc -n 3 -a # run planning engine standalone
+python -m planning.Planner plans --osc2_file tests/overtake.osc -n 3 -a # run planning engine standalone
 bash experiments_src/exp_001/run.sh # run the experiments with their shell script. see shell script for some make examples
 ```
 
