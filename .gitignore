@@ -5,6 +5,9 @@ paper/**/out
 paper/01_model_vis/model_vis_plots/
 paper/figures/
 
+# paper tex, only locally
+docs/paper/
+.claude/PLAN.md
 
 
 .idea/
