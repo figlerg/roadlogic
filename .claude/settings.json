@@ -1,18 +1,49 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(tree:*)",
+      "Bash(pwd)",
+      "Bash(which:*)",
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "ask": [
+      "Edit",
+      "Write",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git stash:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(pip install:*)"
+    ],
     "deny": [
       "Bash(git push:*)",
       "Bash(git reset --hard:*)",
       "Bash(git rebase:*)",
       "Bash(git filter-branch:*)",
-      "Bash(git branch -D:*)"
-    ],
-    "ask": [
-      "Bash(git commit:*)",
-      "Bash(git cherry-pick:*)",
-      "Bash(git merge:*)",
-      "Bash(git checkout:*)",
-      "Bash(rm:*)"
+      "Bash(git branch -D:*)",
+      "Bash(git branch -d:*)"
     ]
   }
 }
