@@ -42,7 +42,13 @@ To reproduce the figures in the paper, just use the Dockerfile. The experiments 
 
 ### Set up locally
 
+#### Prerequisites
+- Ubuntu 22.04.5 LTS (or WSL on Windows)
+- make
+- git
+- pyenv
 
+#### Setup
 ```bash
 git clone https://github.com/figlerg/roadlogic.git
 cd roadlogic
@@ -70,6 +76,44 @@ pip install -e .                           # roadlogic itself
 ```bash
 python -m planning.Planner plans --osc2_file tests/overtake.osc -n 3 -a # run planning engine standalone
 bash experiments_src/exp_001/run.sh # run the experiments with their shell script. see shell script for some make examples
+```
+
+The experiments are carried out like this. Assume there is an experiment folder `EXP` with folders `EXP/in` and `EXP/out`, and a specification `EXP/in/spec.osc`. Then plans, plots and metrics can be generated as follows (see `experiments_src/common.sh` for the full pipeline):
+
+```bash
+N=10                    # number of plans
+STEP_LENGTH=60          # number of discarded plans before selecting the next, has minor impact on model diversity
+
+# actual planning module
+make generate-osc-scenarios \
+    OSC_N="$N" \
+    OSC_FILE="$EXP/in/spec.osc" \
+    OUTPUT_FOLDER="$EXP/out/cr_simulations" \
+    SCENARIOS_FOLDER="$EXP/out" \
+    STEP_LENGTH="$STEP_LENGTH" \
+    RULE_INJECTION="$EXP/in/rule_injection.lp"
+
+# simulate in CommonRoad (no visualization)
+make execute-all-scenarios \
+    SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
+    OUTPUT_FOLDER="$EXP/out/cr_simulations"
+
+# compute metrics for the monitor
+make -j 8 \
+    SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
+    OUTPUT_FOLDER="$EXP/out/cr_simulations" \
+    compute-selected-metrics-for-all-scenarios
+
+# compute monitoring results from the metrics (witnesses satisfaction)
+make generate-summary \
+    SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
+    OUTPUT_FOLDER="$EXP/out/cr_simulations" \
+    OSC_FILE="$EXP/in/spec.osc"
+
+# build a similarity matrix for the generated plans
+python commonroad_extensions/simulation_analysis/similarity.py \
+    --plans-folder "$EXP/out/serialized_models" \
+    --output-folder "$EXP/out/similarity"
 ```
 
 ---
