@@ -52,10 +52,15 @@ class SimulationLogger:
 
         self.config = config
         self.eval_conf = config.evaluation
-        self.scenario = self.config.simulation.name_scenario
+        # self.scenario = self.config.simulation.name_scenario
+
         self.original_planning_problem_id = None
-        log_path = self.config.simulation.log_path
-        self.log_path = log_path if self.scenario not in log_path else log_path.replace(self.scenario, "")
+        
+        # ALESSIO: Why is this necessary ?!
+        # log_path = self.config.simulation.log_path
+        # self.log_path = log_path if self.scenario not in log_path else log_path.replace(self.scenario, "")
+        
+        self.log_path = self.config.simulation.log_path
         self.log_time = self.eval_conf.evaluate_runtime
         self.scenario = self.config.simulation.name_scenario
 
@@ -122,7 +127,7 @@ class SimulationLogger:
                 simulation_config ANY NOT NULL,
                 planner_config TEXT NOT NULL,
                 PRIMARY KEY(scenario)
-            )
+            ) 
         """)
 
         self.con.execute("""
@@ -135,7 +140,7 @@ class SimulationLogger:
                 message TEXT,
                 agent_success TEXT NOT NULL,
                 PRIMARY KEY(scenario, agent_id)
-            )
+            ) 
         """)
 
         if self.eval_conf.evaluate_simulation:
