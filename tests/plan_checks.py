@@ -431,6 +431,14 @@ def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
             for con in sorted(gamma, key=str):
                 printer(f"        {type(con).__name__:<20} {con}")
 
+        printer("\ninvariants (keep constraints, held over a window rather than at an edge):")
+        if not graph.invariants:
+            printer("  (none)")
+        for inv in sorted(graph.invariants, key=str):
+            window = "whole scenario" if inv.scope is None else f"lifetime of {inv.scope}"
+            printer(f"  {type(inv).__name__:<20} {inv}")
+            printer(f"  {'':<20} window: {window}, strength: {inv.strength}")
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         plans = planner.plans(n=n, external_rules=rules, visualize=False, imax=imax)

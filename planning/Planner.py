@@ -106,6 +106,15 @@ class Planner:
                       'If one_of operator is used, this constrains the search.'
                       'Finding all models may be addressed in a future release.')
 
+        if G.invariants:
+            # Stage 1 of the keep feature parses and represents invariants but does not emit
+            # them. Raising here rather than ignoring them keeps a keep from silently having no
+            # effect, which would make a test pass while testing nothing.
+            listed = "\n  ".join(str(i) for i in G.invariants)
+            raise NotImplementedError(
+                f"keep constraints are parsed but not encoded yet:\n  {listed}"
+            )
+
         self.create_asp_instance(actor_ids, aut_path)
 
         this_dir = os.path.dirname(__file__)

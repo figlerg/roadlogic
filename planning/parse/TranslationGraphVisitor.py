@@ -5,15 +5,23 @@ import warnings
 from planning.intermediate_structure.Actor import Actor
 from planning.intermediate_structure.SamplingHint import SamplingHint
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
-from planning.intermediate_structure.Constraint import RelativeConstraint, AbsoluteConstraint, Relation, Modifier
+from planning.intermediate_structure.Constraint import (RelativeConstraint, AbsoluteConstraint,
+                                                       Relation, Modifier, Invariant,
+                                                       StabilityInvariant)
 from planning.parse.generated.openscenario2Visitor import openscenario2Visitor
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
 
 class TranslationGraphVisitor(openscenario2Visitor):
 
+    # Field types that declare a plain scenario parameter rather than an actor. A parameter is
+    # only a name: it carries no graph member, but a keep body may refer to it to say that a
+    # quantity is constant without saying what it equals.
+    PARAMETER_TYPES = {"int", "uint", "float", "bool", "string", "length", "speed", "time"}
+
     def __init__(self):
         self.__x = None
+        self._parameters = set()
 
     # api
     def load(self, ctx):
@@ -36,6 +44,7 @@ class TranslationGraphVisitor(openscenario2Visitor):
         behavior_name = ctx.qualified_behavior_name()
 
         out = TranslationGraph()
+        scenario_invariants = []
 
         for child in ctx.children:
             # assert isinstance(child, (openscenario2Parser.Scenario_member_declContext, openscenario2Parser.Behavior_specificationContext, antlr4.tree.Tree.TerminalNodeImpl)), 'NotImplementedError: Only actor/variable definitions and composition of behaviors is supported right now. Problem rule is {}.'.format(type(child))
@@ -48,13 +57,19 @@ class TranslationGraphVisitor(openscenario2Visitor):
                         out.actors.append(member)
                     if isinstance(member, SamplingHint):
                         out.sampling_hints.append(member)
+                    if isinstance(member, Invariant):
+                        # A keep declared as a scenario member holds for the whole scenario,
+                        # so scope stays None. See 7.3.11.2.
+                        scenario_invariants.append(member)
 
             if isinstance(child, openscenario2Parser.Behavior_specificationContext):
                 behavior_graph: TranslationGraph = self.visit(child)
                 out.graph = behavior_graph.graph
                 out.initial = behavior_graph.initial
                 out.final = behavior_graph.final
+                out.invariants = list(behavior_graph.invariants)
 
+        out.invariants = list(out.invariants) + scenario_invariants
         return out
 
     def visitField_declaration(self, ctx: openscenario2Parser.Field_declarationContext):
@@ -75,11 +90,22 @@ class TranslationGraphVisitor(openscenario2Visitor):
                 path = SamplingHint(type=field_type, properties={'name': name, 'type': field_type})
                 out.append(path)
 
+        elif field_type in self.PARAMETER_TYPES:
+            # A plain parameter. Recorded by name so a keep body can refer to it, see
+            # StabilityInvariant. Nothing reaches the graph or the encoding.
+            self._parameters.update(names)
+            out = []
+
         else:
             raise NotImplementedError(f'The {field_type} variable type translation is not implemented yet!')
 
 
         return out
+
+    def visitType_declarator(self, ctx: openscenario2Parser.Type_declaratorContext):
+        # primitive_type is a bare token, so the generic visitor returns None for 'int' and
+        # friends while working for a declared type name like 'car'. Read the text either way.
+        return ctx.getText()
 
     def visitParameter_declaration(self, ctx: openscenario2Parser.Parameter_declarationContext):
         names = []
@@ -157,12 +183,18 @@ class TranslationGraphVisitor(openscenario2Visitor):
         # otherwise use empty sets
         bwd_ctx = ctx.behavior_with_declaration()
         if bwd_ctx is None:
-            precondition, postcondition = set(), set()
+            precondition, postcondition, invariants = set(), set(), set()
         else:
-            precondition, postcondition = self.visit(bwd_ctx)
+            precondition, postcondition, invariants = self.visit(bwd_ctx)
 
         atomic_graph.add_transition(init_node, behavior_node, precondition)
         atomic_graph.add_transition(behavior_node, fin_node, postcondition)
+
+        # A keep declared here holds for the lifetime of this invocation, so it is scoped to it
+        # rather than to the scenario. See 7.3.11.2.
+        for invariant in invariants:
+            invariant.scope = behavior_node
+        atomic_graph.invariants = sorted(invariants, key=str)
 
         # Replace 'self' by actual actor id in all constraints
         atomic_graph.substitute_actor("self", actor_id)
@@ -174,9 +206,18 @@ class TranslationGraphVisitor(openscenario2Visitor):
         # This can appear in a composition, and in a behavior_invocation.
         precondition = set()
         postcondition = set()
+        invariants = set()
 
         for child in ctx.behavior_with_member():
-            pre_or_post, modifier_constraints = self.visit(child)
+            result = self.visit(child)
+
+            # A keep in a with block yields invariants rather than a boundary constraint. They
+            # hold for the lifetime of the invocation instead of at one of its ends.
+            if isinstance(result, set):
+                invariants.update(result)
+                continue
+
+            pre_or_post, modifier_constraints = result
 
             if pre_or_post == 'start':
                 precondition.update(modifier_constraints)
@@ -193,7 +234,7 @@ class TranslationGraphVisitor(openscenario2Visitor):
             else:
                 raise NotImplementedError(f"Unexpected modifier values in: {ctx.getText()}")
 
-        return precondition, postcondition
+        return precondition, postcondition, invariants
 
     def visitBehavior_with_member(self, ctx: openscenario2Parser.Behavior_with_memberContext):
         if ctx.constraint_declaration() is not None:
@@ -202,10 +243,174 @@ class TranslationGraphVisitor(openscenario2Visitor):
             raise NotImplementedError(f"until directives are not supported yet: {ctx.getText()}")
         return self.visit(ctx.modifier_application())
 
+    # Fields a keep body may constrain, and the modifier each maps to. There is no scalar
+    # position field in the domain model, so position is deliberately absent: relational
+    # distance goes through space_gap instead.
+    KEEP_FIELDS = {
+        "lane": Modifier.LANE,
+        "speed": Modifier.SPEED,
+    }
+
+    KEEP_RELATIONS = {
+        "==": Relation.EQ,
+        "!=": Relation.INEQ,
+        "<": Relation.L,
+        "<=": Relation.LEQ,
+        ">": Relation.G,
+        ">=": Relation.GEQ,
+    }
+
     def visitKeep_constraint_declaration(self, ctx: openscenario2Parser.Keep_constraint_declarationContext):
-        # Placeholder for the keep feature. Raising here keeps invariants from being
-        # silently dropped while the encoding is still being built out.
-        raise NotImplementedError(f"keep constraints are not supported yet: keep({ctx.constraint_expression().getText()})")
+        qualifier_ctx = ctx.constraint_qualifier()
+        strength = qualifier_ctx.getText() if qualifier_ctx is not None else "hard"
+
+        if strength == "default":
+            raise NotImplementedError(
+                "keep(default ...) is not supported yet. The override rules of 7.3.11.3 are "
+                "deferred, only hard constraints are implemented. An unqualified keep is "
+                "already hard."
+            )
+
+        expr_ctx = ctx.constraint_expression()
+        return {inv for inv in self._build_keep_invariants(expr_ctx, strength)}
+
+    # ---------------- keep expression parsing ----------------
+
+    def _find_relation(self, node):
+        """Descend to the single comparison in a keep body.
+
+        A supported body is one comparison. Boolean structure such as and, or or => parses but
+        is not built, so this reports what it found rather than silently taking a branch.
+        """
+        found = []
+
+        def walk(n):
+            if isinstance(n, openscenario2Parser.RelationContext) and n.getChildCount() == 3:
+                found.append(n)
+                return
+            for i in range(n.getChildCount()):
+                child = n.getChild(i)
+                if hasattr(child, "getChildCount"):
+                    walk(child)
+
+        walk(node)
+
+        if not found:
+            raise NotImplementedError(
+                f"The keep body '{node.getText()}' has no comparison. The body must be a "
+                "boolean expression, for example keep(car1.lane == 2). A modifier application "
+                "such as keep(lane(0)) is not a valid body."
+            )
+        if len(found) > 1:
+            raise NotImplementedError(
+                f"The keep body '{node.getText()}' has more than one comparison. Combining "
+                "them with and, or or => is not supported yet. Write one keep per comparison."
+            )
+        return found[0]
+
+    def _resolve_field_access(self, node):
+        """Read `<actor>.<field>` out of the left-hand side. Returns (actor, field)."""
+        accesses = []
+
+        def walk(n):
+            if isinstance(n, openscenario2Parser.Field_access_peContext):
+                accesses.append(n)
+            for i in range(n.getChildCount()):
+                child = n.getChild(i)
+                if hasattr(child, "getChildCount"):
+                    walk(child)
+
+        walk(node)
+
+        if len(accesses) != 1:
+            raise NotImplementedError(
+                f"Expected exactly one <actor>.<field> on the left of a keep comparison, found "
+                f"{len(accesses)} in '{node.getText()}'."
+            )
+
+        access = accesses[0]
+        actor = access.postfix_exp().getText()
+        field = access.field_name().getText()
+        return actor, field
+
+    def _build_keep_invariants(self, expr_ctx, strength):
+        """Turn one keep body into a set of Invariant objects."""
+        relation = self._find_relation(expr_ctx)
+        op = relation.relational_op().getText()
+
+        # A method call on the left is the relational form, keep(car2.space_gap(car1, ...) ...).
+        # Report that rather than letting the field check below call space_gap an unknown field.
+        calls = []
+
+        def find_calls(n):
+            if isinstance(n, openscenario2Parser.Function_application_peContext):
+                calls.append(n)
+            for i in range(n.getChildCount()):
+                child = n.getChild(i)
+                if hasattr(child, "getChildCount"):
+                    find_calls(child)
+
+        find_calls(relation.relation())
+        if calls:
+            name = calls[0].postfix_exp().getText()
+            raise NotImplementedError(
+                f"The relational form '{name}(...)' in a keep body is not encoded yet. The "
+                "domain model declares space_gap, time_gap, space_headway, time_headway, "
+                "object_distance, road_distance and time_to_collision, of which space_gap is "
+                "the planned initial subset. See docs/keep-spec.md section 3."
+            )
+
+        actor, field = self._resolve_field_access(relation.relation())
+        rhs = self.visit(relation.sum_exp())
+
+        if field not in self.KEEP_FIELDS:
+            supported = ", ".join(sorted(self.KEEP_FIELDS))
+            raise NotImplementedError(
+                f"'{field}' cannot be constrained by keep. Supported fields are {supported}. "
+                f"Relational quantities such as a distance go through a method, for example "
+                f"keep(car2.space_gap(car1, longitudinal) in [5m..100m])."
+            )
+        modifier = self.KEEP_FIELDS[field]
+
+        # ---- constant but value free: the right-hand side names a parameter ----
+        if isinstance(rhs, str):
+            if op != "==":
+                raise NotImplementedError(
+                    f"A keep against the parameter '{rhs}' must use ==, got '{op}'. Only "
+                    "equality expresses that the quantity is constant."
+                )
+            if rhs not in self._parameters:
+                raise NotImplementedError(
+                    f"'{rhs}' on the right of a keep is not a declared parameter. Declare it as "
+                    f"a scenario member, for example '{rhs}: int'. Known parameters: "
+                    f"{sorted(self._parameters) or 'none'}."
+                )
+            return {StabilityInvariant(actor, modifier, parameter=rhs, strength=strength)}
+
+        # ---- range: keep(x in [a..b]) ----
+        if op == "in":
+            if not isinstance(rhs, (list, tuple)) or len(rhs) != 2:
+                raise NotImplementedError(
+                    f"The right-hand side of 'in' must be a range such as [5mps..10mps], got "
+                    f"'{relation.sum_exp().getText()}'."
+                )
+            low, high = sorted(rhs)
+            return {
+                Invariant(AbsoluteConstraint(actor, modifier, Relation.GEQ, low), strength),
+                Invariant(AbsoluteConstraint(actor, modifier, Relation.LEQ, high), strength),
+            }
+
+        if isinstance(rhs, (list, tuple)):
+            raise NotImplementedError(
+                f"A range on the right of '{op}' is not meaningful. Use 'in' for ranges."
+            )
+
+        # ---- plain comparison ----
+        if op not in self.KEEP_RELATIONS:
+            raise NotImplementedError(f"Unsupported relational operator '{op}' in a keep body.")
+
+        return {Invariant(AbsoluteConstraint(actor, modifier, self.KEEP_RELATIONS[op], rhs),
+                          strength)}
 
     def visitRemove_default_declaration(self, ctx: openscenario2Parser.Remove_default_declarationContext):
         raise NotImplementedError(f"remove_default is not supported yet: {ctx.getText()}")

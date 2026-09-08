@@ -782,3 +782,121 @@ if __name__ == '__main__':
     # print(test2)
     #
     # print(test == test2)
+
+
+class Invariant:
+    """A `keep` constraint: it must hold at every step inside its window.
+
+    This is deliberately a separate kind from `AbsoluteConstraint` and `RelativeConstraint`,
+    which are point constraints. Those are folded into a single `goal_i(t)` rule and are
+    required to hold at one solver-chosen step. An invariant instead becomes a standalone
+    integrity constraint, so it needs its own type rather than a flag. See section 5 of
+    docs/keep-spec.md.
+
+    The payload is an ordinary constraint, so the relational case reuses everything
+    `RelativeConstraint` already knows about emitting itself. `Invariant` adds the window and
+    the emission site.
+
+    Attributes
+    ----------
+    constraint : BaseConstraint
+        What must hold. Absolute or relative.
+    strength : str
+        'hard' or 'default'. Only 'hard' is supported. An unqualified keep is hard per 7.3.11.3.
+    scope : object
+        None means the whole scenario. Anything else identifies the behavior invocation whose
+        lifetime bounds the window. Phase scoping is not implemented, see DECIDE 3 in the spec,
+        so this is currently recorded but not acted on.
+    """
+
+    def __init__(self, constraint: 'BaseConstraint', strength: str = 'hard', scope=None):
+        if strength not in ('hard', 'default'):
+            raise ValueError(f"Unknown constraint strength '{strength}'.")
+        self.constraint = constraint
+        self.strength = strength
+        self.scope = scope
+
+    @property
+    def actors(self):
+        """Every actor this invariant talks about."""
+        c = self.constraint
+        if isinstance(c, RelativeConstraint):
+            return {c.actor_1, c.actor_2}
+        return {c.actor}
+
+    @property
+    def modifier(self):
+        return self.constraint.modifier
+
+    def substitute_actor(self, original_name, new_name):
+        # Constraints carry their actor as a plain attribute rather than offering a method,
+        # matching how TranslationGraph.substitute_actor rewrites edge constraints.
+        c = self.constraint
+        if isinstance(c, RelativeConstraint):
+            if c.actor_1 == original_name:
+                c.actor_1 = new_name
+            if c.actor_2 == original_name:
+                c.actor_2 = new_name
+        elif isinstance(c, AbsoluteConstraint):
+            if c.actor == original_name:
+                c.actor = new_name
+
+    def __str__(self):
+        where = 'scenario' if self.scope is None else str(self.scope)
+        qualifier = '' if self.strength == 'hard' else f'{self.strength} '
+        return f"keep[{where}]({qualifier}{self.constraint})"
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, other):
+        return isinstance(other, Invariant) and str(self) == str(other)
+
+    def __hash__(self):
+        return hash(str(self))
+
+
+class StabilityInvariant(Invariant):
+    """`keep(actor.field == some_parameter)`: the quantity never changes, value unspecified.
+
+    The parameter is a plain scenario parameter, not a keyword. Because a parameter holds one
+    value for the lifetime of its instance, equating a quantity to it says the quantity is
+    constant without saying what it equals. This is how the domain model defines `keep_lane()`,
+    as `lane = actor.lane` plus `keep(actor.lane == lane)`.
+
+    The parameter never reaches ASP. The meaning is compiled directly as a step-to-step
+    stability constraint, which is why this cannot be expressed as an ordinary constraint with
+    a value and needs its own type.
+    """
+
+    def __init__(self, actor: str, modifier: 'Modifier', parameter: str = None,
+                 strength: str = 'hard', scope=None):
+        self._actor = actor
+        self._modifier = modifier
+        self.parameter = parameter
+        if strength not in ('hard', 'default'):
+            raise ValueError(f"Unknown constraint strength '{strength}'.")
+        self.constraint = None
+        self.strength = strength
+        self.scope = scope
+
+    @property
+    def actors(self):
+        return {self._actor}
+
+    @property
+    def actor(self):
+        return self._actor
+
+    @property
+    def modifier(self):
+        return self._modifier
+
+    def substitute_actor(self, original_name, new_name):
+        if self._actor == original_name:
+            self._actor = new_name
+
+    def __str__(self):
+        where = 'scenario' if self.scope is None else str(self.scope)
+        param = self.parameter or '<free>'
+        return f"keep[{where}]({self._actor}.{self._modifier} == {param}, constant)"

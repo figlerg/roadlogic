@@ -24,6 +24,10 @@ class TranslationGraph(object):
         self.__graph = nx.DiGraph()
         self.__actors = []
         self.__sampling_hints = []
+        # keep constraints. Unlike edge constraints these are not tied to one transition: they
+        # hold over a window. Kept beside the graph rather than on edges so composition does not
+        # have to decide which edge an invariant belongs to.
+        self.__invariants = []
 
         self.__initial = None
         self.__final = None
@@ -43,6 +47,14 @@ class TranslationGraph(object):
     @actors.setter
     def actors(self, value):
         self.__actors = value
+
+    @property
+    def invariants(self):
+        return self.__invariants
+
+    @invariants.setter
+    def invariants(self, value):
+        self.__invariants = value
 
     @property
     def sampling_hints(self):
@@ -126,6 +138,7 @@ class TranslationGraph(object):
         locations = list(itertools.product(locations_1, locations_2))
 
         out = TranslationGraph()
+        out.invariants = list(self.invariants) + list(other.invariants)
         out.add_node('init', initial=True)
         out.add_node('fin', final=True)
 
@@ -210,6 +223,7 @@ class TranslationGraph(object):
         serial_graph: nx.DiGraph = nx.compose(g1, g2)
         out = TranslationGraph()
         out.graph = serial_graph
+        out.invariants = list(self.invariants) + list(other.invariants)
 
         for v1, v2 in edge_constraints.keys():
             out.add_transition(v1, v2, edge_constraints[(v1, v2)])
@@ -245,6 +259,7 @@ class TranslationGraph(object):
 
         out = TranslationGraph()
         out.graph = nx.compose(g1, g2)  # This is only the real nodes, not the dummies
+        out.invariants = list(self.invariants) + list(other.invariants)
 
         out.add_node('init', initial=True)
         out.add_node('fin', final=True)
@@ -354,6 +369,10 @@ class TranslationGraph(object):
                 elif isinstance(con,AbsoluteConstraint):
                     if con.actor == original_name:
                         con.actor=new_name
+
+        # keep constraints live beside the graph, so they need the same substitution
+        for invariant in self.invariants:
+            invariant.substitute_actor(original_name, new_name)
 
     def prune(self):
         # The parallel composition gives us unreachable nodes. These can be safely removed.
