@@ -1,0 +1,24 @@
+# Negative test, must be UNSAT. This is the case 7.6.2.3 singles out as "less obvious":
+# neither keep is contradictory on its own and neither is visible from the other's scope.
+# The conflict only exists because both branches are active on car1 at the same time.
+# This is the headline case for the inconsistency claim, since no purely local check finds it.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive() with:
+            keep(car1.lane == 2)
+
+        c0_conflicting: car1.drive() with:
+            keep(car1.lane == 1)
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)

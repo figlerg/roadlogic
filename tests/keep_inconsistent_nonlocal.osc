@@ -1,0 +1,24 @@
+# Negative test, must be UNSAT. This is 7.6.2.3 case 2, non-local unsatisfiability through
+# interplay. No single constraint here is contradictory and no two of them share a scope.
+# The specification is unsatisfiable only because of how they interact over time:
+# ego must stay at least 40m behind car1, car1 is required to move quickly, and ego is
+# capped below the speed it would need to keep station. Following the leader would push ego
+# past its own speed limit, so no trace satisfies all three.
+# This is the case the standard describes and does not mechanise. It only becomes decidable
+# once keep is read over traces, see section 2 of docs/keep-spec.md.
+
+scenario follow:
+    car1: car
+    ego: car
+
+    keep(car1.speed > 8mps)
+    keep(ego.speed < 4mps)
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: ego.drive() with:
+            lane(same_as:car1, at:start)
+            position([10m..20m], behind:car1, at:start)
+            position([5m..40m], behind:car1)

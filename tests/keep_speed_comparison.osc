@@ -1,0 +1,23 @@
+# Single-sided comparison on a physical quantity, the third supported form. Pairs with
+# keep_inconsistent_speed.osc as the satisfiable half of the standard's 7.6.2.3 example shape.
+# The standard writes this example with kph. We accept only m, s and mps, since the encoding
+# is integer valued and does no unit conversion, so the value is given in mps here.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    keep(car1.speed > 3mps)
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)

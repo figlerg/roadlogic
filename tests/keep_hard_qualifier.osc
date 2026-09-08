@@ -1,0 +1,22 @@
+# Explicit hard qualifier. Semantically identical to keep_scenario_scope.osc, since an
+# unqualified keep is hard by default per 7.3.11.3. This test exists to check that the
+# optional constraint_qualifier is parsed and does not change the outcome.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    keep(hard car1.lane == 2)
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)

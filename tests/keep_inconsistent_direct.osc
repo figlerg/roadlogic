@@ -1,0 +1,23 @@
+# Negative test, must be UNSAT. Direct contradiction on one actor, the first rejection case
+# of 7.6.2.3. Two hard keeps demand different constant lanes for car1 over the same window,
+# so the set of accepted traces is empty and the specification is inconsistent per 7.6.1.
+# This is the case our ASP encoding is supposed to decide.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    keep(car1.lane == 2)
+    keep(car1.lane == 1)
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)

@@ -1,0 +1,22 @@
+# Range invariant on a physical quantity, exercising the "in" relational operator and the
+# mandatory-unit rule for physical literals (7.3.4). Writing [60..100] without units is invalid.
+# Units are mps, one segment per step, so the literals are the encoding values directly.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    keep(car1.speed in [5mps..10mps])
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)

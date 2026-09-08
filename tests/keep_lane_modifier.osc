@@ -1,0 +1,22 @@
+# Surface modifier form. Per 7.3.12.4.1 modifier arguments desugar to constraints, and the
+# domain model defines keep_lane() as "lane = actor.lane" plus "keep(actor.lane == lane)".
+# Semantically identical to keep_lane_free.osc. This test exists to check that the desugaring
+# pass produces the same internal representation as the hand-written keep.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive() with:
+            keep_lane()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)

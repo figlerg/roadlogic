@@ -1,0 +1,29 @@
+# Relational invariant, canonical form: ego stays between 5m and 100m behind car1 for the whole
+# window, written with the domain model's own distance method rather than a modifier.
+# physical_object (8.7) declares
+#   def space_gap(reference: physical_object, direction: road_distance_direction) -> length
+# so this is standard syntax, not invented. It parses with the current grammar via
+# function_application_pe.
+# Must produce the same plan as keep_relational_modifier.osc.
+#
+# TODO the direction argument is a placeholder. The member values of road_distance_direction
+# are not on the coordinate-systems or standard-library pages of the 2.2.0 spec and need to be
+# read out of the domain model library ZIP before this spec is final.
+
+scenario follow:
+    car1: car
+    ego: car
+
+    keep(ego.space_gap(car1, same_direction) in [5m..100m])
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                lane(same_as:car1, at:end)

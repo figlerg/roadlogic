@@ -1,0 +1,23 @@
+# Relational invariant, modifier sugar form: ego stays between 5m and 100m behind car1 for the
+# whole window. The existing position modifier with the at: qualifier omitted. With at: present
+# the constraint is a point constraint at that phase boundary, which is unchanged. Without at:
+# it holds at every step. Contrast the two forms inside A below.
+# Must produce the same plan as keep_relational_distance.osc, which uses the canonical
+# space_gap form. Both desugar to the same Invariant.
+
+scenario follow:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                position([10m..20m], behind:car1, at:start)
+                position([5m..100m], behind:car1)
+
+            B: ego.drive() with:
+                lane(same_as:car1, at:end)
