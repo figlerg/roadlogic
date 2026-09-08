@@ -182,6 +182,12 @@ class TranslationGraphVisitor(openscenario2Visitor):
                 precondition.update(modifier_constraints)
             elif pre_or_post == 'end':
                 postcondition.update(modifier_constraints)
+            elif pre_or_post == 'all':
+                # at: all is the invariant form, holding over the whole window rather than at one
+                # phase boundary. See docs/keep-spec.md section 3.
+                raise NotImplementedError(
+                    "A modifier with 'at: all' is the invariant form, which is not supported yet."
+                )
             elif not pre_or_post:
                 pass  # In this case it is an ignored modifier, and we do nothing.
             else:
@@ -459,17 +465,35 @@ class TranslationGraphVisitor(openscenario2Visitor):
             speed([5mps..10mps], at: ...)
             speed(speed_range: [5mps..10mps], at: ...)
 
-        The relative forms faster_than, slower_than and same_as are declared by the standard
-        but not built yet.
+        And the relative forms, which compare Vel_lon of two actors at the same step:
+
+            speed(faster_than: car2, at: ...)
+            speed(slower_than: car2, at: ...)
+            speed(same_as: car2, at: ...)
         """
         relative_keys = {"faster_than", "slower_than", "same_as"}
         present_rel = relative_keys.intersection(arg_list.keys())
 
-        if present_rel:
-            raise NotImplementedError(
-                f"Relative speed ({', '.join(sorted(present_rel))}) is not supported yet. "
-                "Only absolute speed values and ranges are implemented."
+        if len(present_rel) > 1:
+            raise AssertionError(
+                f"'speed' modifier may have at most one of {relative_keys}, got {present_rel}."
             )
+
+        if present_rel:
+            key = next(iter(present_rel))
+            other = arg_list[key]
+
+            match key:
+                case "faster_than":
+                    con = RelativeConstraint("self", other, Modifier.SPEED, Relation.G)
+                case "slower_than":
+                    con = RelativeConstraint("self", other, Modifier.SPEED, Relation.L)
+                case "same_as":
+                    con = RelativeConstraint("self", other, Modifier.SPEED, Relation.EQ)
+                case _:
+                    raise NotImplementedError(f"Unexpected speed relation key: {key}")
+
+            return {con}
 
         for unsupported in ("direction", "factor"):
             if unsupported in arg_list:

@@ -31,7 +31,7 @@ from plan_checks import (
     speed_at_start,
     speed_between,
     speed_equals,
-    speed_faster_than,
+    faster_at_goal,
 )
 
 CASES = [
@@ -58,8 +58,8 @@ CASES = [
     ),
     Case(
         "speed_relative.osc",
-        "relative speed via faster_than, maps to RelativeConstraint with Modifier.SPEED",
-        invariant=speed_faster_than("ego", "car1"),
+        "relative speed via faster_than at the phase goal, a RelativeConstraint with Modifier.SPEED",
+        invariant=faster_at_goal("ego", "car1", 1),
     ),
 ]
 

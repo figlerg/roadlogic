@@ -232,19 +232,18 @@ def speed_at_start(actor, value):
     return check
 
 
-def speed_at_goal(actor, goal_index, value):
-    """Speed when the given goal is met.
+def at_goal(goal_index, per_step, description):
+    """Lift a per-step predicate to a phase goal time.
 
     An `at: end` modifier is a point constraint at a phase goal, not at the last step of the
     plan: the goal rule requires t > T_last + 1, so the trace deliberately runs past it. The
-    goal time therefore has to be read out of the plan rather than assumed to be the end.
-    Satisfied if any witness has the right speed at its goal time, matching the existential
-    reading of the goal assertion.
+    goal time therefore has to be read out of the plan rather than assumed.
+
+    `per_step(model, t)` returns None if the property holds at step t, else a message. The
+    result holds if any witness satisfies it at its goal time, which is the existential reading
+    of the goal assertion.
     """
     def check(model):
-        seq = speeds_of(model, actor)
-        if not seq:
-            return f"no states for actor {actor}"
         witnesses = goal_witnesses(model)
         if not witnesses:
             return "plan carries no goal atom, cannot locate the goal time"
@@ -254,15 +253,43 @@ def speed_at_goal(actor, goal_index, value):
             if goal_index > len(w):
                 return f"plan has {len(w)} goal times, asked for T{goal_index}"
             t = w[goal_index - 1]
-            if t < len(seq):
-                if seq[t] == value:
-                    return None
-                seen.append((w, t, seq[t]))
-        return (f"no witness has {actor}.speed == {value} at T{goal_index}. "
-                f"Saw {seen}, full trace {seq}")
+            msg = per_step(model, t)
+            if msg is None:
+                return None
+            seen.append(f"T{goal_index}={t}: {msg}")
+        return f"no witness satisfies it. " + "; ".join(seen)
 
-    check.description = f"{actor}.speed == {value} at goal T{goal_index}"
+    check.description = f"{description} at goal T{goal_index}"
     return check
+
+
+def speed_at_goal(actor, goal_index, value):
+    def per_step(model, t):
+        seq = speeds_of(model, actor)
+        if not seq:
+            return f"no states for actor {actor}"
+        if t >= len(seq):
+            return f"goal time {t} is past the trace {seq}"
+        if seq[t] != value:
+            return f"{actor}.speed is {seq[t]}, expected {value}, full trace {seq}"
+        return None
+
+    return at_goal(goal_index, per_step, f"{actor}.speed == {value}")
+
+
+def faster_at_goal(fast, slow, goal_index):
+    def per_step(model, t):
+        a, b = speeds_of(model, fast), speeds_of(model, slow)
+        if not a or not b:
+            missing = [x for x, seq in ((fast, a), (slow, b)) if not seq]
+            return f"no states for actor(s) {missing}"
+        if t >= len(a) or t >= len(b):
+            return f"goal time {t} is past a trace"
+        if a[t] <= b[t]:
+            return f"{fast} is {a[t]}, {slow} is {b[t]}, not faster"
+        return None
+
+    return at_goal(goal_index, per_step, f"{fast}.speed > {slow}.speed")
 
 
 def speed_faster_than(fast, slow):

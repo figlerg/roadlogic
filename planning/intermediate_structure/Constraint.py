@@ -623,6 +623,20 @@ class RelativeConstraint(BaseConstraint):
             else:
                 raise NotImplementedError
 
+        elif self._modifier == Modifier.SPEED:
+            # speed(faster_than: other) and friends. Compares Vel_lon of the two actors at the
+            # same step, so it needs both velocity variables bound in the surrounding rule.
+            if self._relation == Relation.G:
+                goal_atoms.append(f"V{i1} > V{i2}")
+            elif self._relation == Relation.L:
+                goal_atoms.append(f"V{i1} < V{i2}")
+            elif self._relation == Relation.EQ:
+                goal_atoms.append(f"V{i1} = V{i2}")
+            else:
+                raise NotImplementedError(
+                    f"Unexpected relation in RelativeConstraint (speed): {self._relation}"
+                )
+
         elif self._modifier == Modifier.POSITION:
             partner = self._interval_partner
             cs = [self._c, partner._c]

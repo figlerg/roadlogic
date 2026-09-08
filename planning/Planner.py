@@ -165,6 +165,9 @@ class Planner:
         # dyn term instead of the hardcoded 1, and every reference to that init must match.
         speed_actors = {c.actor for c in gamma0
                         if isinstance(c, AbsoluteConstraint) and c.modifier == Modifier.SPEED}
+        speed_actors |= {a for c in gamma0
+                         if isinstance(c, RelativeConstraint) and c.modifier == Modifier.SPEED
+                         for a in (c.actor_1, c.actor_2)}
 
         def dyn_term(actor):
             """dyn(...) for an actor's init atom, plus the domain atom its variable needs."""
@@ -342,6 +345,9 @@ class Planner:
             # constraints are generated exactly as before.
             edge_speed_actors = {c.actor for c in gamma
                                  if isinstance(c, AbsoluteConstraint) and c.modifier == Modifier.SPEED}
+            edge_speed_actors |= {a for c in gamma
+                                  if isinstance(c, RelativeConstraint) and c.modifier == Modifier.SPEED
+                                  for a in (c.actor_1, c.actor_2)}
 
             idx = {}
             for j, actor in enumerate(edge_actor_ids):
