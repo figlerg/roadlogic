@@ -8,6 +8,5 @@
 scenario cruise_range:
     ego: car
 
-    do serial:
-        A: ego.drive() with:
-            speed([5mps..10mps], at: all)
+    do ego.drive() with:
+        speed([5mps..10mps], at: all)

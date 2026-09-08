@@ -155,7 +155,22 @@ class Planner:
         gamma0 = G.edges[edge0]['object']
 
         # --- decide mode: legacy (relative-only) vs. absolute-aware ---
-        has_absolute = any(isinstance(c, AbsoluteConstraint) for c in gamma0)
+        # Only placement constraints decide this. A speed constraint says nothing about where an
+        # actor starts, so counting it here would drop the legacy anchor without replacing it and
+        # leave the actor ungroundable.
+        has_absolute = any(isinstance(c, AbsoluteConstraint) and c.modifier != Modifier.SPEED
+                           for c in gamma0)
+
+        # Actors whose initial velocity is constrained. Their init rule needs a variable in the
+        # dyn term instead of the hardcoded 1, and every reference to that init must match.
+        speed_actors = {c.actor for c in gamma0
+                        if isinstance(c, AbsoluteConstraint) and c.modifier == Modifier.SPEED}
+
+        def dyn_term(actor):
+            """dyn(...) for an actor's init atom, plus the domain atom its variable needs."""
+            if actor in speed_actors:
+                return f"dyn(V{idx[actor]},0)", f"velocity_lon(V{idx[actor]})"
+            return "dyn(1,0)", None
 
         idx = dict()
 
@@ -173,9 +188,24 @@ class Planner:
         else:
             placement=2
             # legacy mode: ego is anchor at (0,placement) -> lane "placement" as default
-            init_rules = [f'init(state(ego,loc(0,{placement}),dyn(1,0))).\n']
-            grounded = {'ego'}
             idx['ego'] = placement
+            if 'ego' in speed_actors:
+                # The anchor is still fixed in place, but its initial velocity is chosen by the
+                # constraints rather than pinned to 1.
+                abs_speed = ', '.join(sorted(
+                    atom
+                    for c in gamma0
+                    if isinstance(c, AbsoluteConstraint) and c.modifier == Modifier.SPEED
+                    and c.actor == 'ego'
+                    for atom in c.asp_goal_format(idx)
+                ))
+                init_rules = [
+                    f"1 {{ init(state(ego,loc(0,{placement}),dyn(V{placement},0))) : "
+                    f"velocity_lon(V{placement}), {abs_speed} }} 1.\n"
+                ]
+            else:
+                init_rules = [f'init(state(ego,loc(0,{placement}),dyn(1,0))).\n']
+            grounded = {'ego'}
 
         remaining = set(actor_ids) - grounded
         remaining = sorted(remaining)
@@ -220,10 +250,14 @@ class Planner:
                     for c in cons_abs:
                         subconstraints_strs.update(c.asp_goal_format(idx))
 
+                    dyn, vel_atom = dyn_term(a)
+                    if vel_atom:
+                        subconstraints_strs.add(vel_atom)
+
                     subconstraints_str = ', '.join(sorted(subconstraints_strs)) if subconstraints_strs else 'true'
 
                     rule = (
-                        f"1 {{ init(state({a}, loc(S{idx[a]}, L{idx[a]}), dyn(1,0))) : "
+                        f"1 {{ init(state({a}, loc(S{idx[a]}, L{idx[a]}), {dyn})) : "
                         f"segment(S{idx[a]}),lane(L{idx[a]}), {subconstraints_str} }} 1.\n"
                     )
 
@@ -255,12 +289,17 @@ class Planner:
                         for c_abs in abs_constraints.get(a1, set()):
                             subconstraints_strs.update(c_abs.asp_goal_format(idx))
 
+                        dyn1, vel_atom1 = dyn_term(a1)
+                        dyn2, _ = dyn_term(a2)
+                        if vel_atom1:
+                            subconstraints_strs.add(vel_atom1)
+
                         subconstraints_str = ', '.join(sorted(subconstraints_strs))
 
                         rule = (
-                            f"1 {{ init(state({a1}, loc(S{idx[a1]}, L{idx[a1]}), dyn(1,0))) : "
+                            f"1 {{ init(state({a1}, loc(S{idx[a1]}, L{idx[a1]}), {dyn1})) : "
                             f"segment(S{idx[a1]}),lane(L{idx[a1]}), {subconstraints_str} }} 1 \n\t"
-                            f":- init(state({a2}, loc(S{idx[a2]}, L{idx[a2]}), dyn(1,0))).\n"
+                            f":- init(state({a2}, loc(S{idx[a2]}, L{idx[a2]}), {dyn2})).\n"
                         )
 
                         init_rules.append(rule)
@@ -298,10 +337,17 @@ class Planner:
             # rule = f'goal{i}(t) :- '  # without time
 
             # TODO this is probably not good yet. I just place all actors in the order of their appearance
+            # Actors whose velocity this edge constrains need a variable in the dyn term.
+            # Everyone else keeps the anonymous wildcards, so instances without speed
+            # constraints are generated exactly as before.
+            edge_speed_actors = {c.actor for c in gamma
+                                 if isinstance(c, AbsoluteConstraint) and c.modifier == Modifier.SPEED}
+
             idx = {}
             for j, actor in enumerate(edge_actor_ids):
                 idx[actor] = j + 1
-                rule += f'holds(state({actor},loc(S{j + 1},L{j + 1}),dyn(_,_)), t)'
+                vel = f'V{j + 1}' if actor in edge_speed_actors else '_'
+                rule += f'holds(state({actor},loc(S{j + 1},L{j + 1}),dyn({vel},_)), t)'
                 if j + 1 == len(edge_actor_ids):
                     break
                 else:

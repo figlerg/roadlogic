@@ -7,7 +7,6 @@
 scenario accelerate:
     ego: car
 
-    do serial:
-        A: ego.drive() with:
-            speed(5mps, at: start)
-            speed(10mps, at: end)
+    do ego.drive() with:
+        speed(5mps, at: start)
+        speed(10mps, at: end)

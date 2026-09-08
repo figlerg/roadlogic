@@ -56,12 +56,18 @@ class Relation(Enum):
 class Modifier(Enum):
     LANE = 'l'
     POSITION = 'p'
+    # Longitudinal velocity, Vel_lon in the ASP state. Deliberately not 'p' or 'l': the
+    # groundability checks in Planner.create_asp_instance test those two literals to decide
+    # whether an actor is pinned down, and speed must not count towards that.
+    SPEED = 'v'
 
     def __str__(self):
         if self._name_ == 'LANE':
             return 'l'
         if self._name_ == 'POSITION':
             return 'p'
+        if self._name_ == 'SPEED':
+            return 'v'
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -368,6 +374,40 @@ class AbsoluteConstraint(BaseConstraint):
             else:
                 raise NotImplementedError(
                     f"Unexpected relation in AbsoluteConstraint (position): {rel}"
+                )
+
+            goal_atoms.append(f"{var} {op} {val}")
+            return goal_atoms
+
+        elif self.modifier == Modifier.SPEED:
+            var = f"V{i}"
+            partner = getattr(self, "interval_partner", None)
+
+            # ----- interval case: speed([a..b], at: ...) -----
+            if partner is not None:
+                vals = []
+                for v in (self.value, partner.value):
+                    if isinstance(v, float) and v.is_integer():
+                        v = int(v)
+                    vals.append(v)
+
+                low, high = sorted(vals)
+                goal_atoms.append(f"{low} <= {var} <= {high}")
+                return goal_atoms
+
+            # ----- single value or inequality -----
+            rel = self.relation
+            val = self.value
+            if isinstance(val, float) and val.is_integer():
+                val = int(val)
+
+            if rel == Relation.EQ:
+                op = "="
+            elif rel in (Relation.L, Relation.G, Relation.LEQ, Relation.GEQ, Relation.INEQ):
+                op = rel.value
+            else:
+                raise NotImplementedError(
+                    f"Unexpected relation in AbsoluteConstraint (speed): {rel}"
                 )
 
             goal_atoms.append(f"{var} {op} {val}")

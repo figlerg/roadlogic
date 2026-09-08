@@ -227,11 +227,12 @@ class TranslationGraphVisitor(openscenario2Visitor):
         # A modifier with no arguments, such as keep_lane(), has no argument_list child.
         arg_list = self.visit(ctx.argument_list()) if ctx.argument_list() is not None else {}
 
-        if modifier not in ("position", "lane"):
+        if modifier not in ("position", "lane", "speed"):
             # Report the unsupported modifier before the 'at' check, which would otherwise
             # mask it with a confusing assertion about a missing argument.
             raise NotImplementedError(
-                f"Modifier '{modifier}' not supported. Currently the position and lane modifiers are part of our implementation."
+                f"Modifier '{modifier}' not supported. Currently the position, lane and speed "
+                f"modifiers are part of our implementation."
             )
 
         # An omitted 'at' is the relational-invariant form: the constraint holds over the whole
@@ -252,10 +253,14 @@ class TranslationGraphVisitor(openscenario2Visitor):
             case "lane":
                 constraints = self._build_lane_constraints(arg_list)
 
+            case "speed":
+                constraints = self._build_speed_constraints(arg_list)
+
             case _:
                 # Unsupported according to DSL 2.1
                 raise NotImplementedError(
-                    f"Modifier '{modifier}' not supported. Currently the position and lane modifiers are part of our implementation."
+                    f"Modifier '{modifier}' not supported. Currently the position, lane and speed "
+                f"modifiers are part of our implementation."
                 )
 
         return start_or_end, constraints
@@ -440,6 +445,64 @@ class TranslationGraphVisitor(openscenario2Visitor):
         con = AbsoluteConstraint("self", Modifier.LANE, Relation.EQ, lane_value)
         return {con}
 
+
+
+    def _build_speed_constraints(self, arg_list: dict) -> set:
+        """
+        Build constraints for the 'speed' modifier.
+
+        Supports the absolute forms, where the value is a longitudinal velocity in mps,
+        which is one segment per step in the encoding:
+
+            speed(5mps, at: ...)
+            speed(speed: 5mps, at: ...)
+            speed([5mps..10mps], at: ...)
+            speed(speed_range: [5mps..10mps], at: ...)
+
+        The relative forms faster_than, slower_than and same_as are declared by the standard
+        but not built yet.
+        """
+        relative_keys = {"faster_than", "slower_than", "same_as"}
+        present_rel = relative_keys.intersection(arg_list.keys())
+
+        if present_rel:
+            raise NotImplementedError(
+                f"Relative speed ({', '.join(sorted(present_rel))}) is not supported yet. "
+                "Only absolute speed values and ranges are implemented."
+            )
+
+        for unsupported in ("direction", "factor"):
+            if unsupported in arg_list:
+                raise NotImplementedError(
+                    f"The '{unsupported}' argument of the speed modifier is not supported yet."
+                )
+
+        if 0 in arg_list:
+            value = arg_list[0]
+        elif "speed" in arg_list:
+            value = arg_list["speed"]
+        elif "speed_range" in arg_list:
+            value = arg_list["speed_range"]
+        else:
+            raise AssertionError(
+                "The 'speed' modifier requires a positional argument (index 0) or a named "
+                "'speed' or 'speed_range' argument."
+            )
+
+        if value is None:
+            raise AssertionError(
+                "Speed value parsed as None. Check literal visitors / argument_list parsing."
+            )
+
+        # Interval [low, high]
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            low, high = value
+            con1 = AbsoluteConstraint("self", Modifier.SPEED, Relation.GEQ, low)
+            con2 = AbsoluteConstraint("self", Modifier.SPEED, Relation.LEQ, high)
+            return {con1, con2}
+
+        con = AbsoluteConstraint("self", Modifier.SPEED, Relation.EQ, value)
+        return {con}
 
 
     def _build_position_constraints(self, arg_list: dict) -> set:

@@ -11,6 +11,5 @@
 scenario cruise:
     ego: car
 
-    do serial:
-        A: ego.drive() with:
-            speed(5mps, at: all)
+    do ego.drive() with:
+        speed(5mps, at: all)
