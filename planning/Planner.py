@@ -106,15 +106,6 @@ class Planner:
                       'If one_of operator is used, this constrains the search.'
                       'Finding all models may be addressed in a future release.')
 
-        if G.invariants:
-            # Stage 1 of the keep feature parses and represents invariants but does not emit
-            # them. Raising here rather than ignoring them keeps a keep from silently having no
-            # effect, which would make a test pass while testing nothing.
-            listed = "\n  ".join(str(i) for i in G.invariants)
-            raise NotImplementedError(
-                f"keep constraints are parsed but not encoded yet:\n  {listed}"
-            )
-
         self.create_asp_instance(actor_ids, aut_path)
 
         this_dir = os.path.dirname(__file__)
@@ -177,6 +168,12 @@ class Planner:
         speed_actors |= {a for c in gamma0
                          if isinstance(c, RelativeConstraint) and c.modifier == Modifier.SPEED
                          for a in (c.actor_1, c.actor_2)}
+        # A scenario-scoped speed invariant covers t=0 as well, since holds(F,0) :- init(F).
+        # Its actor therefore needs a free initial velocity too, otherwise the hardcoded 1
+        # contradicts the invariant and the specification is unsatisfiable for the wrong reason.
+        speed_actors |= {a for inv in G.invariants
+                         if inv.scope is None and inv.modifier == Modifier.SPEED
+                         for a in inv.actors}
 
         def dyn_term(actor):
             """dyn(...) for an actor's init atom, plus the domain atom its variable needs."""
@@ -202,18 +199,19 @@ class Planner:
             # legacy mode: ego is anchor at (0,placement) -> lane "placement" as default
             idx['ego'] = placement
             if 'ego' in speed_actors:
-                # The anchor is still fixed in place, but its initial velocity is chosen by the
-                # constraints rather than pinned to 1.
-                abs_speed = ', '.join(sorted(
+                # The anchor is still fixed in place, but its initial velocity is chosen rather
+                # than pinned to 1, so a speed constraint or invariant can decide it.
+                conditions = [f"velocity_lon(V{placement})"]
+                conditions += sorted(
                     atom
                     for c in gamma0
                     if isinstance(c, AbsoluteConstraint) and c.modifier == Modifier.SPEED
                     and c.actor == 'ego'
-                    for atom in c.asp_goal_format(idx)
-                ))
+                    for atom in c.asp_goal_format({'ego': placement})
+                )
                 init_rules = [
                     f"1 {{ init(state(ego,loc(0,{placement}),dyn(V{placement},0))) : "
-                    f"velocity_lon(V{placement}), {abs_speed} }} 1.\n"
+                    f"{', '.join(conditions)} }} 1.\n"
                 ]
             else:
                 init_rules = [f'init(state(ego,loc(0,{placement}),dyn(1,0))).\n']
@@ -416,6 +414,14 @@ class Planner:
         goal = f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t, t > {times[-1]} + 1.\n"
         goal_assertion = f":- query(t), not goal({','.join(['_'] * (n - 1))},t).\n"
 
+        # keep constraints. Unlike the goal rules these are not tied to one transition: each is
+        # an integrity constraint in check(t), so it is instantiated per step and forbids any
+        # state that breaks the invariant.
+        invariant_rules = []
+        for invariant in sorted(G.invariants, key=str):
+            for rule in invariant.asp_integrity_rules():
+                invariant_rules.append(f"% {invariant}\n{rule}\n")
+
         with open(instance_file_target, 'w') as f:
             f.write('% INITIAL SETUP FACTS:\n')  # just in-file documentation
             f.write('\n#program base.\n\n')  # all the initials are in base
@@ -431,6 +437,10 @@ class Planner:
             f.write('\n\n % GOAL ASSERTION:\n')
             f.write(goal)
             f.write(goal_assertion)
+
+            if invariant_rules:
+                f.write('\n% INVARIANTS (keep):\n')
+                f.writelines(invariant_rules)
 
             # TODO I would like some movement, but this rule doesn't work
             # f.write('\n\n % MANUAL RULES:\n')

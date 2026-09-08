@@ -849,6 +849,79 @@ class Invariant:
             if c.actor == original_name:
                 c.actor = new_name
 
+    # An invariant is emitted as an integrity constraint, which forbids the states that break
+    # it, so each relation is written as its negation.
+    FORBIDDEN = {
+        Relation.EQ: '!=',
+        Relation.INEQ: '=',
+        Relation.L: '>=',
+        Relation.LEQ: '>',
+        Relation.G: '<=',
+        Relation.GEQ: '<',
+    }
+
+    # Which slot of the state atom each modifier reads.
+    STATE_SLOT = {
+        Modifier.LANE: 'loc(_,{var})), dyn(_,_)',
+        Modifier.POSITION: 'loc({var},_)), dyn(_,_)',
+        Modifier.SPEED: 'loc(_,_)), dyn({var},_)',
+    }
+
+    @staticmethod
+    def _holds(actor, modifier, var, step='t'):
+        """One holds atom with a variable bound in the slot the modifier reads."""
+        if modifier == Modifier.LANE:
+            body = f"loc(_,{var}), dyn(_,_)"
+        elif modifier == Modifier.POSITION:
+            body = f"loc({var},_), dyn(_,_)"
+        elif modifier == Modifier.SPEED:
+            body = f"loc(_,_), dyn({var},_)"
+        else:
+            raise NotImplementedError(f"No state slot for modifier {modifier}.")
+        return f"holds(state({actor}, {body}), {step})"
+
+    def asp_integrity_rules(self):
+        """ASP integrity constraints forbidding any step that breaks this invariant.
+
+        Returned as a list of rule strings for `#program check(t)`, so each is instantiated per
+        step and the invariant holds at every step of the window.
+        """
+        if self.scope is not None:
+            raise NotImplementedError(
+                f"Phase-scoped invariants are not encoded yet ({self}). Scoping an invariant to "
+                "a phase requires tying it to the goal witness, see DECIDE 3 in "
+                "docs/keep-spec.md section 6."
+            )
+
+        c = self.constraint
+
+        if isinstance(c, AbsoluteConstraint):
+            value = c.value
+            if isinstance(value, float) and value.is_integer():
+                value = int(value)
+
+            op = self.FORBIDDEN.get(c.relation)
+            if op is None:
+                raise NotImplementedError(f"Cannot negate relation {c.relation} for an invariant.")
+
+            var = 'X'
+            return [f":- {self._holds(c.actor, c.modifier, var)}, {var} {op} {value}."]
+
+        if isinstance(c, RelativeConstraint):
+            op = self.FORBIDDEN.get(c.relation)
+            if op is None:
+                raise NotImplementedError(f"Cannot negate relation {c.relation} for an invariant.")
+            offset = ''
+            if c.c:
+                offset_value = int(c.c) if isinstance(c.c, float) and float(c.c).is_integer() else c.c
+                offset = f" + {offset_value}" if offset_value >= 0 else f" - {abs(offset_value)}"
+            return [
+                f":- {self._holds(c.actor_1, c.modifier, 'X1')}, "
+                f"{self._holds(c.actor_2, c.modifier, 'X2')}, X1 {op} X2{offset}."
+            ]
+
+        raise NotImplementedError(f"Cannot encode an invariant over {type(c).__name__}.")
+
     def __str__(self):
         where = 'scenario' if self.scope is None else str(self.scope)
         qualifier = '' if self.strength == 'hard' else f'{self.strength} '
@@ -903,6 +976,23 @@ class StabilityInvariant(Invariant):
     def substitute_actor(self, original_name, new_name):
         if self._actor == original_name:
             self._actor = new_name
+
+    def asp_integrity_rules(self):
+        """Forbid the quantity changing between consecutive steps.
+
+        The parameter never reaches ASP. Equality to a parameter means the quantity holds one
+        value for the lifetime of the instance, which is exactly step-to-step stability.
+        """
+        if self.scope is not None:
+            raise NotImplementedError(
+                f"Phase-scoped invariants are not encoded yet ({self}). See DECIDE 3 in "
+                "docs/keep-spec.md section 6."
+            )
+        return [
+            f":- {Invariant._holds(self._actor, self._modifier, 'X1')}, "
+            f"{Invariant._holds(self._actor, self._modifier, 'X2', 't-1')}, "
+            f"time(t-1), X1 != X2."
+        ]
 
     def __str__(self):
         where = 'scenario' if self.scope is None else str(self.scope)

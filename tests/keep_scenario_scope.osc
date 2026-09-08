@@ -2,6 +2,17 @@
 # holds for the whole lifetime of the scenario, across every phase of every actor.
 # Contrast with keep.osc, where the same constraint sits inside a single behavior invocation.
 # car1 is pinned to lane 2 because lanes are 1..3 and ego needs a lane strictly left of car1.
+#
+# The final gap is 13m..25m rather than the 5m..10m used in exp_002_b, and that difference is
+# forced by the model rather than by taste. Merging back into car1's lane triggers the "right
+# change version" rule in dynamics.lp, which forbids the move unless car1 is more than
+# safety_distance_back = 7 behind ego's previous segment. A lane change also needs
+# Vel_lon >= min_change_speed = 6 per controller.lp. Together the gap right after merging is at
+# least 6 + 7 = 13, so a 5m..10m goal is unsatisfiable.
+#
+# exp_002_b gets away with 5m..10m only because car1 is free to change lane there and does:
+# its baseline trace is [2,2,2,2,2,1,1,1], so ego never merges in front of it and the rule above
+# never applies. Holding car1 in its lane is what makes this the real overtake.
 
 scenario overtake:
     car1: car
@@ -24,4 +35,4 @@ scenario overtake:
 
             C: ego.drive() with:
                 lane(same_as: car1, at: end)
-                position([5m..10m], ahead_of: car1, at: end)
+                position([13m..25m], ahead_of: car1, at: end)

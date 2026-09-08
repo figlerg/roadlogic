@@ -329,6 +329,8 @@ def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
     case_dir = os.path.join(out_dir, os.path.splitext(case.spec)[0])
     os.makedirs(case_dir, exist_ok=True)
 
+    from planning.asp.generate_plans import NoModelException
+
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -337,16 +339,20 @@ def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
                                   visualize=False, imax=IMAX)
     except NotImplementedError as exc:
         return PENDING, str(exc)
+    except NoModelException:
+        # Exhausting the horizon without a model is how an inconsistent specification shows
+        # up, so it is an outcome rather than an error. The sat flag decides whether it passes.
+        plans = []
     except Exception:
         return FAIL, traceback.format_exc().strip()
 
     if not case.sat:
         if plans:
             return FAIL, f"expected no plan but got {len(plans)}, so the conflict went undetected"
-        return PASS, "no plan, specification correctly rejected as inconsistent"
+        return PASS, f"no model up to horizon {IMAX}, correctly rejected as inconsistent"
 
     if not plans:
-        return FAIL, "expected at least one plan but the program was unsatisfiable"
+        return FAIL, f"expected at least one plan but found no model up to horizon {IMAX}"
 
     for i, plan in enumerate(plans):
         msg = case.invariant(plan)
