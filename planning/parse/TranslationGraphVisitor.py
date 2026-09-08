@@ -1,4 +1,5 @@
 import os.path
+import re
 import warnings
 
 from planning.intermediate_structure.Actor import Actor
@@ -302,13 +303,42 @@ class TranslationGraphVisitor(openscenario2Visitor):
         start, end = ctx.expression()
         return (self.visit(start), self.visit(end))
 
+    # The ASP model is integer valued: segments are metres, steps are seconds, longitudinal
+    # velocity is metres per second. We therefore accept only the matching SI units and refuse
+    # to convert, so a literal in a spec is the number that reaches the encoding. See section 7
+    # of docs/keep-spec.md.
+    SUPPORTED_UNITS = {
+        "m": "length, one segment",
+        "s": "time, one step",
+        "mps": "speed, one segment per step",
+    }
+
     def visitPhysical_literal(self, ctx: openscenario2Parser.Physical_literalContext):
-        nr = ctx.getText()
-        # this returns a string like '3s', need to transform it to number
+        text = ctx.getText()  # e.g. '3s', '10m', '5mps'
 
-        nr = float(''.join(filter(str.isdigit, nr)))
+        match = re.fullmatch(r"(\d+(?:\.\d+)?)([A-Za-z_][A-Za-z_0-9]*)", text)
+        if match is None:
+            raise ValueError(f"Could not read the physical literal '{text}'.")
 
-        return nr
+        number, unit = match.group(1), match.group(2)
+
+        if unit not in self.SUPPORTED_UNITS:
+            supported = ", ".join(sorted(self.SUPPORTED_UNITS))
+            raise NotImplementedError(
+                f"Unit '{unit}' in the literal '{text}' is not supported. The encoding is "
+                f"integer valued and does no unit conversion, so only {supported} are accepted. "
+                f"Rewrite the value in those units."
+            )
+
+        value = float(number)
+        if not value.is_integer():
+            raise NotImplementedError(
+                f"The literal '{text}' is not a whole number. The encoding is integer valued, "
+                "so fractional quantities cannot be represented exactly."
+            )
+
+        return value
+
 
     # helpers for constraints
     def _build_lane_constraints(self, arg_list: dict) -> set:
