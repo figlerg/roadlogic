@@ -114,12 +114,27 @@ Nineteen specs. The ones where I made a judgement call:
       still say `ego` because `Planner.py:175` hardcodes it: a relative-only spec whose actors are
       named anything else cannot ground at all. Renaming is blocked on removing that anchor.
 
-## 6. Known issues, no action needed
+## 6. Finding about the benchmark, not about keep
+
+- [ ] **The canonical overtake is satisfiable partly by accident.** exp_002_b's final phase asks
+      for a 5m..10m gap ahead of car1. Merging back into car1's lane is forbidden by the
+      right-change rule in `dynamics.lp` unless car1 is more than `safety_distance_back = 7`
+      behind ego's previous segment, and a lane change needs `Vel_lon >= min_change_speed = 6`,
+      so the post-merge gap is at least 13. exp_002_b only plans because car1 is free to change
+      lane and does, baseline trace `[2,2,2,2,2,1,1,1]`, so ego never merges in front of it.
+      Holding car1's lane makes the specified maneuver impossible.
+      `keep_scenario_scope.osc` uses 13m..25m and is the first spec in the corpus that exercises
+      a genuine merge-back. Worth deciding whether the benchmark should too.
+
+## 7. Known issues, no action needed
 
 - [ ] **`docs/known-issues-exp-parallel.md`.** Two pre-existing bugs that keep `exp_parallel` from
       running: a grounding-loop error in `Planner.py` where `remaining.remove(a1)` runs
       unconditionally so the error reports an empty list, and a clingo syntax error in the
-      generated instance for `spec_parallel.osc`. Tracked as xfail, so if it ever starts passing
-      the suite reports XPASS and fails, and the note cannot rot.
+      generated instance for `spec_parallel.osc`. The clingo half is now **fixed**: the goal rule
+      was emitting `goal2(t) :- time(t), .` for an edge with no constraints, which made clingo
+      reject the whole instance. The grounding half remains, and is now precisely diagnosed: an
+      actor with an absolute lane but no absolute position cannot be grounded, and nothing can
+      anchor to it. Still xfail, so if it ever starts passing the suite reports XPASS and fails.
 - [ ] **`exp_004` and `exp_004_b` are skipped by default.** Their planning alone took 2731s and
       12140s in the recorded runs. Not a regression, inherent cost. `--include-slow` runs them.
