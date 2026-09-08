@@ -212,7 +212,15 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
     def visitModifier_application(self, ctx: openscenario2Parser.Modifier_applicationContext):
         modifier = self.visit(ctx.modifier_name())
-        arg_list = self.visit(ctx.argument_list())
+        # A modifier with no arguments, such as keep_lane(), has no argument_list child.
+        arg_list = self.visit(ctx.argument_list()) if ctx.argument_list() is not None else {}
+
+        if modifier not in ("position", "lane"):
+            # Report the unsupported modifier before the 'at' check, which would otherwise
+            # mask it with a confusing assertion about a missing argument.
+            raise NotImplementedError(
+                f"Modifier '{modifier}' not supported. Currently the position and lane modifiers are part of our implementation."
+            )
 
         # All modifiers in the DSL support 'at'
         assert "at" in arg_list, f"Modifier '{modifier}' requires an 'at' argument."
