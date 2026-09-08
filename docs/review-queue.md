@@ -34,11 +34,8 @@ These are already baked into code and tests. If any is wrong, the cost of findin
       and that argument was wrong: `goal/n` already grounds over every `T_i` tuple. Section 6
       lists three things to settle it, and the middle one is a measurement rather than an
       argument. Only blocks keep stage 4.
-- [ ] **`road_distance_direction` members.** Deferred technicality, your call. Members look like
-      `longitudinal` and `lateral` with positive meaning ahead-of, read off the `keep_space_gap`
-      pseudocode in 8.8 rather than an enum declaration. Confirm against the domain model library
-      ZIP before stage 2b treats it as settled. `tests/keep_relational_distance.osc` carries a
-      placeholder and a TODO.
+- [x] ~~`road_distance_direction` members.~~ Settled: always `longitudinal`, since this tool has
+      no lateral distance. `lateral` is rejected saying so.
 
 ## 3. Code to read
 
@@ -84,7 +81,7 @@ jupyter lab tests/explore.ipynb
 
 # the boards
 python tests/run_speed_tests.py          # 2 passed, 3 pending
-python tests/run_keep_tests.py           # 7 passed, 7 pending (slow: proving UNSAT)
+python tests/run_keep_tests.py           # 9 passed, 5 pending (slow: proving UNSAT)
 python tests/run_keep_tests.py --self-test   # the checkers, against a real plan
 python tests/run_experiment_tests.py     # ~10 min, 12 passed 1 xfail 2 skipped
 ```
