@@ -333,6 +333,78 @@ class TranslationGraphVisitor(openscenario2Visitor):
         field = access.field_name().getText()
         return actor, field
 
+    # Distance methods the domain model declares on physical_object (8.7). Only space_gap is
+    # built: it is the one that maps onto our segment model without extra machinery.
+    KEEP_DISTANCE_METHODS = {
+        "space_gap", "time_gap", "space_headway", "time_headway",
+        "object_distance", "road_distance", "time_to_collision",
+    }
+
+    def _build_relational_invariants(self, call, relation, op, strength):
+        """Build invariants from keep(a.space_gap(b, longitudinal) <rel> ...).
+
+        The gap is signed: positive means the receiver is ahead of the reference, which is the
+        convention the standard uses in its keep_space_gap semantics (8.8). So
+        keep(car1.space_gap(car2, longitudinal) in [5m..100m]) says car1 runs 5m to 100m ahead
+        of car2, equivalently car2 stays that far behind car1.
+        """
+        receiver_ctx = call.postfix_exp()
+        actor, method = self._resolve_field_access(receiver_ctx)
+
+        if method not in self.KEEP_DISTANCE_METHODS:
+            raise NotImplementedError(
+                f"'{method}' is not a distance method of the domain model. Known ones are "
+                f"{', '.join(sorted(self.KEEP_DISTANCE_METHODS))}."
+            )
+        if method != "space_gap":
+            raise NotImplementedError(
+                f"'{method}' is declared by the standard but not built. Only space_gap is "
+                "implemented, since it is the one that maps onto the segment model directly."
+            )
+
+        args = self.visit(call.argument_list()) if call.argument_list() is not None else {}
+
+        reference = args.get(0, args.get("reference"))
+        if reference is None:
+            raise AssertionError(
+                f"{actor}.{method}(...) needs a reference actor as its first argument."
+            )
+
+        direction = args.get(1, args.get("direction", "longitudinal"))
+        if direction != "longitudinal":
+            raise NotImplementedError(
+                f"Direction '{direction}' is not supported. Everything in this tool is "
+                "longitudinal: distance is measured in segments along the road, and the lateral "
+                "axis is lane indices rather than a distance, so a lateral gap has no meaning "
+                "here."
+            )
+
+        rhs = self.visit(relation.sum_exp())
+
+        if op == "in":
+            if not isinstance(rhs, (list, tuple)) or len(rhs) != 2:
+                raise NotImplementedError(
+                    f"The right-hand side of 'in' must be a range, got "
+                    f"'{relation.sum_exp().getText()}'."
+                )
+            low, high = sorted(rhs)
+            return {
+                Invariant(RelativeConstraint(actor, reference, Modifier.POSITION,
+                                             Relation.GEQ, c=low), strength),
+                Invariant(RelativeConstraint(actor, reference, Modifier.POSITION,
+                                             Relation.LEQ, c=high), strength),
+            }
+
+        if isinstance(rhs, (list, tuple)):
+            raise NotImplementedError(
+                f"A range on the right of '{op}' is not meaningful. Use 'in' for ranges."
+            )
+        if op not in self.KEEP_RELATIONS:
+            raise NotImplementedError(f"Unsupported relational operator '{op}' in a keep body.")
+
+        return {Invariant(RelativeConstraint(actor, reference, Modifier.POSITION,
+                                             self.KEEP_RELATIONS[op], c=rhs), strength)}
+
     def _build_keep_invariants(self, expr_ctx, strength):
         """Turn one keep body into a set of Invariant objects."""
         relation = self._find_relation(expr_ctx)
@@ -352,13 +424,7 @@ class TranslationGraphVisitor(openscenario2Visitor):
 
         find_calls(relation.relation())
         if calls:
-            name = calls[0].postfix_exp().getText()
-            raise NotImplementedError(
-                f"The relational form '{name}(...)' in a keep body is not encoded yet. The "
-                "domain model declares space_gap, time_gap, space_headway, time_headway, "
-                "object_distance, road_distance and time_to_collision, of which space_gap is "
-                "the planned initial subset. See docs/keep-spec.md section 3."
-            )
+            return self._build_relational_invariants(calls[0], relation, op, strength)
 
         actor, field = self._resolve_field_access(relation.relation())
         rhs = self.visit(relation.sum_exp())
@@ -446,15 +512,12 @@ class TranslationGraphVisitor(openscenario2Visitor):
                 f"modifiers are part of our implementation."
             )
 
-        # An omitted 'at' is the relational-invariant form: the constraint holds over the whole
-        # window rather than at one phase boundary. Not implemented yet, see docs/keep-spec.md
-        # section 3. Raising here keeps it from being mistaken for a malformed modifier.
-        if "at" not in arg_list:
-            raise NotImplementedError(
-                f"Modifier '{modifier}' without an 'at' argument is the invariant form, "
-                "which is not supported yet."
-            )
-        start_or_end = arg_list["at"]
+        # The standard-movement-parameters define 'at' as all (default), start or end. An omitted
+        # 'at', or an explicit 'at: all', means the constraint holds over the whole window rather
+        # than at one phase boundary, which is the invariant form. See docs/keep-spec.md
+        # section 3, where the standard defines keep_space_gap as exactly this.
+        start_or_end = arg_list.get("at", "all")
+        is_invariant = start_or_end == "all"
 
 
         match modifier:
@@ -473,6 +536,11 @@ class TranslationGraphVisitor(openscenario2Visitor):
                     f"Modifier '{modifier}' not supported. Currently the position, lane and speed "
                 f"modifiers are part of our implementation."
                 )
+
+        if is_invariant:
+            # Scope is filled in by visitBehavior_invocation, which knows the invocation this
+            # with block belongs to. A modifier written as a scenario member would stay None.
+            return {Invariant(con) for con in constraints}
 
         return start_or_end, constraints
     
