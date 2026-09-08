@@ -37,6 +37,11 @@ class Relation(Enum):
     def __eq__(self, other):
         return str(self) == str(other)
 
+    def __hash__(self):
+        # Defining __eq__ on a class drops the inherited __hash__, which would make these
+        # unusable as dict keys or set members. Hash on the same value __eq__ compares.
+        return hash(str(self))
+
     @property
     def flipped(self):
         if self == Relation.G:
@@ -71,6 +76,9 @@ class Modifier(Enum):
 
     def __eq__(self, other):
         return str(self) == str(other)
+
+    def __hash__(self):
+        return hash(str(self))
 
 
 
