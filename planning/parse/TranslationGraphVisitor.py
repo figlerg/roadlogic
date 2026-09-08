@@ -190,7 +190,19 @@ class TranslationGraphVisitor(openscenario2Visitor):
         return precondition, postcondition
 
     def visitBehavior_with_member(self, ctx: openscenario2Parser.Behavior_with_memberContext):
+        if ctx.constraint_declaration() is not None:
+            return self.visit(ctx.constraint_declaration())
+        if ctx.until_directive() is not None:
+            raise NotImplementedError(f"until directives are not supported yet: {ctx.getText()}")
         return self.visit(ctx.modifier_application())
+
+    def visitKeep_constraint_declaration(self, ctx: openscenario2Parser.Keep_constraint_declarationContext):
+        # Placeholder for the keep feature. Raising here keeps invariants from being
+        # silently dropped while the encoding is still being built out.
+        raise NotImplementedError(f"keep constraints are not supported yet: keep({ctx.constraint_expression().getText()})")
+
+    def visitRemove_default_declaration(self, ctx: openscenario2Parser.Remove_default_declarationContext):
+        raise NotImplementedError(f"remove_default is not supported yet: {ctx.getText()}")
 
     # def visitModifier_application(self, ctx: openscenario2Parser.Modifier_applicationContext):
     #     modifier = self.visit(ctx.modifier_name())
@@ -222,8 +234,14 @@ class TranslationGraphVisitor(openscenario2Visitor):
                 f"Modifier '{modifier}' not supported. Currently the position and lane modifiers are part of our implementation."
             )
 
-        # All modifiers in the DSL support 'at'
-        assert "at" in arg_list, f"Modifier '{modifier}' requires an 'at' argument."
+        # An omitted 'at' is the relational-invariant form: the constraint holds over the whole
+        # window rather than at one phase boundary. Not implemented yet, see docs/keep-spec.md
+        # section 3. Raising here keeps it from being mistaken for a malformed modifier.
+        if "at" not in arg_list:
+            raise NotImplementedError(
+                f"Modifier '{modifier}' without an 'at' argument is the invariant form, "
+                "which is not supported yet."
+            )
         start_or_end = arg_list["at"]
 
 
@@ -346,7 +364,6 @@ class TranslationGraphVisitor(openscenario2Visitor):
             )
 
         return value
-
 
     # helpers for constraints
     def _build_lane_constraints(self, arg_list: dict) -> set:
