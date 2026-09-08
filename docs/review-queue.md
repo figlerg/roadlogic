@@ -58,6 +58,14 @@ Ordered by how much judgement went into it.
 - [ ] **`e3ea58b` and `847b9f2`.** Small guard commits. `keep(...)` used to be parsed and
       silently dropped, so a test written against the feature would have passed while testing
       nothing.
+- [ ] **`ac24813` feat: encode scenario-scoped keep constraints.** The emission itself is small,
+      an invariant becomes an integrity constraint so each relation is written as its negation.
+      The parts worth reading are why a scenario-scoped speed keep needs the initial velocity
+      freed, and the two test specifications that had to be corrected because they were failing
+      for reasons unrelated to keep.
+- [ ] **`2f99b73` fix: goal rules and grounding errors.** Two pre-existing bugs. The first made
+      clingo reject a whole instance whenever a phase constrained only its start, and it is the
+      clingo half of the exp_parallel known issue.
 - [ ] **`68e5fd3` test: benchmark regression suite.** Mostly mechanical. The part worth a look is
       that the variability (`_b`) experiments need their partition instances generated first,
       because those carry the `init` facts, and that per-partition UNSAT is a recorded outcome
@@ -75,8 +83,8 @@ python tests/run_speed_tests.py speed_start_end.osc -v
 jupyter lab tests/explore.ipynb
 
 # the boards
-python tests/run_speed_tests.py          # 1 passed, 4 pending
-python tests/run_keep_tests.py           # 14 pending
+python tests/run_speed_tests.py          # 2 passed, 3 pending
+python tests/run_keep_tests.py           # 7 passed, 7 pending (slow: proving UNSAT)
 python tests/run_keep_tests.py --self-test   # the checkers, against a real plan
 python tests/run_experiment_tests.py     # ~10 min, 12 passed 1 xfail 2 skipped
 ```
@@ -87,7 +95,8 @@ python tests/run_experiment_tests.py     # ~10 min, 12 passed 1 xfail 2 skipped
 - [ ] **`tests/explore.ipynb`.** Five cells: pick a spec, explain it, poke at the plans, run
       checkers by hand, compare two specs that should agree.
 - [ ] **`--self-test`.** Worth one look because it is the answer to "do the tests actually test
-      anything". Every keep case is PENDING, so the checkers would otherwise never execute. It
+      anything". It was written when every keep case was pending and the checkers would otherwise
+      never have executed. It
       runs all of them against a real plan where the verdicts are known from the trace, and
       reports that car1 changes lane in the unconstrained baseline, which is what makes the lane
       cases non-trivial.
