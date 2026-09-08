@@ -17,6 +17,7 @@ Run with:
     python tests/run_keep_tests.py                # all keep cases
     python tests/run_keep_tests.py keep.osc       # a subset
     python tests/run_keep_tests.py --self-test    # check the invariant checkers themselves
+    python tests/run_keep_tests.py keep.osc -v    # walk one spec through the pipeline
 """
 
 import os
@@ -27,6 +28,8 @@ import warnings
 from typing import List
 
 from plan_checks import (
+    HERE,
+    explain,
     CONTROLLER_LP,
     IMAX,
     ROOT,
@@ -199,12 +202,29 @@ def main(argv):
     if "--self-test" in argv:
         return self_test()
 
+    argv = list(argv)
+    verbose = "--verbose" in argv or "-v" in argv
+    argv = [a for a in argv if a not in ("--verbose", "-v")]
+
     only = argv[1:] if len(argv) > 1 else None
     cases = [c for c in CASES if not only or c.spec in only
              or c.spec.removesuffix(".osc") in only]
     if not cases:
         print(f"No cases matched {only}. Known specs: {[c.spec for c in CASES]}")
         return 2
+
+    if verbose:
+        # Walk each specification through the pipeline and print every stage, rather than
+        # reporting a board. Meant for eyeballing one or two examples.
+        rc = 0
+        for case in cases:
+            try:
+                explain(os.path.join(HERE, case.spec))
+            except Exception as exc:
+                print(f"\n{case.spec} stopped: {type(exc).__name__}: {exc}")
+                rc = 1
+        return rc
+
     return run_cases(cases, prefix="keep_tests_")
 
 

@@ -208,18 +208,60 @@ def speed_constant(actor):
     return check
 
 
-def speed_at(actor, when, value):
-    """Speed at one endpoint. `when` is "start" or "end"."""
+def goal_witnesses(model):
+    """Goal-time tuples from the plan, one per goal/n atom.
+
+    A plan carries goal(T1,...,Tn-1,t): the times at which the successive phase goals are
+    met, plus the horizon. Several witnesses can hold for one trace, which is why the goal
+    assertion in the instance uses wildcards. Returns a list of (T1,...,Tn-1) tuples with the
+    trailing horizon dropped.
+    """
+    return [tuple(pred.arguments[:-1]) for pred in model.goal]
+
+
+def speed_at_start(actor, value):
     def check(model):
         seq = speeds_of(model, actor)
         if not seq:
             return f"no states for actor {actor}"
-        got = seq[0] if when == "start" else seq[-1]
-        if got != value:
-            return f"{actor}.speed at {when} is {got}, expected {value}, full trace {seq}"
+        if seq[0] != value:
+            return f"{actor}.speed at start is {seq[0]}, expected {value}, full trace {seq}"
         return None
 
-    check.description = f"{actor}.speed == {value} at {when}"
+    check.description = f"{actor}.speed == {value} at t=0"
+    return check
+
+
+def speed_at_goal(actor, goal_index, value):
+    """Speed when the given goal is met.
+
+    An `at: end` modifier is a point constraint at a phase goal, not at the last step of the
+    plan: the goal rule requires t > T_last + 1, so the trace deliberately runs past it. The
+    goal time therefore has to be read out of the plan rather than assumed to be the end.
+    Satisfied if any witness has the right speed at its goal time, matching the existential
+    reading of the goal assertion.
+    """
+    def check(model):
+        seq = speeds_of(model, actor)
+        if not seq:
+            return f"no states for actor {actor}"
+        witnesses = goal_witnesses(model)
+        if not witnesses:
+            return "plan carries no goal atom, cannot locate the goal time"
+
+        seen = []
+        for w in witnesses:
+            if goal_index > len(w):
+                return f"plan has {len(w)} goal times, asked for T{goal_index}"
+            t = w[goal_index - 1]
+            if t < len(seq):
+                if seq[t] == value:
+                    return None
+                seen.append((w, t, seq[t]))
+        return (f"no witness has {actor}.speed == {value} at T{goal_index}. "
+                f"Saw {seen}, full trace {seq}")
+
+    check.description = f"{actor}.speed == {value} at goal T{goal_index}"
     return check
 
 
@@ -311,3 +353,82 @@ def run_cases(cases: List[Case], prefix: str, spec_dir: str = HERE):
         print(f"Artifacts of the failing runs kept in {out_dir}")
 
     return 1 if counts[FAIL] else 0
+
+
+# ---------------------------------------------------------------- verbose explanation
+
+def _rule(title, char="="):
+    return f"\n{char * 78}\n{title}\n{char * 78}"
+
+
+def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
+            show_graph=True, show_instance=True, show_plans=True, printer=print):
+    """Walk one specification through the whole pipeline, printing every stage.
+
+    Prints the OSC source, the translation graph with the constraints on each edge, the chosen
+    path, the generated ASP instance, and the resulting plans as per-actor traces. Returns the
+    list of plans so a notebook can poke at them further.
+
+    Intended for eyeballing a single example, not for the test board. Raises whatever the
+    pipeline raises, so an unimplemented feature shows up as its own error rather than being
+    swallowed.
+    """
+    import networkx as nx
+
+    spec_path = os.path.abspath(spec_path)
+    out_dir = tempfile.mkdtemp(prefix="explain_")
+    rules = external_rules if external_rules is not None else [CONTROLLER_LP]
+
+    printer(_rule(f"SPECIFICATION  {os.path.relpath(spec_path, ROOT)}"))
+    if show_source:
+        printer(open(spec_path).read().rstrip())
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        planner = Planner(spec_path, out_path=out_dir)
+
+    graph = planner.translation_graph
+    if show_graph:
+        printer(_rule("TRANSLATION GRAPH"))
+        printer(f"actors : {[a.id for a in graph.actors]}")
+        printer(f"nodes  : {list(graph.graph.nodes)}")
+        path = next(nx.all_simple_paths(graph.graph, 'init', 'fin'))
+        printer(f"path   : {' -> '.join(str(p) for p in path)}")
+        printer("\nconstraints per edge along that path:")
+        for i, (u, v) in enumerate(zip(path, path[1:])):
+            gamma = graph.graph.edges[(u, v)]['object']
+            role = "init rule" if i == 0 else f"goal{i}"
+            printer(f"  [{i}] {u} -> {v}   ({role})")
+            if not gamma:
+                printer("        (none)")
+            for con in sorted(gamma, key=str):
+                printer(f"        {type(con).__name__:<20} {con}")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        plans = planner.plans(n=n, external_rules=rules, visualize=False, imax=imax)
+
+    if show_instance:
+        printer(_rule("GENERATED ASP INSTANCE  (instance.lp)"))
+        printer(open(os.path.join(out_dir, "instance.lp")).read().rstrip())
+
+    if show_plans:
+        printer(_rule(f"PLANS  ({len(plans)} found)"))
+        for k, model in enumerate(plans, 1):
+            printer(_rule(f"plan {k} of {len(plans)}", "-"))
+            witnesses = goal_witnesses(model)
+            printer(f"goal times (T1..Tn-1) per witness: {witnesses if witnesses else 'none'}")
+            rows = {}
+            for actor, t, seg, lane, v_lon, v_lat in states(model):
+                rows.setdefault(actor, {})[t] = (seg, lane, v_lon, v_lat)
+            for actor in sorted(rows):
+                steps = sorted(rows[actor])
+                printer(f"\n  {actor}")
+                printer("    t       " + " ".join(f"{t:>4}" for t in steps))
+                printer("    segment " + " ".join(f"{rows[actor][t][0]:>4}" for t in steps))
+                printer("    lane    " + " ".join(f"{rows[actor][t][1]:>4}" for t in steps))
+                printer("    v_lon   " + " ".join(f"{rows[actor][t][2]:>4}" for t in steps))
+                printer("    v_lat   " + " ".join(f"{rows[actor][t][3]:>4}" for t in steps))
+
+    printer(f"\nartifacts in {out_dir}")
+    return plans

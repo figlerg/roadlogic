@@ -16,14 +16,19 @@ Run with:
     source venv/bin/activate
     python tests/run_speed_tests.py                   # all cases
     python tests/run_speed_tests.py speed_range.osc   # a subset
+    python tests/run_speed_tests.py speed_range.osc -v   # walk it through the pipeline
 """
 
+import os
 import sys
 
 from plan_checks import (
+    HERE,
     Case,
+    explain,
     run_cases,
-    speed_at,
+    speed_at_goal,
+    speed_at_start,
     speed_between,
     speed_equals,
     speed_faster_than,
@@ -33,8 +38,8 @@ CASES = [
     Case(
         "speed_start_end.osc",
         "point speed at both ends of a segment, no invariant machinery needed",
-        invariant=lambda m: (speed_at("ego", "start", 5)(m)
-                             or speed_at("ego", "end", 10)(m)),
+        invariant=lambda m: (speed_at_start("ego", 5)(m)
+                             or speed_at_goal("ego", 1, 10)(m)),
     ),
     Case(
         "speed_constant.osc",
@@ -59,16 +64,33 @@ CASES = [
 ]
 
 # speed_start_end uses a lambda, so give it a description like the other checkers have.
-CASES[0].invariant.description = "ego.speed == 5mps at start and 10mps at end"
+CASES[0].invariant.description = "ego.speed == 5mps at t=0 and 10mps at goal T1"
 
 
 def main(argv):
+    argv = list(argv)
+    verbose = "--verbose" in argv or "-v" in argv
+    argv = [a for a in argv if a not in ("--verbose", "-v")]
+
     only = argv[1:] if len(argv) > 1 else None
     cases = [c for c in CASES if not only or c.spec in only
              or c.spec.removesuffix(".osc") in only]
     if not cases:
         print(f"No cases matched {only}. Known specs: {[c.spec for c in CASES]}")
         return 2
+
+    if verbose:
+        # Walk each specification through the pipeline and print every stage, rather than
+        # reporting a board. Meant for eyeballing one or two examples.
+        rc = 0
+        for case in cases:
+            try:
+                explain(os.path.join(HERE, case.spec))
+            except Exception as exc:
+                print(f"\n{case.spec} stopped: {type(exc).__name__}: {exc}")
+                rc = 1
+        return rc
+
     return run_cases(cases, prefix="speed_tests_")
 
 
