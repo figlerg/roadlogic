@@ -315,12 +315,22 @@ class Planner:
                         )
 
                         init_rules.append(rule)
+                        grounded.add(a1)
                         progress = True
 
-                remaining.remove(a1)
+                        # Only drop an actor once it is actually grounded. This used to run
+                        # unconditionally, which emptied `remaining` regardless of progress and
+                        # made the error below report an empty list, hiding which actors were
+                        # stuck.
+                        remaining.remove(a1)
+                        break
 
             if not progress:
-                raise ValueError(f"Could not ground all actors — disconnected or circular constraints: {remaining}")
+                raise ValueError(
+                    f"Could not ground all actors: {sorted(remaining)}. Each needs either "
+                    f"absolute lane and position constraints, or lane and position constraints "
+                    f"relative to an already grounded actor. Grounded so far: {sorted(grounded)}."
+                )
 
         init_rules = sorted(init_rules)
 
@@ -344,9 +354,15 @@ class Planner:
             
             edge_actor_ids = sorted(list(edge_actor_ids), key=str)
 
-            # the base is the part which needs to be in each of the goal rules
-            rule = f'goal{i}(t) :- time(t), '
-            # rule = f'goal{i}(t) :- '  # without time
+            # the base is the part which needs to be in each of the goal rules.
+            # An edge with no constraints contributes no body atoms, so the comma after time(t)
+            # is only written when something follows it. Without this the rule came out as
+            # "goal1(t) :- time(t), ." and clingo refused to parse the whole instance. That
+            # happens whenever a phase constrains only its start, leaving its outgoing edge
+            # empty, which is a perfectly ordinary specification.
+            rule = f'goal{i}(t) :- time(t)'
+            if edge_actor_ids:
+                rule += ', '
 
             # TODO this is probably not good yet. I just place all actors in the order of their appearance
             # Actors whose velocity this edge constrains need a variable in the dyn term.

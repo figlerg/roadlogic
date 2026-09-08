@@ -39,6 +39,25 @@ artifact, also uses parallel composition and relative constraints) grounds and r
 via `create_scenarios/create_plan_scenarios.py`. So this isn't a general break, it's specific to
 the constraint shape in exp_parallel's spec.osc.
 
+## 2. `experiments_src/exp_parallel/in/spec_parallel.osc`
+
+**FIXED 2026-09-07.** This one is resolved. Root cause was in `Planner.create_asp_instance`: the
+goal rule was built as
+
+```python
+rule = f'goal{i}(t) :- time(t), '
+```
+
+with the comma written unconditionally. An edge whose constraint set is empty contributes no body
+atoms, so the rule came out as `goal2(t) :- time(t), .` and clingo refused to parse the whole
+instance. An edge is empty whenever a phase constrains only its start, leaving its outgoing edge
+with nothing on it, which is an ordinary thing to write. The comma is now written only when
+something follows it.
+
+`spec_parallel.osc` plans again. The original description of the symptom follows.
+
+### original notes
+
 ## 2. `experiments_src/exp_parallel/in/spec_parallel.osc` (the second file, not used by run.sh)
 
 Different failure, in ASP generation itself:
