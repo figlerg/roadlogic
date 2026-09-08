@@ -1,0 +1,14 @@
+# like exp005 except we now have just one obstacle
+
+scenario overtake:
+    ego: car
+    obstacle: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: ego.drive() with:
+            # position([1m..20m], behind:obstacle, at:start)
+            # lane(same_as:obstacle, at:start)
+            position([10m..20m], ahead_of:obstacle, at:end)
+
+        c2: obstacle.drive()
