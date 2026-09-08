@@ -1,0 +1,13 @@
+# Point speed constraints at the two ends of a segment, the classic modifier use.
+# This is the form that should work first, since it needs no invariant machinery: the atoms
+# go into the existing goal_i(t) rules exactly like lane() and position() do.
+#
+# The jump from 5mps to 10mps is within max_velocity_change_lon = 8.
+
+scenario accelerate:
+    ego: car
+
+    do serial:
+        A: ego.drive() with:
+            speed(5mps, at: start)
+            speed(10mps, at: end)

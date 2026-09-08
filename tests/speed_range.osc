@@ -1,0 +1,13 @@
+# Speed held inside a range for the whole segment.
+# Per 7.3.12.4.1 a range argument desugars to an "in" constraint, so this is
+# keep(ego.speed in [5mps..10mps]) over the window.
+#
+# The range excludes 1, the hardcoded initial velocity, so this spec also exercises blocker 2
+# of docs/keep-spec.md section 1b.
+
+scenario cruise_range:
+    ego: car
+
+    do serial:
+        A: ego.drive() with:
+            speed([5mps..10mps], at: all)

@@ -1,0 +1,16 @@
+# One car holding a fixed speed for the whole segment.
+# at: all is the default per the standard-movement-parameters, written explicitly here.
+#
+# Units are mps, one segment per step, so 5mps is literally 5 in the encoding. No conversion
+# happens anywhere, see section 7 of docs/keep-spec.md.
+#
+# NOTE this spec is expected to stay UNSAT until blocker 2 of docs/keep-spec.md section 1b is
+# fixed: Planner.py hardcodes dyn(1,0) in the init rules, so t=0 is pinned to velocity 1 and
+# no constant speed other than 1 can hold at every step.
+
+scenario cruise:
+    ego: car
+
+    do serial:
+        A: ego.drive() with:
+            speed(5mps, at: all)

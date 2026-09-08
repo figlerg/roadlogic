@@ -1,0 +1,29 @@
+# The usual overtake, but car1 holds a constant speed for the whole scenario while ego does
+# the manoeuvre. The constant-speed part is an invariant, so this one needs the keep work on
+# top of the speed modifier.
+#
+# car1 is held at 5mps. Note that controller.lp forbids a lane change below
+# min_change_speed = 6, so car1 cannot change lane while held at 5. That is intended here:
+# car1 should just drive straight while the other car passes it.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive() with:
+            speed(5mps, at: all)
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)
+
+            C: ego.drive() with:
+                lane(same_as: car1, at: end)
+                position([5m..10m], ahead_of: car1, at: end)
