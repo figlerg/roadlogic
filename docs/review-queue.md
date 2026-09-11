@@ -27,16 +27,12 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 - [ ] **Section 7, `actor.speed` is `Vel_lon`.** The standard's signed-magnitude formula does not
       carry over because `Vel_lat` is lanes per step, a lane-change flag rather than a velocity.
 
-## 1b. Padding switch, needs your decision
+## 1b. Planner settings
 
-- [ ] **`PAD_AFTER_GOALS`** in `planning/Planner.py`, still True. Turning it off is 2 to 8 times
-      faster (`tests/compare_settings.py`). Padding was also doing two jobs by accident. The
-      minimum plan length is now done properly by the spec's own `duration`, and
-      `keep_inconsistent_nonlocal` passes without padding. What remains is a two-step lookahead:
-      without padding a plan can end in a state that cannot be continued for two more steps. Now
-      5 of 30 benchmark plans, all five of exp_003, and it depends on which plans the solver
-      happens to find first. Harmless if nothing runs after the last goal. Details in
-      `.claude/PLAN.md`.
+- [x] ~~`PAD_AFTER_GOALS`~~ Now False by default: plans end when the goals are met. Checked in the
+      full simulation on exp_003, 5 padded and 5 unpadded plans: every agent completed all goals,
+      no collision, all 10 runs satisfy the spec. Padded plans end on a collision course just as
+      often, padding only moved that two steps later. True reproduces the paper.
 - [ ] **`HONOUR_DURATION`**, True. Durations never change which plans are accepted, but they change
       which plans come out first in 3 of the 6 vanilla benchmarks, so rerun experiments will differ
       from the paper. False reproduces the paper instances exactly.

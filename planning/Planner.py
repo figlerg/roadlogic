@@ -24,10 +24,11 @@ from planning.misc.errors import HardSyntaxErrorStrategy
 ## TODO appending planning/ at the start above should solve things for the makefile, but somehow the parsing craps out?
 
 
-# True keeps the original requirement that a plan runs two more steps after its last goal, which
-# made the animations play out longer. False ends every plan exactly at the first step at which
-# all goals are met, even when plans are collected over several horizons.
-PAD_AFTER_GOALS = True
+# False ends every plan exactly at the first step at which all goals are met, even when plans are
+# collected over several horizons. True restores the original two extra steps after the last goal,
+# which made the animations play out longer. To reproduce the HSCC paper, set this to True and
+# HONOUR_DURATION to False.
+PAD_AFTER_GOALS = False
 
 # True honours the standard's duration argument on compositions and invocations, for example
 # parallel(duration: [3s..20s]). False ignores it, as the planner always did before, and gives

@@ -19,9 +19,9 @@ What has been added for the journal version.
   now respected. Before, it was ignored. This rules out plans that are too short or too long, and
   detects timings that cannot fit together.
 
-- **Faster planning, optional.** Every plan used to run two extra steps after its goals were met.
-  A switch drops them, so plans end when the goals are met, which is 2 to 8 times faster on the
-  benchmarks. Not the default yet.
+- **Faster planning.** Every plan used to run two extra steps after its goals were met. Plans now
+  end when the goals are met, which is 2 to 8 times faster on the benchmarks. Simulated scenarios
+  complete just as before. The old behaviour is one switch away, for reproducing the paper.
 
 - **Units.** Values are given in m, s and mps, and are used exactly as written. Other units are
   rejected instead of being silently misread.

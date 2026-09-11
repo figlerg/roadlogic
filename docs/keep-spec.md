@@ -448,6 +448,3 @@ Each stage is done when the named specs reach the named status under `tests/run_
 
 - Stage 3, `keep_lane()` desugaring.
 - Stage 5, monitors.
-- Whether to turn the padding off (`PAD_AFTER_GOALS` in `planning/Planner.py`). It is much faster,
-  but padding also forced a minimum plan length and a two-step safety lookahead, see
-  `tests/compare_padding.py` and `.claude/PLAN.md`.
