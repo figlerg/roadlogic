@@ -30,10 +30,11 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 ## 1b. Padding switch, needs your decision
 
 - [ ] **`PAD_AFTER_GOALS`** in `planning/Planner.py`, still True. Turning it off is 2 to 8 times
-      faster (`tests/compare_padding.py`), but padding was also forcing a minimum plan length and
-      a two-step safety lookahead. With it off, `keep_inconsistent_nonlocal` is satisfied by a
-      one-step plan, and 1 of 30 benchmark plans ends one step before an unavoidable safety
-      violation. Details in `.claude/PLAN.md`.
+      faster (`tests/compare_settings.py`). Padding was also doing two jobs by accident. The
+      minimum plan length is now done properly by the spec's own `duration`, and
+      `keep_inconsistent_nonlocal` passes without padding. What remains is a two-step safety
+      lookahead: 1 of 30 benchmark plans ended one step before an unavoidable safety violation.
+      Harmless if nothing runs after the last goal. Details in `.claude/PLAN.md`.
 
 ## 2. Open, needs your answer eventually
 
@@ -47,13 +48,17 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 
 Ordered by how much judgement went into it.
 
+- [ ] **`04ffd42` feat: honour the duration of compositions and invocations.** A duration covering
+      phases k1..k2 becomes `low <= T(k2) - T(k1-1) <= high` in the goal rule, using the same phase
+      mapping as the invocation keeps. `HONOUR_DURATION` switches it off and gives the original
+      instances back. Worth a look: without padding the top-level maximum also bounds the search.
 - [ ] **`603976a` feat: encode keeps inside a behavior invocation in the goal rule.** The keep is a
       literal `keep_held(i,From,To)` in the goal rule, built from `keep_broken(i,t)` by a forward
       chain. `Planner._invocation_keep_rules` has it all. Also widens the final gap in your
       `tests/keep.osc` from 5m..10m to 13m..25m, same reason as keep_scenario_scope.
 - [ ] **`2401630` refactor: drop the boundary goal encoding, keep the padding switch.** Together
       with `1e12b90` and the revert `e6dd919` this is an approach that was built, measured and
-      dropped. Only the padding switch and `tests/compare_padding.py` survive. Not worth reading
+      dropped. Only the padding switch and `tests/compare_settings.py` survive. Not worth reading
       in detail.
 - [ ] **`6774c89` feat: support absolute speed constraints.** The one with real design in it.
       Three changes in `Planner.create_asp_instance`, all because velocity was never a variable
@@ -96,6 +101,8 @@ jupyter lab tests/explore.ipynb
 # the boards
 python tests/run_speed_tests.py          # 5 passed
 python tests/run_keep_tests.py           # 13 passed, 1 pending (slow: proving UNSAT)
+python tests/run_duration_tests.py       # 9 passed
+python tests/compare_settings.py         # paper vs durations vs no padding, several minutes
 python tests/run_keep_tests.py --self-test   # the checkers, against a real plan
 python tests/run_experiment_tests.py     # ~10 min, 12 passed 1 xfail 2 skipped
 ```
