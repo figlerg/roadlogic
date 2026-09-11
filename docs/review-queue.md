@@ -27,6 +27,14 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 - [ ] **Section 7, `actor.speed` is `Vel_lon`.** The standard's signed-magnitude formula does not
       carry over because `Vel_lat` is lanes per step, a lane-change flag rather than a velocity.
 
+## 1b. Goal encoding switch, needs your decision
+
+- [ ] **Defaults for `GOAL_ENCODING` and `PAD_AFTER_GOALS`** in `planning/Planner.py`. Still the old
+      values, so nothing changed for existing specs. Measured in `.claude/PLAN.md`, "comparison
+      rerun with the exact cut". Short version: the new encoding accepts the same plans but is
+      slower and returns them in a different order. Dropping padding is where all the speed is,
+      but padding was also enforcing a minimum plan length and a two-step safety lookahead.
+
 ## 2. Open, needs your answer eventually
 
 - [ ] **DECIDE 3, phase scoping.** `docs/keep-spec.md` section 6. Genuinely open, no
@@ -40,6 +48,14 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 ## 3. Code to read
 
 Ordered by how much judgement went into it.
+
+- [ ] **`1e12b90` feat: add a boundary goal encoding and a padding switch.** The `reached` chain,
+      the Python rebuild of the `goal(T1,...,t)` atoms that `map_plan` reads, and the exact cut.
+      `tests/compare_goal_encodings.py` is the evidence. Note its gate check was broken when it was
+      committed (see PLAN.md, process note), the code itself was verified afterwards.
+- [ ] **`2335d2c` feat: encode phase-scoped keep constraints.** Boundary choice with `pass/2`,
+      `in_phase/2` windows, `#project holds/2`. Also widens the final gap in your `tests/keep.osc`
+      from 5m..10m to 13m..25m, same reason as keep_scenario_scope.
 
 - [ ] **`6774c89` feat: support absolute speed constraints.** The one with real design in it.
       Three changes in `Planner.create_asp_instance`, all because velocity was never a variable
