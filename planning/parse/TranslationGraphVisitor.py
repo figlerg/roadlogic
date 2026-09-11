@@ -7,7 +7,8 @@ from planning.intermediate_structure.SamplingHint import SamplingHint
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
 from planning.intermediate_structure.Constraint import (RelativeConstraint, AbsoluteConstraint,
                                                        Relation, Modifier, Invariant,
-                                                       StabilityInvariant)
+                                                       StabilityInvariant, Duration)
+from planning.intermediate_structure.TranslationGraph import flatten_node
 from planning.parse.generated.openscenario2Visitor import openscenario2Visitor
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
 
@@ -68,6 +69,7 @@ class TranslationGraphVisitor(openscenario2Visitor):
                 out.initial = behavior_graph.initial
                 out.final = behavior_graph.final
                 out.invariants = list(behavior_graph.invariants)
+                out.durations = list(behavior_graph.durations)
 
         out.invariants = list(out.invariants) + scenario_invariants
         return out
@@ -195,6 +197,12 @@ class TranslationGraphVisitor(openscenario2Visitor):
         for invariant in invariants:
             invariant.scope = behavior_node
         atomic_graph.invariants = sorted(invariants, key=str)
+
+        # car1.drive(duration: [30s..60s]) bounds how long this one invocation lasts
+        duration = self._duration_from_arguments(ctx.argument_list(), {behavior_node},
+                                                 f"the invocation {behavior_node}")
+        if duration is not None:
+            atomic_graph.durations = [duration]
 
         # Replace 'self' by actual actor id in all constraints
         atomic_graph.substitute_actor("self", actor_id)
@@ -578,6 +586,17 @@ class TranslationGraphVisitor(openscenario2Visitor):
         else:
             raise NotImplementedError
 
+        # serial(duration: [10s..30s]) and friends bound the time from the start of the first
+        # member to the end of the last, so the duration covers every invocation in the result.
+        label_ctx = ctx.parentCtx.label_name() if hasattr(ctx.parentCtx, "label_name") else None
+        source = f"{label_ctx.getText()}: {node_type}" if label_ctx is not None else node_type
+        members = {label for graph_node in node.graph.nodes
+                   if graph_node not in (node.initial, node.final)
+                   for label in flatten_node(graph_node)}
+        duration = self._duration_from_arguments(ctx.argument_list(), members, source)
+        if duration is not None:
+            node.durations = list(node.durations) + [duration]
+
         # node.draw()
         return node
 
@@ -648,6 +667,59 @@ class TranslationGraphVisitor(openscenario2Visitor):
             )
 
         return value
+
+    # Arguments a composition or invocation may carry. The standard also gives parallel the
+    # overlap, start_to_start and end_to_end parameters, which are not supported.
+    TIMING_ARGUMENTS = {"duration"}
+
+    def _physical_units(self, ctx):
+        """Units of every physical literal inside an expression, for example {"s"} for [3s..20s]."""
+        units = set()
+
+        def walk(node):
+            if isinstance(node, openscenario2Parser.Physical_literalContext):
+                match = re.fullmatch(r"\d+(?:\.\d+)?([A-Za-z_][A-Za-z_0-9]*)", node.getText())
+                units.add(match.group(1) if match else node.getText())
+            for i in range(node.getChildCount()):
+                child = node.getChild(i)
+                if hasattr(child, "getChildCount"):
+                    walk(child)
+
+        walk(ctx)
+        return units
+
+    def _duration_from_arguments(self, arg_ctx, labels, source):
+        """Read the duration argument of a composition or invocation, if it has one.
+
+        Returns a Duration or None. Any other argument is rejected rather than ignored.
+        """
+        if arg_ctx is None:
+            return None
+        if arg_ctx.positional_argument():
+            raise NotImplementedError(
+                f"Positional arguments are not supported on {source}: '{arg_ctx.getText()}'. "
+                "Write duration: [3s..20s]."
+            )
+
+        named = {self.visit(arg.argument_name()): arg.expression() for arg in arg_ctx.named_argument()}
+        unsupported = sorted(set(named) - self.TIMING_ARGUMENTS)
+        if unsupported:
+            raise NotImplementedError(
+                f"The argument(s) {', '.join(unsupported)} of {source} are not supported. "
+                "Only duration is."
+            )
+        if "duration" not in named:
+            return None
+
+        expr = named["duration"]
+        if self._physical_units(expr) != {"s"}:
+            raise ValueError(
+                f"The duration of {source} is '{expr.getText()}'. A duration is a time and has to "
+                "be given in s, for example duration: [3s..20s]."
+            )
+        value = self.visit(expr)
+        low, high = sorted(value) if isinstance(value, (list, tuple)) else (value, value)
+        return Duration(labels, int(low), int(high), source)
 
     # helpers for constraints
     def _build_lane_constraints(self, arg_list: dict) -> set:

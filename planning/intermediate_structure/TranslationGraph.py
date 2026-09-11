@@ -5,6 +5,13 @@ import matplotlib.pyplot as plt
 import z3
 
 
+def flatten_node(node):
+    """Component labels of a translation-graph node. Parallel composition makes tuples of them."""
+    if isinstance(node, tuple):
+        return {label for part in node for label in flatten_node(part)}
+    return {node}
+
+
 class TranslationGraph(object):
     """An intermediate structure for the translation of openSCENARIO to Scenic.
     It is a directed Graph, it's edges have Constraint objects as labels.
@@ -28,6 +35,8 @@ class TranslationGraph(object):
         # hold over a window. Kept beside the graph rather than on edges so composition does not
         # have to decide which edge an invariant belongs to.
         self.__invariants = []
+        # duration bounds from composition and invocation arguments, see Constraint.Duration
+        self.__durations = []
 
         self.__initial = None
         self.__final = None
@@ -55,6 +64,14 @@ class TranslationGraph(object):
     @invariants.setter
     def invariants(self, value):
         self.__invariants = value
+
+    @property
+    def durations(self):
+        return self.__durations
+
+    @durations.setter
+    def durations(self, value):
+        self.__durations = value
 
     @property
     def sampling_hints(self):
@@ -139,6 +156,7 @@ class TranslationGraph(object):
 
         out = TranslationGraph()
         out.invariants = list(self.invariants) + list(other.invariants)
+        out.durations = list(self.durations) + list(other.durations)
         out.add_node('init', initial=True)
         out.add_node('fin', final=True)
 
@@ -224,6 +242,7 @@ class TranslationGraph(object):
         out = TranslationGraph()
         out.graph = serial_graph
         out.invariants = list(self.invariants) + list(other.invariants)
+        out.durations = list(self.durations) + list(other.durations)
 
         for v1, v2 in edge_constraints.keys():
             out.add_transition(v1, v2, edge_constraints[(v1, v2)])
@@ -260,6 +279,7 @@ class TranslationGraph(object):
         out = TranslationGraph()
         out.graph = nx.compose(g1, g2)  # This is only the real nodes, not the dummies
         out.invariants = list(self.invariants) + list(other.invariants)
+        out.durations = list(self.durations) + list(other.durations)
 
         out.add_node('init', initial=True)
         out.add_node('fin', final=True)

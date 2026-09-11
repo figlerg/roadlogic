@@ -13,6 +13,7 @@ from planning.asp.MyModel import MyModel
 from planning.asp.generate_plans import generate_plans, visualize_plans
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
 from planning.intermediate_structure.Constraint import RelativeConstraint, AbsoluteConstraint, Modifier
+from planning.intermediate_structure.TranslationGraph import flatten_node
 from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
 from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
 from planning.parse.generated.openscenario2Parser import openscenario2Parser
@@ -28,12 +29,10 @@ from planning.misc.errors import HardSyntaxErrorStrategy
 # all goals are met, even when plans are collected over several horizons.
 PAD_AFTER_GOALS = True
 
-
-def _flatten_node(node):
-    """Component labels of a translation-graph node. Parallel composition makes tuples of them."""
-    if isinstance(node, tuple):
-        return {label for part in node for label in _flatten_node(part)}
-    return {node}
+# True honours the standard's duration argument on compositions and invocations, for example
+# parallel(duration: [3s..20s]). False ignores it, as the planner always did before, and gives
+# the original instances back.
+HONOUR_DURATION = True
 
 
 class Planner:
@@ -42,7 +41,7 @@ class Planner:
     """
 
     def __init__(self, osc_path, verbose=False, out_path=None, animate_plans=False,
-                 pad_after_goals=None):
+                 pad_after_goals=None, honour_duration=None):
         """
         Constructor which does the parsing of the input OSC file and initialises the structures for translation.
 
@@ -64,6 +63,8 @@ class Planner:
 
         # Read the module switch at call time, so changing it at runtime takes effect.
         self.pad_after_goals = PAD_AFTER_GOALS if pad_after_goals is None else pad_after_goals
+        self.honour_duration = HONOUR_DURATION if honour_duration is None else honour_duration
+        self._horizon_cap = None
 
         self.visualize = animate_plans
 
@@ -139,6 +140,11 @@ class Planner:
                 files.append(external_rules)  # can also use a simple path
 
 
+        if self._horizon_cap is not None and not self.pad_after_goals:
+            # Without padding a plan ends at its last goal, and the top-level duration bounds that,
+            # so no plan can be longer. Searching further would only prove that there is none.
+            imax = min(imax, self._horizon_cap + 1)
+
         models = generate_plans(files=files, rules=self.__additional_single_rules, n=diversity_step * n, imin=imin,
                                 imax=imax, save_path=self.__out_path, verbose=self.verbose, time_limit=time_limit,
                                 override_files=rules_override, deterministic=deterministic)
@@ -160,6 +166,48 @@ class Planner:
 
 
     # LOGIC ETC:
+
+    @staticmethod
+    def _phase_window(labels, aut_path, what):
+        """Goal times bounding the phases that contain any of `labels`, as ASP terms.
+
+        Phase k is the k-th node of the chosen path and runs from goal time T(k-1) to Tk, with
+        T0 = 0, both ends included. After parallel composition a node is a tuple of component
+        states, so a behavior covers the consecutive phases whose node contains one of its labels.
+        Returns (start, end), for example ("0", "T2") or ("T1", "T3").
+        """
+        path_nodes = aut_path[1:-1]
+        phases = [k for k, node in enumerate(path_nodes, 1) if set(labels) & flatten_node(node)]
+        if not phases:
+            raise ValueError(f"{what} is not on the chosen path.")
+        if phases != list(range(phases[0], phases[-1] + 1)):
+            raise NotImplementedError(
+                f"{what} covers phases {phases}, which are not consecutive. It has to be one "
+                "stretch of the plan."
+            )
+        start = "0" if phases[0] == 1 else f"T{phases[0] - 1}"
+        return start, f"T{phases[-1]}"
+
+    def _duration_literals(self, G, aut_path):
+        """Goal-rule literals for the duration bounds, plus the top-level maximum if there is one.
+
+        A duration covering phases k1..k2 bounds T(k2) - T(k1-1). Returns the literals as one
+        string to append to the goal rule, the maximum of a duration that covers the whole plan,
+        and comment lines for the instance.
+        """
+        literals, comments, cap = [], [], None
+        last = f"T{len(aut_path) - 2}"
+        for duration in sorted(G.durations, key=str):
+            start, end = self._phase_window(duration.labels, aut_path, str(duration))
+            span = end if start == "0" else f"{end} - {start}"
+            if duration.low == duration.high:
+                literals.append(f"{span} = {duration.low}")
+            else:
+                literals.append(f"{duration.low} <= {span} <= {duration.high}")
+            comments.append(f"% {duration}: from {start} to {end}\n")
+            if start == "0" and end == last:
+                cap = duration.high if cap is None else min(cap, duration.high)
+        return "".join(", " + literal for literal in literals), cap, comments
 
     def _invocation_keep_rules(self, G, aut_path):
         """ASP rules and goal-rule literals for keeps declared inside a behavior invocation.
@@ -185,16 +233,7 @@ class Planner:
         rules = ["\n% KEEPS INSIDE A BEHAVIOR INVOCATION:\n"]
         literals = []
         for i, inv in enumerate(keeps, 1):
-            phases = [k for k, node in enumerate(path_nodes, 1) if inv.scope in _flatten_node(node)]
-            if not phases:
-                raise ValueError(f"The invocation '{inv.scope}' of {inv} is not on the chosen path.")
-            if phases != list(range(phases[0], phases[-1] + 1)):
-                raise NotImplementedError(
-                    f"The invocation '{inv.scope}' of {inv} covers phases {phases}, which are not "
-                    "consecutive. A keep window has to be one stretch of the plan."
-                )
-            start = "0" if phases[0] == 1 else f"T{phases[0] - 1}"
-            end = f"T{phases[-1]}"
+            start, end = self._phase_window({inv.scope}, aut_path, f"The invocation '{inv.scope}' of {inv}")
 
             rules.append(f"% keep {i}: {inv}, held from {start} to {end}\n")
             for body in inv.asp_violation_bodies():
@@ -482,10 +521,16 @@ class Planner:
         # such keeps nothing is added and the instance is exactly the original one.
         keep_rules, keep_literals = self._invocation_keep_rules(G, aut_path)
 
+        # Durations bound the time between goal times, so they belong in the goal rule as well.
+        if self.honour_duration:
+            duration_literals, self._horizon_cap, duration_comments = self._duration_literals(G, aut_path)
+        else:
+            duration_literals, self._horizon_cap, duration_comments = "", None, []
+
         # The padding was added so the animations play out a little longer.
         padding = f", t > {times[-1]} + 1" if self.pad_after_goals else ""
         acceptance = [
-            f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t{padding}{keep_literals}.\n",
+            f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t{padding}{keep_literals}{duration_literals}.\n",
             f":- query(t), not goal({','.join(['_'] * (n - 1))},t).\n",
         ]
         if not self.pad_after_goals:
@@ -518,6 +563,7 @@ class Planner:
             f.writelines(goals_rules)
 
             f.write('\n\n % GOAL ASSERTION:\n')
+            f.writelines(duration_comments)
             f.writelines(acceptance)
             f.writelines(keep_rules)
 

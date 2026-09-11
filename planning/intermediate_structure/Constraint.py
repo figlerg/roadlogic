@@ -1014,3 +1014,26 @@ class StabilityInvariant(Invariant):
         where = 'scenario' if self.scope is None else str(self.scope)
         param = self.parameter or '<free>'
         return f"keep[{where}]({self._actor}.{self._modifier} == {param}, constant)"
+
+
+class Duration:
+    """A bound from the standard's duration argument, in steps, one s being one step.
+
+    Given on a composition, serial(duration: [10s..30s]), or on one invocation,
+    car1.drive(duration: [30s..60s]). It bounds the time from the start of the first covered
+    behavior to the end of the last one (Semantics 7.6.2.1 and 7.6.2.4.1). `labels` are the
+    invocation labels it covers, which the planner maps to phases of the chosen path.
+    """
+
+    def __init__(self, labels, low, high, source):
+        self.labels = frozenset(labels)
+        self.low = low
+        self.high = high
+        self.source = source
+
+    def __str__(self):
+        bound = f"{self.low}" if self.low == self.high else f"{self.low}..{self.high}"
+        return f"duration[{self.source}]({bound}s)"
+
+    def __repr__(self):
+        return str(self)
