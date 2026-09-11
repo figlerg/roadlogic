@@ -22,7 +22,7 @@ from planning.asp.MyModel import MyModel
 from typing import Sequence
 
 def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, save_path=None, verbose=False,
-                   time_limit = None, deterministic=True, project=False):
+                   time_limit = None, deterministic=True):
     '''
     The main function implementing incremental solving.
     @param imin:
@@ -37,12 +37,6 @@ def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, 
 
     if deterministic:
         ctl.configuration.solve.parallel_mode=1
-
-    # Enumerate distinct projections only, as declared by #project in the program. Needed when the
-    # program contains choices that do not change the trace, otherwise one trace is returned once
-    # per choice. Off by default so existing programs enumerate exactly as before.
-    if project:
-        ctl.configuration.solve.project = "auto"
 
     ## NONE OF THESE HELP WITH THE SEARCH TREE ORDER
     # ctl.configuration.solve.rand_freq = 1

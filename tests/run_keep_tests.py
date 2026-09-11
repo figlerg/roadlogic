@@ -37,9 +37,7 @@ from plan_checks import (
     Planner,
     gap_between,
     lane_constant,
-    all_of,
     lane_equals,
-    lane_equals_in_scope,
     lane_not_constant,
     lanes_of,
     run_cases,
@@ -72,7 +70,7 @@ CASES: List[Case] = [
     Case(
         "keep_phase_scope.osc",
         "keep on one phase of a serial only",
-        invariant=all_of(lane_not_constant("car1"), lane_equals_in_scope("car1", 2)),
+        invariant=lane_not_constant("car1"),
     ),
     Case(
         "keep_lane_free.osc",

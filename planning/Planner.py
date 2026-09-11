@@ -189,8 +189,7 @@ class Planner:
 
         models = generate_plans(files=files, rules=self.__additional_single_rules, n=diversity_step * n, imin=imin,
                                 imax=imax, save_path=self.__out_path, verbose=self.verbose, time_limit=time_limit,
-                                override_files=rules_override, deterministic=deterministic,
-                                project=self._acceptance["choice"])
+                                override_files=rules_override, deterministic=deterministic)
         models = models[::diversity_step]
 
         if self.goal_encoding == "boundary":
@@ -239,12 +238,11 @@ class Planner:
         speed_actors |= {a for c in gamma0
                          if isinstance(c, RelativeConstraint) and c.modifier == Modifier.SPEED
                          for a in (c.actor_1, c.actor_2)}
-        # A speed invariant can cover t=0, since holds(F,0) :- init(F), and the first phase starts
-        # there. Its actor therefore needs a free initial velocity too, otherwise the hardcoded 1
+        # A scenario-scoped speed invariant covers t=0 as well, since holds(F,0) :- init(F).
+        # Its actor therefore needs a free initial velocity too, otherwise the hardcoded 1
         # contradicts the invariant and the specification is unsatisfiable for the wrong reason.
-        # For a phase-scoped invariant that does not reach t=0 this only adds a choice.
         speed_actors |= {a for inv in G.invariants
-                         if inv.modifier == Modifier.SPEED
+                         if inv.scope is None and inv.modifier == Modifier.SPEED
                          for a in inv.actors}
 
         def dyn_term(actor):
@@ -521,53 +519,19 @@ class Planner:
             step_rules.append("reached(I,t) :- reached(I,t-1).\n")
 
         else:
-            # With phase-scoped keeps the earliest split is no longer always valid, so the solver
-            # chooses the step at which it passes each boundary. The choice is free, nothing forces
-            # progress, and several boundaries may be passed at the same step.
-            last = f"t-2" if self.pad_after_goals else "t"
-            acceptance.append(f"{{ pass(P,t) }} :- P = 1..{n_boundaries}.\n")
-            for i in range(1, n_boundaries + 1):
-                acceptance.append(f":- pass({i},t), not goal{i}(t).\n")
-            acceptance.append(":- pass(P,t), P > 1, not passed(P-1,t).\n")
-            acceptance.append("passed(P,t) :- pass(P,t).\n")
-            if self.pad_after_goals:
-                acceptance.append(f":- query(t), not passed({n_boundaries},{last}).\n")
-            else:
-                # the plan ends at the step its last boundary is passed, so every step belongs to
-                # a phase and a keep in the last invocation covers the plan to its end
-                acceptance.append(f":- query(t), not pass({n_boundaries},t).\n")
-            # phase k runs from boundary k-1 to boundary k, both ends included
-            acceptance.append("in_phase(1,t) :- time(t), not passed(1,t-1).\n")
-            for k in range(2, n_boundaries + 1):
-                acceptance.append(f"in_phase({k},t) :- passed({k - 1},t), not passed({k},t-1).\n")
-            step_rules += ["passed(P,t) :- passed(P,t-1).\n", ":- pass(P,t), passed(P,t-1).\n"]
-            # the boundary choice does not change the trace, so count each trace once
-            base_rules.append("#project holds/2.\n")
-            choice = True
-
-            # A keep inside a behavior invocation holds while that invocation runs. After parallel
-            # composition a path node is a tuple of component states, so the invocation's phases
-            # are the path nodes containing it.
-            path_nodes = aut_path[1:-1]
-            scope_ids = {}
-            for scope in sorted({inv.scope for inv in phase_invariants}, key=str):
-                phases = [k for k, node in enumerate(path_nodes, 1) if scope in _flatten_node(node)]
-                if not phases:
-                    raise ValueError(f"The invocation '{scope}' of a keep is not on the chosen path.")
-                scope_ids[scope] = len(scope_ids) + 1
-                window_rules.append(f"% in_scope({scope_ids[scope]},t) is the lifetime of {scope}, phases {phases}\n")
-                for k in phases:
-                    window_rules.append(f"in_scope({scope_ids[scope]},t) :- in_phase({k},t).\n")
+            raise NotImplementedError(
+                "keep constraints scoped to a phase are not encoded yet: "
+                + ", ".join(str(inv) for inv in phase_invariants)
+            )
 
         self._acceptance = {"boundaries": n_boundaries, "choice": choice}
 
         # keep constraints. Unlike the goal rules these are not tied to one transition: each is
         # an integrity constraint in check(t), so it is instantiated per step and forbids any
-        # state that breaks the invariant. A phase-scoped one is restricted to its window.
+        # state that breaks the invariant.
         invariant_rules = []
         for invariant in sorted(G.invariants, key=str):
-            window = None if invariant.scope is None else f"in_scope({scope_ids[invariant.scope]},{{t}})"
-            for rule in invariant.asp_integrity_rules(window=window):
+            for rule in invariant.asp_integrity_rules():
                 invariant_rules.append(f"% {invariant}\n{rule}\n")
 
         with open(instance_file_target, 'w') as f:
