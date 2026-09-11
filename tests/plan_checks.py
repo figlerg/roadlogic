@@ -255,6 +255,45 @@ def goal_witnesses(model):
     return [tuple(pred.arguments[:-1]) for pred in model.goal]
 
 
+def span_between(from_goal, to_goal, low, high):
+    """T(to_goal) - T(from_goal) lies in [low, high] in every valid split, with T0 = 0.
+
+    The duration of a composition or invocation covering phases k1..k2 is T(k2) - T(k1-1). Every
+    split the plan carries is valid, so every one of them has to respect the duration.
+    """
+    def check(model):
+        splits = goal_witnesses(model)
+        if not splits:
+            return "plan carries no goal atom"
+        bad = []
+        for split in splits:
+            start = 0 if from_goal == 0 else split[from_goal - 1]
+            span = split[to_goal - 1] - start
+            if not low <= span <= high:
+                bad.append((split, span))
+        if bad:
+            return f"T{to_goal} - T{from_goal} outside [{low}, {high}] in splits {sorted(bad)[:4]}"
+        return None
+
+    check.description = f"{low} <= T{to_goal} - T{from_goal} <= {high} in every split"
+    return check
+
+
+def last_goal_between(low, high):
+    """The last goal time, which is when the whole behavior ends, lies in [low, high]."""
+    def check(model):
+        splits = goal_witnesses(model)
+        if not splits:
+            return "plan carries no goal atom"
+        bad = sorted(split for split in splits if not low <= split[-1] <= high)
+        if bad:
+            return f"last goal time outside [{low}, {high}] in splits {bad[:4]}"
+        return None
+
+    check.description = f"{low} <= last goal time <= {high} in every split"
+    return check
+
+
 def speed_at_start(actor, value):
     def check(model):
         seq = speeds_of(model, actor)
@@ -357,6 +396,8 @@ class Case:
     # Search bound for this case. Kept low by default because a negative case has to exhaust
     # every horizon up to it to prove there is no plan.
     imax: int = IMAX
+    # Exception type the spec must be rejected with, for syntax that is invalid or unsupported.
+    raises: Optional[type] = None
 
 
 def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
@@ -376,14 +417,19 @@ def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
             planner = Planner(spec_path, out_path=case_dir)
             plans = planner.plans(n=N_PLANS, external_rules=[CONTROLLER_LP],
                                   visualize=False, imax=case.imax)
-    except NotImplementedError as exc:
-        return PENDING, str(exc)
     except NoModelException:
         # Exhausting the horizon without a model is how an inconsistent specification shows
         # up, so it is an outcome rather than an error. The sat flag decides whether it passes.
         plans = []
-    except Exception:
+    except Exception as exc:
+        if case.raises is not None and isinstance(exc, case.raises):
+            return PASS, f"rejected with {type(exc).__name__} as expected: {str(exc).splitlines()[0]}"
+        if isinstance(exc, NotImplementedError):
+            return PENDING, str(exc)
         return FAIL, traceback.format_exc().strip()
+
+    if case.raises is not None:
+        return FAIL, f"expected the spec to be rejected with {case.raises.__name__}, but it planned"
 
     if not case.sat:
         if plans:
@@ -483,6 +529,12 @@ def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
             window = "whole scenario" if inv.scope is None else f"lifetime of {inv.scope}"
             printer(f"  {type(inv).__name__:<20} {inv}")
             printer(f"  {'':<20} window: {window}, strength: {inv.strength}")
+
+        printer("\ndurations (bound the time from start to end, in steps, T0 = 0):")
+        if not graph.durations:
+            printer("  (none)")
+        for duration in sorted(graph.durations, key=str):
+            printer(f"  {duration}, covers {sorted(duration.labels)}")
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

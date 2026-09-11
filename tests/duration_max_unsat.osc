@@ -1,0 +1,17 @@
+# Negative test, must be UNSAT. The same pass as duration_max_ok.osc, but within 2s. car1 has to
+# gain at least 15m on car2 and change lane to get past it. Both start at speed 1 and a lane
+# change needs at least 6mps, which cannot happen in two steps. Without duration handling this
+# spec is satisfiable, so rejecting it is purely the duration.
+
+scenario pass_too_fast:
+    car1: car
+    car2: car
+
+    do parallel(duration: [1s..2s]):
+        c0: car2.drive() with:
+            lane(1, at: start)
+            position(50m, at: start)
+        c1: car1.drive() with:
+            lane(same_as: car2, at: start)
+            position([10m..20m], behind: car2, at: start)
+            position([5m..10m], ahead_of: car2, at: end)

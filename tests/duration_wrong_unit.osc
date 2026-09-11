@@ -1,0 +1,13 @@
+# Must be rejected: a duration is a time, so it has to be given in s. 3m..5m is a length.
+
+scenario wrong_unit:
+    car1: car
+    car2: car
+
+    do parallel(duration: [3m..5m]):
+        c0: car1.drive() with:
+            lane(1, at: start)
+            position(0m, at: start)
+        c1: car2.drive() with:
+            lane(same_as: car1, at: start)
+            position([10m..20m], ahead_of: car1, at: start)

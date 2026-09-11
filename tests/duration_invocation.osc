@@ -1,0 +1,17 @@
+# Duration on single invocations, as in the standard's car1.drive(duration: [30s..60s]).
+# The path is init -> (c0,A) -> (c0,B) -> fin, so A is phase 1 and B is phase 2:
+# 3 <= T1 <= 4, 2 <= T2 - T1 <= 5, and the composition gives 3 <= T2 <= 20.
+
+scenario timed_phases:
+    car1: car
+    car2: car
+
+    do parallel(duration: [3s..20s]):
+        c0: car2.drive() with:
+            lane(1, at: start)
+            position(40m, at: start)
+        c1: serial:
+            A: car1.drive(duration: [3s..4s]) with:
+                lane(same_as: car2, at: start)
+                position([10m..20m], behind: car2, at: start)
+            B: car1.drive(duration: [2s..5s])

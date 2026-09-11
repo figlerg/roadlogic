@@ -1,0 +1,17 @@
+# Negative test, must be UNSAT. A timing inconsistency: A and B each last at least 3s and run one
+# after the other, so together at least 6s, but the composition they are part of lasts at most 5s.
+# No single duration is contradictory on its own.
+
+scenario too_much_for_the_time:
+    car1: car
+    car2: car
+
+    do parallel(duration: [1s..5s]):
+        c0: car2.drive() with:
+            lane(1, at: start)
+            position(40m, at: start)
+        c1: serial:
+            A: car1.drive(duration: [3s..4s]) with:
+                lane(same_as: car2, at: start)
+                position([10m..20m], behind: car2, at: start)
+            B: car1.drive(duration: [3s..4s])

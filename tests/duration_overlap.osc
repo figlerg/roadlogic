@@ -1,0 +1,14 @@
+# Must be rejected clearly: overlap is a parameter of parallel in the standard, but it is not
+# supported here. It used to be ignored without a word.
+
+scenario overlapping:
+    car1: car
+    car2: car
+
+    do parallel(overlap: equal, duration: [3s..20s]):
+        c0: car1.drive() with:
+            lane(1, at: start)
+            position(0m, at: start)
+        c1: car2.drive() with:
+            lane(same_as: car1, at: start)
+            position([10m..20m], ahead_of: car1, at: start)

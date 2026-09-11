@@ -1,0 +1,16 @@
+# Minimum duration. Every goal here is a start condition, so without duration handling the
+# last goal is met at t=0 and the plan has no length at all. The composition says it lasts 4s to
+# 10s, so the last goal time must fall in 4..10. This is how a zero-length plan is ruled out on
+# the spec side rather than by padding. One phase: path init -> (c0,c1) -> fin.
+
+scenario min_duration:
+    car1: car
+    car2: car
+
+    do parallel(duration: [4s..10s]):
+        c0: car1.drive() with:
+            lane(1, at: start)
+            position(0m, at: start)
+        c1: car2.drive() with:
+            lane(same_as: car1, at: start)
+            position([10m..20m], ahead_of: car1, at: start)
