@@ -1,25 +1,20 @@
-"""Compare the tuple and boundary goal encodings on the benchmark specs.
+"""Compare plans with and without the two padding steps after the last goal.
 
-Each spec is planned under three configurations:
+Each spec is planned twice:
 
-  original   tuple encoding, two padding steps     what the HSCC paper used
-  boundary   boundary encoding, two padding steps  should accept exactly the same plans
-  cut        boundary encoding, no padding         stops at the step the last goal is met
-  tuple_cut  tuple encoding, no padding            the same cut on the old encoding
+  original   two padding steps after the last goal, what the HSCC paper used
+  cut        no padding, the plan ends at the first step at which all goals are met
 
-Reported per spec: solve time, horizon of the first plan, how many of the first N plans are the
-same trace as one of the original's first N, and a cross-check. The cross-check re-solves each
-plan with its trace fixed, under the other configuration, to confirm that one accepts it too:
-  boundary plans under original, at the same horizon
-  original plans under boundary, at the same horizon
-  cut plans under original, which should need exactly the two padding steps more
-  cut plans under tuple_cut and back, at the same horizon
+Reported per spec: solve time, horizon of the first plan, and a cross-check. Each cut plan is
+re-solved with its trace fixed under the original configuration, which should accept it with
+exactly two more steps. A cut plan that fails this ends in a state the original would have
+rejected, for example one step before an unavoidable safety violation.
 
 Run with:
     source venv/bin/activate
-    python tests/compare_goal_encodings.py                  # vanilla benchmarks, N=5
-    python tests/compare_goal_encodings.py exp_002 --n 10
-    python tests/compare_goal_encodings.py exp_004          # slow, 45 minutes in the paper run
+    python tests/compare_padding.py                  # vanilla benchmarks, N=5
+    python tests/compare_padding.py exp_002 --n 10
+    python tests/compare_padding.py exp_004          # slow, 45 minutes in the paper run
 """
 
 import argparse
@@ -42,10 +37,8 @@ CONTROLLER_LP = os.path.join(ROOT, "create_scenarios", "controller.lp")
 DEFAULT_SPECS = ["exp_001", "exp_002", "exp_003", "exp_005", "exp_006", "exp_007"]
 
 CONFIGS = {
-    "original": dict(goal_encoding="tuple", pad_after_goals=True),
-    "boundary": dict(goal_encoding="boundary", pad_after_goals=True),
-    "cut": dict(goal_encoding="boundary", pad_after_goals=False),
-    "tuple_cut": dict(goal_encoding="tuple", pad_after_goals=False),
+    "original": dict(pad_after_goals=True),
+    "cut": dict(pad_after_goals=False),
 }
 
 
@@ -55,11 +48,6 @@ def rules_for(exp):
     if os.path.getsize(injection) > 0:
         rules.append(injection)
     return rules
-
-
-def trace(model):
-    """The plan as a set of holds atoms, which is what makes two plans the same."""
-    return frozenset(str(pred) for pred in model.holds)
 
 
 def plan(exp, config, n, imax):
@@ -105,27 +93,14 @@ def accepted_horizon(exp, config, model, slack):
 
 def compare(exp, n, imax):
     runs = {name: plan(exp, name, n, imax) for name in CONFIGS}
-    base_models, _ = runs["original"]
-    base_traces = {trace(m) for m in base_models}
-
     print(f"\n{exp}")
     for name, (models, elapsed) in runs.items():
-        same = sum(trace(m) in base_traces for m in models)
-        print(f"  {name:<9} {elapsed:8.1f}s   horizon t={models[0].max_t:<3} "
-              f"{len(models)} plans, {same} identical to an original plan")
+        print(f"  {name:<9} {elapsed:8.1f}s   horizon t={models[0].max_t:<3} {len(models)} plans")
 
     checks = []
-    for m in runs["boundary"][0]:
-        checks.append(("boundary plan accepted by original", accepted_horizon(exp, "original", m, 0) == m.max_t))
-    for m in base_models:
-        checks.append(("original plan accepted by boundary", accepted_horizon(exp, "boundary", m, 0) == m.max_t))
     for m in runs["cut"][0]:
         checks.append(("cut plan plus two steps accepted by original",
                        accepted_horizon(exp, "original", m, 2) == m.max_t + 2))
-    for m in runs["cut"][0]:
-        checks.append(("cut plan accepted by tuple_cut", accepted_horizon(exp, "tuple_cut", m, 0) == m.max_t))
-    for m in runs["tuple_cut"][0]:
-        checks.append(("tuple_cut plan accepted by cut", accepted_horizon(exp, "cut", m, 0) == m.max_t))
 
     for label in dict.fromkeys(label for label, _ in checks):
         results = [ok for lbl, ok in checks if lbl == label]
