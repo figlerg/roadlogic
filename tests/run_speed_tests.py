@@ -26,6 +26,7 @@ from plan_checks import (
     HERE,
     Case,
     explain,
+    in_keep_windows,
     run_cases,
     speed_at_goal,
     speed_at_start,
@@ -44,17 +45,20 @@ CASES = [
     Case(
         "speed_constant.osc",
         "fixed speed for the whole segment via at: all",
-        invariant=speed_equals("ego", 5),
+        invariant=in_keep_windows(speed_equals("ego", 5)),
     ),
     Case(
         "speed_range.osc",
         "speed held inside a range, the 7.3.12.4.1 in-constraint desugaring",
-        invariant=speed_between("ego", 5, 10),
+        invariant=in_keep_windows(speed_between("ego", 5, 10)),
     ),
     Case(
         "speed_overtake_keep.osc",
         "overtake with car1 at constant speed, needs speed plus the keep work",
-        invariant=speed_equals("car1", 5),
+        invariant=in_keep_windows(speed_equals("car1", 5)),
+        # Held at 5mps car1 cannot change lane (min_change_speed is 6), so ego has to merge back
+        # in front of it, which takes longer. With padding the first plan is at horizon 12.
+        imax=14,
     ),
     Case(
         "speed_relative.osc",

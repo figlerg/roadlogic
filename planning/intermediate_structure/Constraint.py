@@ -880,19 +880,16 @@ class Invariant:
             raise NotImplementedError(f"No state slot for modifier {modifier}.")
         return f"holds(state({actor}, {body}), {step})"
 
-    def asp_integrity_rules(self):
-        """ASP integrity constraints forbidding any step that breaks this invariant.
+    # True when breaking the invariant can be seen at one step on its own. A stability keep
+    # compares two consecutive steps, so it overrides this.
+    checks_single_step = True
 
-        Returned as a list of rule strings for `#program check(t)`, so each is instantiated per
-        step and the invariant holds at every step of the window.
+    def asp_violation_bodies(self):
+        """Rule bodies for `#program check(t)` that hold exactly when the invariant is broken at t.
+
+        A keep for the whole scenario turns each into an integrity constraint. A keep inside a
+        behavior invocation turns each into keep_broken(i,t), see Planner._invocation_keep_rules.
         """
-        if self.scope is not None:
-            raise NotImplementedError(
-                f"Phase-scoped invariants are not encoded yet ({self}). Scoping an invariant to "
-                "a phase requires tying it to the goal witness, see DECIDE 3 in "
-                "docs/keep-spec.md section 6."
-            )
-
         c = self.constraint
 
         if isinstance(c, AbsoluteConstraint):
@@ -905,7 +902,7 @@ class Invariant:
                 raise NotImplementedError(f"Cannot negate relation {c.relation} for an invariant.")
 
             var = 'X'
-            return [f":- {self._holds(c.actor, c.modifier, var)}, {var} {op} {value}."]
+            return [f"{self._holds(c.actor, c.modifier, var)}, {var} {op} {value}"]
 
         if isinstance(c, RelativeConstraint):
             op = self.FORBIDDEN.get(c.relation)
@@ -916,11 +913,24 @@ class Invariant:
                 offset_value = int(c.c) if isinstance(c.c, float) and float(c.c).is_integer() else c.c
                 offset = f" + {offset_value}" if offset_value >= 0 else f" - {abs(offset_value)}"
             return [
-                f":- {self._holds(c.actor_1, c.modifier, 'X1')}, "
-                f"{self._holds(c.actor_2, c.modifier, 'X2')}, X1 {op} X2{offset}."
+                f"{self._holds(c.actor_1, c.modifier, 'X1')}, "
+                f"{self._holds(c.actor_2, c.modifier, 'X2')}, X1 {op} X2{offset}"
             ]
 
         raise NotImplementedError(f"Cannot encode an invariant over {type(c).__name__}.")
+
+    def asp_integrity_rules(self):
+        """ASP integrity constraints forbidding any step that breaks this invariant.
+
+        Only for a keep that holds for the whole scenario. Returned as rule strings for
+        `#program check(t)`, so each is instantiated per step.
+        """
+        if self.scope is not None:
+            raise NotImplementedError(
+                f"{self} is scoped to the invocation {self.scope}. Such keeps are encoded through "
+                "the goal rule by Planner._invocation_keep_rules, not as standalone constraints."
+            )
+        return [f":- {body}." for body in self.asp_violation_bodies()]
 
     def __str__(self):
         where = 'scenario' if self.scope is None else str(self.scope)
@@ -977,22 +987,28 @@ class StabilityInvariant(Invariant):
         if self._actor == original_name:
             self._actor = new_name
 
-    def asp_integrity_rules(self):
-        """Forbid the quantity changing between consecutive steps.
+    checks_single_step = False
+
+    def asp_violation_bodies(self):
+        """Broken at t when the quantity differs from the step before.
 
         The parameter never reaches ASP. Equality to a parameter means the quantity holds one
         value for the lifetime of the instance, which is exactly step-to-step stability.
         """
+        return [
+            f"{Invariant._holds(self._actor, self._modifier, 'X1')}, "
+            f"{Invariant._holds(self._actor, self._modifier, 'X2', 't-1')}, "
+            f"time(t-1), X1 != X2"
+        ]
+
+    def asp_integrity_rules(self):
+        """Forbid the quantity changing between consecutive steps, for a scenario-wide keep."""
         if self.scope is not None:
             raise NotImplementedError(
-                f"Phase-scoped invariants are not encoded yet ({self}). See DECIDE 3 in "
-                "docs/keep-spec.md section 6."
+                f"{self} is scoped to the invocation {self.scope}. Such keeps are encoded through "
+                "the goal rule by Planner._invocation_keep_rules, not as standalone constraints."
             )
-        return [
-            f":- {Invariant._holds(self._actor, self._modifier, 'X1')}, "
-            f"{Invariant._holds(self._actor, self._modifier, 'X2', 't-1')}, "
-            f"time(t-1), X1 != X2."
-        ]
+        return [f":- {body}." for body in self.asp_violation_bodies()]
 
     def __str__(self):
         where = 'scenario' if self.scope is None else str(self.scope)

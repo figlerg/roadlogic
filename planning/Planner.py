@@ -161,6 +161,55 @@ class Planner:
 
     # LOGIC ETC:
 
+    def _invocation_keep_rules(self, G, aut_path):
+        """ASP rules and goal-rule literals for keeps declared inside a behavior invocation.
+
+        Phase k is the k-th node of the chosen path and runs from goal time T(k-1) to Tk, with
+        T0 = 0, both ends included. After parallel composition a node is a tuple of component
+        states, so an invocation covers the consecutive phases whose node contains it.
+
+        Per keep with number i:
+          keep_broken(i,t)          the keep is broken at step t
+          keep_held(i,From,To)      the keep held at every step from From to To, built forward so
+                                    it only refers to steps that already exist
+          keep_window(i,From,To,t)  the steps the keep covered in a split valid at horizon t, for
+                                    inspection. It carries t like goal/n does, because incremental
+                                    solving forbids defining the same atom at two horizons
+        and the literal keep_held(i,From,To) is added to the goal rule.
+        """
+        keeps = sorted((inv for inv in G.invariants if inv.scope is not None), key=str)
+        if not keeps:
+            return [], ""
+
+        path_nodes = aut_path[1:-1]
+        rules = ["\n% KEEPS INSIDE A BEHAVIOR INVOCATION:\n"]
+        literals = []
+        for i, inv in enumerate(keeps, 1):
+            phases = [k for k, node in enumerate(path_nodes, 1) if inv.scope in _flatten_node(node)]
+            if not phases:
+                raise ValueError(f"The invocation '{inv.scope}' of {inv} is not on the chosen path.")
+            if phases != list(range(phases[0], phases[-1] + 1)):
+                raise NotImplementedError(
+                    f"The invocation '{inv.scope}' of {inv} covers phases {phases}, which are not "
+                    "consecutive. A keep window has to be one stretch of the plan."
+                )
+            start = "0" if phases[0] == 1 else f"T{phases[0] - 1}"
+            end = f"T{phases[-1]}"
+
+            rules.append(f"% keep {i}: {inv}, held from {start} to {end}\n")
+            for body in inv.asp_violation_bodies():
+                rules.append(f"keep_broken({i},t) :- {body}.\n")
+            if inv.checks_single_step:
+                rules.append(f"keep_held({i},t,t) :- time(t), not keep_broken({i},t).\n")
+            else:
+                # a keep comparing consecutive steps has nothing to compare inside a one-step window
+                rules.append(f"keep_held({i},t,t) :- time(t).\n")
+            args = [f"T{j}" if f"T{j}" in (start, end) else "_" for j in range(1, len(path_nodes) + 1)]
+            rules.append(f"keep_window({i},{start},{end},t) :- goal({','.join(args)},t).\n")
+            literals.append(f"keep_held({i},{start},{end})")
+
+        return rules, ", " + ", ".join(literals)
+
     def create_asp_instance(self, actor_ids, aut_path):
 
         instance_file_target = os.path.join(self.__out_path, 'instance.lp')
@@ -185,11 +234,12 @@ class Planner:
         speed_actors |= {a for c in gamma0
                          if isinstance(c, RelativeConstraint) and c.modifier == Modifier.SPEED
                          for a in (c.actor_1, c.actor_2)}
-        # A scenario-scoped speed invariant covers t=0 as well, since holds(F,0) :- init(F).
-        # Its actor therefore needs a free initial velocity too, otherwise the hardcoded 1
+        # A speed invariant can cover t=0, since holds(F,0) :- init(F), and the first phase starts
+        # there. Its actor therefore needs a free initial velocity too, otherwise the hardcoded 1
         # contradicts the invariant and the specification is unsatisfiable for the wrong reason.
+        # For a keep whose invocation starts later this only adds a choice.
         speed_actors |= {a for inv in G.invariants
-                         if inv.scope is None and inv.modifier == Modifier.SPEED
+                         if inv.modifier == Modifier.SPEED
                          for a in inv.actors}
 
         def dyn_term(actor):
@@ -426,17 +476,16 @@ class Planner:
 
         goals = [f'goal{i}(T{i})' for i in range(1, n)]
 
-        phase_invariants = [inv for inv in G.invariants if inv.scope is not None]
-        if phase_invariants:
-            raise NotImplementedError(
-                "keep constraints scoped to a phase are not encoded yet: "
-                + ", ".join(str(inv) for inv in phase_invariants)
-            )
+        # A keep inside a behavior invocation holds only while that invocation runs. Which steps
+        # those are depends on how the plan is split into phases, so the keep is added to the goal
+        # rule: a split only counts if every such keep held over its invocation's steps. Without
+        # such keeps nothing is added and the instance is exactly the original one.
+        keep_rules, keep_literals = self._invocation_keep_rules(G, aut_path)
 
         # The padding was added so the animations play out a little longer.
         padding = f", t > {times[-1]} + 1" if self.pad_after_goals else ""
         acceptance = [
-            f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t{padding}.\n",
+            f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t{padding}{keep_literals}.\n",
             f":- query(t), not goal({','.join(['_'] * (n - 1))},t).\n",
         ]
         if not self.pad_after_goals:
@@ -444,12 +493,15 @@ class Planner:
             # complete, so a trace that could already have ended one step earlier is rejected.
             acceptance.append(f":- query(t), goal({','.join(['_'] * (n - 1))},t-1).\n")
         step_rules = []
+        if keep_rules:
+            # extend each held window by one step as long as the keep is not broken
+            step_rules.append("keep_held(I,Ta,t) :- keep_held(I,Ta,t-1), not keep_broken(I,t).\n")
 
         # keep constraints. Unlike the goal rules these are not tied to one transition: each is
         # an integrity constraint in check(t), so it is instantiated per step and forbids any
         # state that breaks the invariant.
         invariant_rules = []
-        for invariant in sorted(G.invariants, key=str):
+        for invariant in sorted((inv for inv in G.invariants if inv.scope is None), key=str):
             for rule in invariant.asp_integrity_rules():
                 invariant_rules.append(f"% {invariant}\n{rule}\n")
 
@@ -467,6 +519,7 @@ class Planner:
 
             f.write('\n\n % GOAL ASSERTION:\n')
             f.writelines(acceptance)
+            f.writelines(keep_rules)
 
             if invariant_rules:
                 f.write('\n% INVARIANTS (keep):\n')

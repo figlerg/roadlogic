@@ -35,7 +35,9 @@ from plan_checks import (
     ROOT,
     Case,
     Planner,
+    all_of,
     gap_between,
+    in_keep_windows,
     lane_constant,
     lane_equals,
     lane_not_constant,
@@ -55,7 +57,7 @@ CASES: List[Case] = [
     Case(
         "keep.osc",
         "behavior-scoped keep, hardcoded lane",
-        invariant=lane_equals("car1", 2),
+        invariant=in_keep_windows(lane_equals("car1", 2)),
     ),
     Case(
         "keep_scenario_scope.osc",
@@ -70,7 +72,7 @@ CASES: List[Case] = [
     Case(
         "keep_phase_scope.osc",
         "keep on one phase of a serial only",
-        invariant=lane_not_constant("car1"),
+        invariant=all_of(lane_not_constant("car1"), in_keep_windows(lane_equals("car1", 2))),
     ),
     Case(
         "keep_lane_free.osc",
@@ -99,8 +101,8 @@ CASES: List[Case] = [
     ),
     Case(
         "keep_relational_modifier.osc",
-        "same invariant via an at-less position modifier, must match the space_gap form",
-        invariant=gap_between("ego", "car1", 5, 100),
+        "same invariant via an at-less position modifier, inside its invocation",
+        invariant=in_keep_windows(gap_between("ego", "car1", 5, 100)),
     ),
     Case(
         "keep_inconsistent_direct.osc",

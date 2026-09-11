@@ -117,6 +117,42 @@ def lane_not_constant(actor):
     return check
 
 
+def keep_windows(model):
+    """Steps covered by keep constraints scoped to an invocation, from the keep_window atoms.
+
+    keep_window(Id,From,To,t) is derived for every split of the plan into phases that is valid at
+    horizon t, and every one of those honours the keeps, so the union of the ranges is the set of
+    steps to check.
+    """
+    steps = set()
+    for pred in model:
+        if pred.name == "keep_window":
+            start, end = pred.arguments[1], pred.arguments[2]
+            steps.update(range(start, end + 1))
+    return steps
+
+
+def in_keep_windows(check):
+    """Run a checker only on the steps inside the keep windows.
+
+    A keep inside an invocation holds while that invocation runs. The two padding steps after the
+    last goal lie outside every invocation, so a checker over the whole trace would test steps
+    the keep never covered.
+    """
+    import copy
+
+    def wrapped(model):
+        steps = keep_windows(model)
+        if not steps:
+            return "plan carries no keep_window atom, so there is no keep window to check"
+        view = copy.copy(model)
+        view.symbols = [p for p in model.symbols if p.name != "holds" or p.time in steps]
+        return check(view)
+
+    wrapped.description = f"{check.description}, inside the keep windows"
+    return wrapped
+
+
 def speed_between(actor, low, high):
     def check(model):
         seq = speeds_of(model, actor)
@@ -318,6 +354,9 @@ class Case:
     note: str
     sat: bool = True
     invariant: Optional[Callable] = None
+    # Search bound for this case. Kept low by default because a negative case has to exhaust
+    # every horizon up to it to prove there is no plan.
+    imax: int = IMAX
 
 
 def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
@@ -336,7 +375,7 @@ def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
             warnings.simplefilter("ignore")
             planner = Planner(spec_path, out_path=case_dir)
             plans = planner.plans(n=N_PLANS, external_rules=[CONTROLLER_LP],
-                                  visualize=False, imax=IMAX)
+                                  visualize=False, imax=case.imax)
     except NotImplementedError as exc:
         return PENDING, str(exc)
     except NoModelException:
@@ -349,10 +388,10 @@ def run_case(case: Case, out_dir: str, spec_dir: str = HERE):
     if not case.sat:
         if plans:
             return FAIL, f"expected no plan but got {len(plans)}, so the conflict went undetected"
-        return PASS, f"no model up to horizon {IMAX}, correctly rejected as inconsistent"
+        return PASS, f"no model up to horizon {case.imax}, correctly rejected as inconsistent"
 
     if not plans:
-        return FAIL, f"expected at least one plan but found no model up to horizon {IMAX}"
+        return FAIL, f"expected at least one plan but found no model up to horizon {case.imax}"
 
     for i, plan in enumerate(plans):
         msg = case.invariant(plan)
@@ -459,6 +498,9 @@ def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
             printer(_rule(f"plan {k} of {len(plans)}", "-"))
             witnesses = goal_witnesses(model)
             printer(f"goal times (T1..Tn-1) per witness: {witnesses if witnesses else 'none'}")
+            windows = sorted({tuple(p.arguments[:3]) for p in model if p.name == "keep_window"})
+            if windows:
+                printer(f"keep windows (Id, From, To), one per valid split: {windows}")
             rows = {}
             for actor, t, seg, lane, v_lon, v_lat in states(model):
                 rows.setdefault(actor, {})[t] = (seg, lane, v_lon, v_lat)
