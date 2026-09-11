@@ -23,12 +23,71 @@ from planning.misc.errors import HardSyntaxErrorStrategy
 ## TODO appending planning/ at the start above should solve things for the makefile, but somehow the parsing craps out?
 
 
+# How the phase goals are combined into acceptance of a plan. Change these two to switch back.
+#
+# "tuple"    the original encoding: one goal(T1,...,Tn,t) rule over every ordered tuple of goal
+#            times. Its grounding grows like t^(n-1) in the number of phase boundaries.
+# "boundary" the same acceptance condition written per boundary, which grows linearly. The
+#            goal(T1,...,Tn,t) atoms are rebuilt in Python after solving, so code reading them
+#            sees the same atoms. Needed for keep constraints scoped to a phase.
+GOAL_ENCODING = "tuple"
+
+# True keeps the original requirement that a plan runs two more steps after its last goal, which
+# made the animations play out longer. False ends every plan exactly at the first step at which
+# all goals are met, even when plans are collected over several horizons.
+PAD_AFTER_GOALS = True
+
+
+def _flatten_node(node):
+    """Component labels of a translation-graph node. Parallel composition makes tuples of them."""
+    if isinstance(node, tuple):
+        return {label for part in node for label in _flatten_node(part)}
+    return {node}
+
+
+def _ordered_splits(times, lower=0):
+    """Every non-decreasing choice of one time per boundary, from the times each goal holds."""
+    if not times:
+        yield ()
+        return
+    for t in times[0]:
+        if t >= lower:
+            for rest in _ordered_splits(times[1:], t):
+                yield (t,) + rest
+
+
+def reconstruct_goal_atoms(model, n_boundaries, pad, from_passes):
+    """Add the goal(T1,...,Tn,t) atoms the tuple encoding would have derived for this plan.
+
+    Under the boundary encoding the solver never builds the tuple, but map_plan chooses among all
+    valid splits to find the gentlest lane change, so they are rebuilt from the goal_i atoms with
+    the same condition as the tuple rule: 0 <= T1 <= ... <= Tn <= t, plus t > Tn + 1 when padding.
+    With phase-scoped keeps only the split the solver chose is valid, so that one is used.
+    """
+    from planning.asp.MyModel import MyPred
+
+    if from_passes:
+        chosen = {pred.arguments[0]: pred.arguments[1] for pred in model if pred.name == "pass"}
+        splits = [tuple(chosen[i] for i in range(1, n_boundaries + 1))]
+    else:
+        times = [sorted(pred.arguments[0] for pred in model if pred.name == f"goal{i}")
+                 for i in range(1, n_boundaries + 1)]
+        splits = list(_ordered_splits(times))
+
+    first = 2 if pad else 0
+    for split in splits:
+        for t in range(split[-1] + first, model.max_t + 1):
+            model.symbols.append(MyPred("goal", list(split) + [t]))
+    return model
+
+
 class Planner:
     """
     The API for the planning module. Create a Planner object, either from a OS2 file or an intermediate structure.
     """
 
-    def __init__(self, osc_path, verbose=False, out_path=None, animate_plans=False):
+    def __init__(self, osc_path, verbose=False, out_path=None, animate_plans=False,
+                 goal_encoding=None, pad_after_goals=None):
         """
         Constructor which does the parsing of the input OSC file and initialises the structures for translation.
 
@@ -47,6 +106,12 @@ class Planner:
         self.verbose = verbose
         if verbose:
             self._translation_graph.draw(show=True)
+
+        # Read the module switches at call time, so changing them at runtime takes effect.
+        self.goal_encoding = GOAL_ENCODING if goal_encoding is None else goal_encoding
+        if self.goal_encoding not in ("tuple", "boundary"):
+            raise ValueError(f"Unknown goal encoding '{self.goal_encoding}', use 'tuple' or 'boundary'.")
+        self.pad_after_goals = PAD_AFTER_GOALS if pad_after_goals is None else pad_after_goals
 
         self.visualize = animate_plans
 
@@ -126,6 +191,11 @@ class Planner:
                                 imax=imax, save_path=self.__out_path, verbose=self.verbose, time_limit=time_limit,
                                 override_files=rules_override, deterministic=deterministic)
         models = models[::diversity_step]
+
+        if self.goal_encoding == "boundary":
+            for model in models:
+                reconstruct_goal_atoms(model, self._acceptance["boundaries"], self.pad_after_goals,
+                                       from_passes=self._acceptance["choice"])
 
         if self.verbose:
             print(models)
@@ -409,10 +479,52 @@ class Planner:
 
         goals = [f'goal{i}(T{i})' for i in range(1, n)]
 
-        # not sure why I added a constant to the final time. probably to see what is happening better on the animation
-        # TODO maybe add this as a padding_param=1 above. It could be useful in general, but IMO not worth it computing for 5 more steps
-        goal = f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t, t > {times[-1]} + 1.\n"
-        goal_assertion = f":- query(t), not goal({','.join(['_'] * (n - 1))},t).\n"
+        n_boundaries = n - 1
+        phase_invariants = [inv for inv in G.invariants if inv.scope is not None]
+        acceptance, window_rules, step_rules, base_rules = [], [], [], []
+        choice = False
+
+        if self.goal_encoding == "tuple":
+            if phase_invariants:
+                listed = "\n  ".join(str(inv) for inv in phase_invariants)
+                raise NotImplementedError(
+                    "keep constraints scoped to a phase need the boundary goal encoding. The tuple "
+                    "encoding has no fixed phase boundaries to attach them to:\n  " + listed +
+                    "\nUse Planner(..., goal_encoding='boundary') or set "
+                    "planning.Planner.GOAL_ENCODING. Scenario-scoped keeps work with either."
+                )
+            # The padding was added so the animations play out a little longer.
+            padding = f", t > {times[-1]} + 1" if self.pad_after_goals else ""
+            acceptance = [
+                f"goal({','.join(times)},t) :-  {','.join(goals)}, 0 <= {'<='.join(times)} <= t{padding}.\n",
+                f":- query(t), not goal({','.join(['_'] * (n - 1))},t).\n",
+            ]
+            if not self.pad_after_goals:
+                # Without padding the plan ends at the first step at which the goals can all be
+                # complete, so a trace that could already have ended one step earlier is rejected.
+                acceptance.append(f":- query(t), goal({','.join(['_'] * (n - 1))},t-1).\n")
+
+        elif not phase_invariants:
+            # Same condition as the tuple rule, one boundary at a time. reached(I,t) holds once
+            # goals 1..I have been met in order by step t, several at the same step allowed. That
+            # is exactly "some T1 <= ... <= TI <= t exists", and it needs no choice.
+            last = f"t-2" if self.pad_after_goals else "t"
+            acceptance.append("reached(1,t) :- goal1(t).\n")
+            for i in range(2, n_boundaries + 1):
+                acceptance.append(f"reached({i},t) :- reached({i - 1},t), goal{i}(t).\n")
+            acceptance.append(f":- query(t), not reached({n_boundaries},{last}).\n")
+            if not self.pad_after_goals:
+                # end exactly when the goals are first complete, not at some later step
+                acceptance.append(f":- query(t), reached({n_boundaries},t-1).\n")
+            step_rules.append("reached(I,t) :- reached(I,t-1).\n")
+
+        else:
+            raise NotImplementedError(
+                "keep constraints scoped to a phase are not encoded yet: "
+                + ", ".join(str(inv) for inv in phase_invariants)
+            )
+
+        self._acceptance = {"boundaries": n_boundaries, "choice": choice}
 
         # keep constraints. Unlike the goal rules these are not tied to one transition: each is
         # an integrity constraint in check(t), so it is instantiated per step and forbids any
@@ -435,12 +547,20 @@ class Planner:
             f.writelines(goals_rules)
 
             f.write('\n\n % GOAL ASSERTION:\n')
-            f.write(goal)
-            f.write(goal_assertion)
+            f.writelines(acceptance)
+            f.writelines(window_rules)
 
             if invariant_rules:
                 f.write('\n% INVARIANTS (keep):\n')
                 f.writelines(invariant_rules)
+
+            if step_rules:
+                f.write('\n#program step(t).\n\n')
+                f.writelines(step_rules)
+
+            if base_rules:
+                f.write('\n#program base.\n\n')
+                f.writelines(base_rules)
 
             # TODO I would like some movement, but this rule doesn't work
             # f.write('\n\n % MANUAL RULES:\n')
