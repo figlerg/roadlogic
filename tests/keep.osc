@@ -1,5 +1,9 @@
 # our typical overtake (exp_002_b) but using the keep structure 
 #  (i.e. enforcing it as an invariant on the OS2 level)
+#
+# The final gap is 13m..25m instead of exp_002_b's 5m..10m. With car1 held in its lane, merging
+# back in front of it needs at least min_change_speed + safety_distance_back = 6 + 7 = 13m, so
+# 5m..10m cannot be met. See keep_scenario_scope.osc for the full derivation.
 
 scenario overtake:
     car1: car
@@ -21,4 +25,4 @@ scenario overtake:
 
             C: ego.drive() with:
                 lane(same_as: car1, at: end)
-                position([5m..10m], ahead_of: car1, at: end)
+                position([13m..25m], ahead_of: car1, at: end)

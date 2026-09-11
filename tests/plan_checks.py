@@ -117,6 +117,27 @@ def lane_not_constant(actor):
     return check
 
 
+def lane_equals_in_scope(actor, value):
+    """Lane pinned at every step inside a keep window.
+
+    Reads the in_scope(Id,t) atoms the boundary encoding emits for phase-scoped keeps, so this
+    checks the window the solver actually chose rather than guessing it. Treats every scope in the
+    plan as one window, which is enough for specs with a single phase-scoped keep.
+    """
+    def check(model):
+        window = sorted({pred.arguments[1] for pred in model if pred.name == "in_scope"})
+        if not window:
+            return "plan carries no in_scope atom, so there is no keep window to check"
+        seq = lanes_of(model, actor)
+        bad = [(t, seq[t]) for t in window if t < len(seq) and seq[t] != value]
+        if bad:
+            return f"{actor}.lane != {value} inside the window {window} at {bad}, trace {seq}"
+        return None
+
+    check.description = f"{actor}.lane == {value} at every step of the keep window"
+    return check
+
+
 def speed_between(actor, low, high):
     def check(model):
         seq = speeds_of(model, actor)

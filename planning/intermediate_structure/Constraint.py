@@ -880,18 +880,21 @@ class Invariant:
             raise NotImplementedError(f"No state slot for modifier {modifier}.")
         return f"holds(state({actor}, {body}), {step})"
 
-    def asp_integrity_rules(self):
+    def asp_integrity_rules(self, window=None):
         """ASP integrity constraints forbidding any step that breaks this invariant.
 
         Returned as a list of rule strings for `#program check(t)`, so each is instantiated per
         step and the invariant holds at every step of the window.
+
+        `window` is a body literal with a `{t}` placeholder, for example "in_scope(1,{t})". It is
+        required for a phase-scoped invariant and restricts the rule to the steps of that phase.
         """
-        if self.scope is not None:
+        if self.scope is not None and window is None:
             raise NotImplementedError(
-                f"Phase-scoped invariants are not encoded yet ({self}). Scoping an invariant to "
-                "a phase requires tying it to the goal witness, see DECIDE 3 in "
-                "docs/keep-spec.md section 6."
+                f"No window was given for the phase-scoped invariant {self}. The planner supplies "
+                "one only under the boundary goal encoding."
             )
+        guard = f"{window.format(t='t')}, " if window else ""
 
         c = self.constraint
 
@@ -905,7 +908,7 @@ class Invariant:
                 raise NotImplementedError(f"Cannot negate relation {c.relation} for an invariant.")
 
             var = 'X'
-            return [f":- {self._holds(c.actor, c.modifier, var)}, {var} {op} {value}."]
+            return [f":- {guard}{self._holds(c.actor, c.modifier, var)}, {var} {op} {value}."]
 
         if isinstance(c, RelativeConstraint):
             op = self.FORBIDDEN.get(c.relation)
@@ -916,7 +919,7 @@ class Invariant:
                 offset_value = int(c.c) if isinstance(c.c, float) and float(c.c).is_integer() else c.c
                 offset = f" + {offset_value}" if offset_value >= 0 else f" - {abs(offset_value)}"
             return [
-                f":- {self._holds(c.actor_1, c.modifier, 'X1')}, "
+                f":- {guard}{self._holds(c.actor_1, c.modifier, 'X1')}, "
                 f"{self._holds(c.actor_2, c.modifier, 'X2')}, X1 {op} X2{offset}."
             ]
 
@@ -977,19 +980,21 @@ class StabilityInvariant(Invariant):
         if self._actor == original_name:
             self._actor = new_name
 
-    def asp_integrity_rules(self):
+    def asp_integrity_rules(self, window=None):
         """Forbid the quantity changing between consecutive steps.
 
         The parameter never reaches ASP. Equality to a parameter means the quantity holds one
-        value for the lifetime of the instance, which is exactly step-to-step stability.
+        value for the lifetime of the instance, which is exactly step-to-step stability. With a
+        window, both steps have to lie inside it.
         """
-        if self.scope is not None:
+        if self.scope is not None and window is None:
             raise NotImplementedError(
-                f"Phase-scoped invariants are not encoded yet ({self}). See DECIDE 3 in "
-                "docs/keep-spec.md section 6."
+                f"No window was given for the phase-scoped invariant {self}. The planner supplies "
+                "one only under the boundary goal encoding."
             )
+        guard = f"{window.format(t='t')}, {window.format(t='t-1')}, " if window else ""
         return [
-            f":- {Invariant._holds(self._actor, self._modifier, 'X1')}, "
+            f":- {guard}{Invariant._holds(self._actor, self._modifier, 'X1')}, "
             f"{Invariant._holds(self._actor, self._modifier, 'X2', 't-1')}, "
             f"time(t-1), X1 != X2."
         ]
