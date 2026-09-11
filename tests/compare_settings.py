@@ -1,20 +1,24 @@
-"""Compare plans with and without the two padding steps after the last goal.
+"""Compare planner settings on the benchmark specs: padding and duration handling.
 
-Each spec is planned twice:
+Each spec is planned three times:
 
-  original   two padding steps after the last goal, what the HSCC paper used
-  cut        no padding, the plan ends at the first step at which all goals are met
+  paper      two padding steps after the last goal, duration ignored. What the HSCC paper used.
+  duration   the same, but the spec's duration is honoured. Isolates the effect of durations.
+  new        no padding, duration honoured. The plan ends at the first step at which all goals are
+             met, and the spec's duration rules out plans that are too short or too long.
 
-Reported per spec: solve time, horizon of the first plan, and a cross-check. Each cut plan is
-re-solved with its trace fixed under the original configuration, which should accept it with
-exactly two more steps. A cut plan that fails this ends in a state the original would have
-rejected, for example one step before an unavoidable safety violation.
+Reported per spec: solve time, horizon of the first plan, and cross-checks. Each check re-solves a
+plan with its trace fixed under another setting, to see whether that setting accepts it too:
+  duration plans under paper, same horizon. Durations only restrict, so these should all pass.
+  paper plans under duration, same horizon. A failure is a paper plan the duration rules out.
+  new plans plus two steps under duration. A failure is a plan that ends in a state padding
+  would have rejected, for example one step before an unavoidable safety violation.
 
 Run with:
     source venv/bin/activate
-    python tests/compare_padding.py                  # vanilla benchmarks, N=5
-    python tests/compare_padding.py exp_002 --n 10
-    python tests/compare_padding.py exp_004          # slow, 45 minutes in the paper run
+    python tests/compare_settings.py                  # vanilla benchmarks, N=5
+    python tests/compare_settings.py exp_002 --n 10
+    python tests/compare_settings.py exp_004          # slow, 45 minutes in the paper run
 """
 
 import argparse
@@ -37,8 +41,9 @@ CONTROLLER_LP = os.path.join(ROOT, "create_scenarios", "controller.lp")
 DEFAULT_SPECS = ["exp_001", "exp_002", "exp_003", "exp_005", "exp_006", "exp_007"]
 
 CONFIGS = {
-    "original": dict(pad_after_goals=True),
-    "cut": dict(pad_after_goals=False),
+    "paper": dict(pad_after_goals=True, honour_duration=False),
+    "duration": dict(pad_after_goals=True, honour_duration=True),
+    "new": dict(pad_after_goals=False, honour_duration=True),
 }
 
 
@@ -98,9 +103,15 @@ def compare(exp, n, imax):
         print(f"  {name:<9} {elapsed:8.1f}s   horizon t={models[0].max_t:<3} {len(models)} plans")
 
     checks = []
-    for m in runs["cut"][0]:
-        checks.append(("cut plan plus two steps accepted by original",
-                       accepted_horizon(exp, "original", m, 2) == m.max_t + 2))
+    for m in runs["duration"][0]:
+        checks.append(("duration plan accepted by paper",
+                       accepted_horizon(exp, "paper", m, 0) == m.max_t))
+    for m in runs["paper"][0]:
+        checks.append(("paper plan accepted by duration",
+                       accepted_horizon(exp, "duration", m, 0) == m.max_t))
+    for m in runs["new"][0]:
+        checks.append(("new plan plus two steps accepted by duration",
+                       accepted_horizon(exp, "duration", m, 2) == m.max_t + 2))
 
     for label in dict.fromkeys(label for label, _ in checks):
         results = [ok for lbl, ok in checks if lbl == label]
