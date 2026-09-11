@@ -315,82 +315,34 @@ integrity constraints with no model, because `dynamics.lp` gives car1 exactly on
 :- holds(state(car1, loc(_,L), dyn(_,_)), t), L != 1.
 ```
 
-**DECIDE 3, phase scoping. Genuinely open, no recommendation.**
+**RESOLVED 2026-09-11, phase scoping: the keep goes into the goal rule.**
 
-An earlier draft of this section recommended deferring on grounding cost. That reasoning was
-wrong and is corrected below.
-
-**What a phase actually is after compilation.** The overtake produces
-(`planning/generated/instance.lp`):
-
-```prolog
-goal1(t) :- time(t), holds(state(car1,loc(S1,L1),dyn(_,_)), t), holds(state(car2,...), t), L2 < L1.
-goal2(t) :- time(t), ... 1 <= (S2 - S1) <= 10.
-goal3(t) :- time(t), ... L2 = L1, 5 <= (S2 - S1) <= 10.
-
-goal(T1,T2,T3,t) :- goal1(T1), goal2(T2), goal3(T3), 0 <= T1<=T2<=T3 <= t, t > T3 + 1.
-:- query(t), not goal(_,_,_,t).
-```
-
-`goal1/1` is not "the moment phase A ends". It is true at every step where its condition happens
-to hold, possibly many. `goal/4` says an ordered witness tuple exists, and the assertion takes it
-with wildcards, so any witness will do. **There is no unique phase decomposition in the model.**
-Phases exist only relative to a chosen witness: A is `[0,T1]`, B is `[T1,T2]`, C is `[T2,T3]`.
-
-**Which makes the scoping ambiguous.** Two readings, and they differ:
-
-- *for every witness*: too strong. A trace with several valid witnesses would have to satisfy the
-  invariant on all of their intervals, rejecting traces that are fine.
-- *for the same witness*: correct. The invariant becomes part of what makes a witness valid.
-
-The second means folding it into the goal rule rather than emitting a standalone constraint:
+A phase has no fixed boundaries: `goal_i(t)` can hold at many steps, and `goal(T1,...,Tn,t)` only
+asks that some ordered split exists. So a keep inside an invocation cannot be a standalone
+constraint. It is added to the goal rule instead, and a split only counts if every such keep held
+over its invocation's steps:
 
 ```prolog
-goal(T1,T2,T3,t) :- goal1(T1), goal2(T2), goal3(T3),
-                    0 <= T1<=T2<=T3 <= t, t > T3 + 1,
-                    not phaseB_violated(T1,T2).
+goal(T1,T2,t) :- goal1(T1), goal2(T2), 0 <= T1<=T2 <= t, t > T2 + 1, keep_held(1,T1,T2).
 
-phaseB_violated(Ta,Tb) :- holds(state(car1,loc(_,L),dyn(_,_)), T),
-                          Ta <= T, T <= Tb, L != 2.
+keep_broken(1,t) :- holds(state(car1, loc(_,X), dyn(_,_)), t), X != 2.
+keep_held(1,t,t) :- time(t), not keep_broken(1,t).
+#program step(t).
+keep_held(I,Ta,t) :- keep_held(I,Ta,t-1), not keep_broken(I,t).
 ```
 
-**Cost, corrected.** `goal/4` already grounds over every `(T1,T2,T3)` tuple. Adding one body
-literal plus a `phase_violated/2` of the same order is additive, not a new dimension. The earlier
-"grounds over all `T_i` combinations" argument does not distinguish the options, because the
-existing rule already does that. The real cost is scope of work: `Planner.py:337` builds the goal
-rule as a single f-string and per-phase invariants have to be woven into it.
+Phase k is the k-th node of the chosen path, from `T(k-1)` to `Tk` with `T0 = 0`. After parallel
+composition a node is a tuple of component states, so an invocation covers the consecutive
+phases whose node contains it. `keep_window(i,From,To,t)` records the steps a keep covered, for
+tests and the verbose mode. It carries the horizon t like `goal/n`, since incremental solving does
+not allow the same atom to be defined at two horizons.
 
-**Recovering which edges belong to a phase is easier than expected.** Parallel composition is
-`TranslationGraph.__add__`, a cartesian product, and the composed node labels are tuples of the
-component states. For the overtake the chosen path is
+Specs without such keeps get exactly the original instance. An alternative with an explicit
+phase choice was built and dropped: it accepted the same plans but was slower and changed the plan
+order.
 
-```
-init -> ('c0.drive','A.drive') -> ('c0.drive','B.drive') -> ('c0.drive','C.drive') -> fin
-```
-
-so a branch's phase is the maximal run of path edges over which that branch's component is
-unchanged. Component 0 stays `c0.drive` throughout, component 1 walks A, B, C. Nothing in
-`create_asp_instance` uses this today, but the information is present in the labels.
-
-That projection also settles something about the test corpus: in `keep.osc` the keep sits on
-`c0: car1.drive()`, whose component spans every path edge, so its phase window coincides with the
-whole scenario even under correct phase semantics. `keep.osc` therefore cannot discriminate the
-two scoping rules. `keep_phase_scope.osc`, where car1 runs a serial of two drives, is the one
-that can.
-
-**Cost of deferring, which the earlier draft understated.** If phase scope is treated as scenario
-scope, `keep_inconsistent_parallel.osc` passes vacuously: both keeps become global and it is UNSAT
-for the same trivial reason as `keep_inconsistent_direct.osc`. A green light that tests nothing,
-on exactly the case the scoping mechanism exists for.
-
-**Open questions before this can be costed properly**, in order:
-
-1. Does the witness-based reading above match what we want, or is there a simpler formulation
-   that avoids touching the goal rule?
-2. What does the extra `phase_violated/2` actually do to solve time on exp_003 and exp_004, which
-   are already the slow ones? Measure rather than argue.
-3. Is the component projection reliable for nested compositions, serial inside parallel inside
-   serial, or only for the flat shapes in the current corpus?
+Limitation: with padding on, the two steps after the last goal lie outside every invocation, so a
+keep inside an invocation does not cover them. A keep for the whole scenario does.
 
 ### Blocker: `ego` is currently a hardcoded actor name
 
@@ -485,16 +437,17 @@ Each stage is done when the named specs reach the named status under `tests/run_
    plan, and `keep_inconsistent_nonlocal.osc` PASSes by being unsatisfiable.
 3. **Modifier desugaring.** Done when `keep_lane_modifier.osc` PASSes with the same plan as
    `keep_lane_free.osc`.
-4. **Phase scoping** (DECIDE 3). Done when `keep_phase_scope.osc` and
-   `keep_inconsistent_parallel.osc` PASS, and `lane_not_constant` has been tightened into a real
-   window check. Note `keep.osc` passes under either scoping rule, see section 6, so it is not
-   evidence for this stage.
+4. **Phase scoping.** Done, see section 6. `keep_phase_scope.osc` and
+   `keep_inconsistent_parallel.osc` pass, and invocation-scoped cases are checked inside their
+   keep windows.
 5. **Monitors.** An invariant is an always-operator over its window, failing at the first
    violating step rather than at a phase boundary. Detail after stage 2, once the representation
    has settled. I have not traced the monitor code yet.
 
 ## 11. Open
 
-DECIDE 3 (phase scoping, section 6). Deferred technicality: confirming the
-`road_distance_direction` enum against the domain model library ZIP, section 3, not needed until
-stage 2b.
+- Stage 3, `keep_lane()` desugaring.
+- Stage 5, monitors.
+- Whether to turn the padding off (`PAD_AFTER_GOALS` in `planning/Planner.py`). It is much faster,
+  but padding also forced a minimum plan length and a two-step safety lookahead, see
+  `tests/compare_padding.py` and `.claude/PLAN.md`.

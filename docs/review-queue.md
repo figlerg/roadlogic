@@ -27,21 +27,19 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 - [ ] **Section 7, `actor.speed` is `Vel_lon`.** The standard's signed-magnitude formula does not
       carry over because `Vel_lat` is lanes per step, a lane-change flag rather than a velocity.
 
-## 1b. Goal encoding switch, needs your decision
+## 1b. Padding switch, needs your decision
 
-- [ ] **Defaults for `GOAL_ENCODING` and `PAD_AFTER_GOALS`** in `planning/Planner.py`. Still the old
-      values, so nothing changed for existing specs. Measured in `.claude/PLAN.md`, "comparison
-      rerun with the exact cut". Short version: the new encoding accepts the same plans but is
-      slower and returns them in a different order. Dropping padding is where all the speed is,
-      but padding was also enforcing a minimum plan length and a two-step safety lookahead.
+- [ ] **`PAD_AFTER_GOALS`** in `planning/Planner.py`, still True. Turning it off is 2 to 8 times
+      faster (`tests/compare_padding.py`), but padding was also forcing a minimum plan length and
+      a two-step safety lookahead. With it off, `keep_inconsistent_nonlocal` is satisfied by a
+      one-step plan, and 1 of 30 benchmark plans ends one step before an unavoidable safety
+      violation. Details in `.claude/PLAN.md`.
 
 ## 2. Open, needs your answer eventually
 
-- [ ] **DECIDE 3, phase scoping.** `docs/keep-spec.md` section 6. Genuinely open, no
-      recommendation from me any more. The earlier draft argued for deferring on grounding cost
-      and that argument was wrong: `goal/n` already grounds over every `T_i` tuple. Section 6
-      lists three things to settle it, and the middle one is a measurement rather than an
-      argument. Only blocks keep stage 4.
+- [x] ~~DECIDE 3, phase scoping.~~ Settled with your idea: a keep inside an invocation is added
+      to the old goal rule, so a split into phases only counts if the keep held while that
+      invocation ran. `docs/keep-spec.md` section 6.
 - [x] ~~`road_distance_direction` members.~~ Settled: always `longitudinal`, since this tool has
       no lateral distance. `lateral` is rejected saying so.
 
@@ -49,14 +47,14 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 
 Ordered by how much judgement went into it.
 
-- [ ] **`1e12b90` feat: add a boundary goal encoding and a padding switch.** The `reached` chain,
-      the Python rebuild of the `goal(T1,...,t)` atoms that `map_plan` reads, and the exact cut.
-      `tests/compare_goal_encodings.py` is the evidence. Note its gate check was broken when it was
-      committed (see PLAN.md, process note), the code itself was verified afterwards.
-- [ ] **`2335d2c` feat: encode phase-scoped keep constraints.** Boundary choice with `pass/2`,
-      `in_phase/2` windows, `#project holds/2`. Also widens the final gap in your `tests/keep.osc`
-      from 5m..10m to 13m..25m, same reason as keep_scenario_scope.
-
+- [ ] **`603976a` feat: encode keeps inside a behavior invocation in the goal rule.** The keep is a
+      literal `keep_held(i,From,To)` in the goal rule, built from `keep_broken(i,t)` by a forward
+      chain. `Planner._invocation_keep_rules` has it all. Also widens the final gap in your
+      `tests/keep.osc` from 5m..10m to 13m..25m, same reason as keep_scenario_scope.
+- [ ] **`2401630` refactor: drop the boundary goal encoding, keep the padding switch.** Together
+      with `1e12b90` and the revert `e6dd919` this is an approach that was built, measured and
+      dropped. Only the padding switch and `tests/compare_padding.py` survive. Not worth reading
+      in detail.
 - [ ] **`6774c89` feat: support absolute speed constraints.** The one with real design in it.
       Three changes in `Planner.create_asp_instance`, all because velocity was never a variable
       anywhere in the generated program. Two of them were not in the plan: the legacy `ego`
@@ -96,8 +94,8 @@ python tests/run_speed_tests.py speed_start_end.osc -v
 jupyter lab tests/explore.ipynb
 
 # the boards
-python tests/run_speed_tests.py          # 2 passed, 3 pending
-python tests/run_keep_tests.py           # 9 passed, 5 pending (slow: proving UNSAT)
+python tests/run_speed_tests.py          # 5 passed
+python tests/run_keep_tests.py           # 13 passed, 1 pending (slow: proving UNSAT)
 python tests/run_keep_tests.py --self-test   # the checkers, against a real plan
 python tests/run_experiment_tests.py     # ~10 min, 12 passed 1 xfail 2 skipped
 ```
