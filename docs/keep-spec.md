@@ -80,11 +80,12 @@ about one-shot versus continuous evaluation.
 | speed range | `keep(car1.speed in [5mps..10mps])` | `keep_speed_range.osc` |
 | speed comparison | `keep(car1.speed > 3mps)` | `keep_speed_comparison.osc` |
 | modifier sugar | `keep_lane()` | `keep_lane_modifier.osc` |
+| modifier sugar, speed | `keep_speed()` | `keep_speed_modifier.osc` |
 | relational distance | `keep(car2.space_gap(car1, <dir>) in [5m..100m])` | `keep_relational_distance.osc` |
 | relational, modifier sugar | `position([5m..100m], behind: car1)` | `keep_relational_modifier.osc` |
 
 Must error clearly, not silently: `keep(lane(0))` (modifier application, not an expression),
-`keep(speed: [0..10])` (named-argument form), `[5..10]` (physical literals need units),
+`keep(speed: [0..10])` (named-argument form), `keep_lane(2)` (the shorthands take no arguments), `[5..10]` (physical literals need units),
 `10kph` (unsupported unit, section 7),
 `keep(default ...)` and `remove_default(...)` (deferred, section 9).
 
@@ -435,8 +436,9 @@ Each stage is done when the named specs reach the named status under `tests/run_
    `visitModifier_application`, and have both wrap a `RelativeConstraint` in an `Invariant`.
    Done when `keep_relational_distance.osc` and `keep_relational_modifier.osc` PASS with the same
    plan, and `keep_inconsistent_nonlocal.osc` PASSes by being unsatisfiable.
-3. **Modifier desugaring.** Done when `keep_lane_modifier.osc` PASSes with the same plan as
-   `keep_lane_free.osc`.
+3. **Modifier desugaring.** Done. `keep_lane_modifier.osc` PASSes with the same first three
+   plans as `keep_lane_free.osc`, and `keep_speed()` works the same way
+   (`keep_speed_modifier.osc`). Standard 8.9.6 and 8.9.16.
 4. **Phase scoping.** Done, see section 6. `keep_phase_scope.osc` and
    `keep_inconsistent_parallel.osc` pass, and invocation-scoped cases are checked inside their
    keep windows.
@@ -446,5 +448,4 @@ Each stage is done when the named specs reach the named status under `tests/run_
 
 ## 11. Open
 
-- Stage 3, `keep_lane()` desugaring.
 - Stage 5, monitors.

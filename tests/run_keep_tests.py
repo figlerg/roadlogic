@@ -44,7 +44,9 @@ from plan_checks import (
     lanes_of,
     run_cases,
     speed_above,
+    speed_at_start,
     speed_between,
+    speed_constant,
     speeds_of,
 )
 
@@ -83,6 +85,16 @@ CASES: List[Case] = [
         "keep_lane_modifier.osc",
         "keep_lane() surface form, must match keep_lane_free.osc",
         invariant=lane_constant("car1"),
+    ),
+    Case(
+        "keep_speed_modifier.osc",
+        "keep_speed() on the first phase only, the speed changes afterwards",
+        invariant=all_of(speed_at_start("car1", 5), in_keep_windows(speed_constant("car1"))),
+    ),
+    Case(
+        "keep_lane_args.osc",
+        "keep_lane() takes no arguments, a lane value in it is rejected",
+        raises=ValueError,
     ),
     Case(
         "keep_speed_range.osc",

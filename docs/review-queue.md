@@ -49,6 +49,14 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 
 Ordered by how much judgement went into it.
 
+- [ ] **`keep_lane()` and `keep_speed()`.** Both become the same "never changes" invariant as
+      `keep(car1.lane == car1_lane)`, limited to the invocation they are written in. Written with
+      an argument they are rejected. Worth a look: whether `keep_speed_modifier.osc` says what you
+      mean by "for the current period".
+- [ ] **Top-level serial fix.** A scenario whose top level is a `serial` of labeled invocations
+      could not be planned, because the planner looked up the start and end nodes by the names
+      `init` and `fin`. It now asks the graph for them. Same one-line change in four places,
+      including the verbose mode and `tests/compare_settings.py`.
 - [ ] **`04ffd42` feat: honour the duration of compositions and invocations.** A duration covering
       phases k1..k2 becomes `low <= T(k2) - T(k1-1) <= high` in the goal rule, using the same phase
       mapping as the invocation keeps. `HONOUR_DURATION` switches it off and gives the original

@@ -512,6 +512,9 @@ class TranslationGraphVisitor(openscenario2Visitor):
         # A modifier with no arguments, such as keep_lane(), has no argument_list child.
         arg_list = self.visit(ctx.argument_list()) if ctx.argument_list() is not None else {}
 
+        if modifier in self.STABILITY_MODIFIERS:
+            return self._build_stability_invariants(modifier, arg_list)
+
         if modifier not in ("position", "lane", "speed"):
             # Report the unsupported modifier before the 'at' check, which would otherwise
             # mask it with a confusing assertion about a missing argument.
@@ -553,6 +556,24 @@ class TranslationGraphVisitor(openscenario2Visitor):
         return start_or_end, constraints
     
 
+
+    # Domain model modifiers that hold one quantity of the actor for the current period, 8.9.6 and
+    # 8.9.16. The standard defines keep_lane() as lane = actor.lane plus keep(actor.lane == lane),
+    # so each is the same invariant as a keep against a free parameter.
+    STABILITY_MODIFIERS = {
+        "keep_lane": Modifier.LANE,
+        "keep_speed": Modifier.SPEED,
+    }
+
+    def _build_stability_invariants(self, modifier: str, arg_list: dict) -> set:
+        if arg_list:
+            raise ValueError(
+                f"{modifier}() takes no arguments, got {arg_list}. To fix a value, write for "
+                f"example lane(2) or keep(car1.lane == 2) instead."
+            )
+        # 'self' is replaced by the invoking actor in visitBehavior_invocation, which also sets
+        # the scope to that invocation.
+        return {StabilityInvariant("self", self.STABILITY_MODIFIERS[modifier])}
 
     def visitBehavior_name(self, ctx: openscenario2Parser.Behavior_nameContext):
         return self.visit(ctx.identifier())

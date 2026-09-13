@@ -1,0 +1,10 @@
+# keep_lane() takes no arguments, 8.9.16. A lane value written into it must be rejected rather
+# than silently dropped. The standard way to pin a lane is lane(2) or keep(car1.lane == 2).
+
+scenario cruise:
+    car1: car
+
+    do car1.drive() with:
+        lane(2, at: start)
+        position(20m, at: start)
+        keep_lane(2)

@@ -4,8 +4,9 @@ What has been added for the journal version.
 
 - **Invariants with `keep`.** A scenario can say that something must hold throughout, either for
   the whole scenario or only while one part of it runs. For example, a car stays in its lane, keeps
-  its speed within a range, or stays within some distance of another car. Not yet supported: the
-  `keep_lane()` shorthand, soft `default` keeps, and checking invariants in simulation.
+  its speed within a range, or stays within some distance of another car. The standard's shorthands `keep_lane()` and
+  `keep_speed()` work as well. Not yet supported: soft `default` keeps, and checking invariants
+  in simulation.
 
 - **Inconsistency detection.** When the requirements of a scenario contradict each other, the
   planner reports that no plan exists instead of producing one. This covers direct contradictions,
