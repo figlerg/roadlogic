@@ -510,7 +510,7 @@ def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
         printer(_rule("TRANSLATION GRAPH"))
         printer(f"actors : {[a.id for a in graph.actors]}")
         printer(f"nodes  : {list(graph.graph.nodes)}")
-        path = next(nx.all_simple_paths(graph.graph, 'init', 'fin'))
+        path = next(nx.all_simple_paths(graph.graph, graph.initial, graph.final))
         printer(f"path   : {' -> '.join(str(p) for p in path)}")
         printer("\nconstraints per edge along that path:")
         for i, (u, v) in enumerate(zip(path, path[1:])):

@@ -78,7 +78,7 @@ def accepted_horizon(exp, config, model, slack):
         planner = Planner(spec, out_path=out, **CONFIGS[config])
         graph = planner.translation_graph
         planner.create_asp_instance([a.id for a in graph.actors],
-                                    next(nx.all_simple_paths(graph.graph, "init", "fin")))
+                                    next(nx.all_simple_paths(graph.graph, graph.initial, graph.final)))
 
     fixed = os.path.join(out, "fixed_trace.lp")
     with open(fixed, "w") as f:

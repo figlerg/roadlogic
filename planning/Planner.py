@@ -120,7 +120,7 @@ class Planner:
         actor_ids = [actor.id for actor in G.actors]
 
         # we select one path from the tree-like
-        aut_path = next(nx.all_simple_paths(G.graph, 'init', 'fin'))
+        aut_path = next(nx.all_simple_paths(G.graph, G.initial, G.final))
         warnings.warn('Picked one qualitative path from the translation graph. '
                       'If one_of operator is used, this constrains the search.'
                       'Finding all models may be addressed in a future release.')

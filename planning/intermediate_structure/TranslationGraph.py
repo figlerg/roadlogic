@@ -434,7 +434,7 @@ class TranslationGraph(object):
                 self.__graph.edges[edge]['object'] = z3.And(*z3_constraints)
 
     def paths(self):
-        return list(nx.all_simple_paths(self.__graph, 'init', 'fin'))
+        return list(nx.all_simple_paths(self.__graph, self.initial, self.final))
 
     @property
     def variables(self):
