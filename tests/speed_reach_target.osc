@@ -1,0 +1,11 @@
+# The simplest speed question: asked to be at 8mps at the end of the segment, does the car get
+# there? Nothing is kept, so this one says whether the motion planner reaches a requested speed
+# at all, separately from whether it can hold one.
+
+scenario reach_speed:
+    car1: car
+
+    do car1.drive() with:
+        lane(2, at: start)
+        position(0m, at: start)
+        speed(8mps, at: end)

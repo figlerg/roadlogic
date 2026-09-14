@@ -27,6 +27,7 @@ from plan_checks import (
     Case,
     explain,
     in_keep_windows,
+    all_of,
     run_cases,
     speed_at_goal,
     speed_at_start,
@@ -51,6 +52,17 @@ CASES = [
         "speed_range.osc",
         "speed held inside a range, the 7.3.12.4.1 in-constraint desugaring",
         invariant=in_keep_windows(speed_between("ego", 5, 10)),
+    ),
+    Case(
+        "speed_rampup_then_hold.osc",
+        "a segment to reach the speed, then a segment holding it. The shape a simulated speed "
+        "keep needs, since every car starts from a standstill",
+        invariant=all_of(speed_at_goal("car1", 1, 6), in_keep_windows(speed_equals("car1", 6))),
+    ),
+    Case(
+        "speed_reach_target.osc",
+        "does the plan reach a requested speed at the end of a segment",
+        invariant=speed_at_goal("car1", 1, 8),
     ),
     Case(
         "speed_overtake_keep.osc",
