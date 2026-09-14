@@ -71,6 +71,14 @@ def get_orientation_from_xy(xy: np.ndarray, coordinate_system: CoordinateSystem)
     return coordinate_system.ref_theta[idx]
 
 
+# The plan's speed at each waypoint is handed to the motion planner as a window of this size, in
+# mps. Changing this changes every simulation, not the plans. Set ROADLOGIC_GOAL_VELOCITY=0 to
+# fall back to the older behaviour, where a goal state constrained position and time only, which
+# is how the HSCC paper's simulations were produced.
+CONSTRAIN_GOAL_VELOCITY = os.environ.get("ROADLOGIC_GOAL_VELOCITY", "1") != "0"
+GOAL_VELOCITY_TOLERANCE = float(os.environ.get("ROADLOGIC_GOAL_VELOCITY_TOLERANCE", "1.0"))
+
+
 def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_path = None, config_sim=dummy_config_sim):
 
     predicates = plan_model.holds  # get only holds predicates
@@ -234,7 +242,17 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
                 rect = Rectangle(1., 2., np.array([x, y]),orientation)  # work, but may mess with timing because too long
 
                 # goal_state_3 = ExtendedPMState(time_step=I3, position=R3, velocity=V3)
-                goal_state = ExtendedPMState(time_step=Interval(*time_interval), position=rect, velocity=None)
+                # The plan says how fast the car should be at this waypoint. Passing it on gives
+                # the motion planner something to aim for, otherwise only position and time are
+                # constrained and the speed wanders freely in between. A window rather than a
+                # value, since the plan is discrete (one segment per step) and the simulation is
+                # not. See GOAL_VELOCITY_TOLERANCE.
+                goal_velocity = None
+                if CONSTRAIN_GOAL_VELOCITY and "lon_vel" in row:
+                    planned = float(row["lon_vel"])
+                    goal_velocity = Interval(max(0.0, planned - GOAL_VELOCITY_TOLERANCE),
+                                             planned + GOAL_VELOCITY_TOLERANCE)
+                goal_state = ExtendedPMState(time_step=Interval(*time_interval), position=rect, velocity=goal_velocity)
                 goal_states.append(goal_state)
 
         if initial_state is not None and goal_states:
