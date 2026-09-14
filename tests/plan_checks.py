@@ -132,6 +132,29 @@ def keep_windows(model):
     return steps
 
 
+def in_keep_window(keep_id, check):
+    """Run a checker only on the steps inside one keep's window, by its number in instance.lp.
+
+    Needed where two keeps cover different stretches of the same plan, so the union of all
+    windows would not say which keep covered which step.
+    """
+    import copy
+
+    def wrapped(model):
+        steps = set()
+        for pred in model:
+            if pred.name == "keep_window" and pred.arguments[0] == keep_id:
+                steps.update(range(pred.arguments[1], pred.arguments[2] + 1))
+        if not steps:
+            return f"plan carries no keep_window atom for keep {keep_id}"
+        view = copy.copy(model)
+        view.symbols = [p for p in model.symbols if p.name != "holds" or p.time in steps]
+        return check(view)
+
+    wrapped.description = f"{check.description}, inside the window of keep {keep_id}"
+    return wrapped
+
+
 def in_keep_windows(check):
     """Run a checker only on the steps inside the keep windows.
 

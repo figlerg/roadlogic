@@ -169,13 +169,12 @@ class Planner:
     # LOGIC ETC:
 
     @staticmethod
-    def _phase_window(labels, aut_path, what):
-        """Goal times bounding the phases that contain any of `labels`, as ASP terms.
+    def _phase_indices(labels, aut_path, what):
+        """The phases of the chosen path that belong to `labels`, as 1-based indices.
 
-        Phase k is the k-th node of the chosen path and runs from goal time T(k-1) to Tk, with
-        T0 = 0, both ends included. After parallel composition a node is a tuple of component
-        states, so a behavior covers the consecutive phases whose node contains one of its labels.
-        Returns (start, end), for example ("0", "T2") or ("T1", "T3").
+        Phase k is the k-th node of the chosen path. After parallel composition a node is a tuple
+        of component states, so a behavior covers the consecutive phases whose node contains one
+        of its labels.
         """
         path_nodes = aut_path[1:-1]
         phases = [k for k, node in enumerate(path_nodes, 1) if set(labels) & flatten_node(node)]
@@ -186,6 +185,18 @@ class Planner:
                 f"{what} covers phases {phases}, which are not consecutive. It has to be one "
                 "stretch of the plan."
             )
+        return phases
+
+    @staticmethod
+    def _phase_window(labels, aut_path, what):
+        """Goal times bounding the phases that contain any of `labels`, as ASP terms.
+
+        Phase k runs from goal time T(k-1) to Tk, with T0 = 0. Both ends are included here,
+        which is what a duration measures. A keep instead uses a half-open window, see
+        _invocation_keep_rules.
+        Returns (start, end), for example ("0", "T2") or ("T1", "T3").
+        """
+        phases = Planner._phase_indices(labels, aut_path, what)
         start = "0" if phases[0] == 1 else f"T{phases[0] - 1}"
         return start, f"T{phases[-1]}"
 
@@ -234,7 +245,16 @@ class Planner:
         rules = ["\n% KEEPS INSIDE A BEHAVIOR INVOCATION:\n"]
         literals = []
         for i, inv in enumerate(keeps, 1):
-            start, end = self._phase_window({inv.scope}, aut_path, f"The invocation '{inv.scope}' of {inv}")
+            phases = self._phase_indices({inv.scope}, aut_path,
+                                         f"The invocation '{inv.scope}' of {inv}")
+            first, last = phases[0], phases[-1]
+            start = "0" if first == 1 else f"T{first - 1}"
+            # The windows tile the plan: phase k covers T(k-1) up to but excluding Tk, and only the
+            # last phase keeps its closed end so that the final step is covered. If consecutive
+            # phases shared their boundary step, two keeps on neighbouring phases would have to
+            # hold at once there, which makes a plain spec such as keep(lane == 1) followed by
+            # keep(lane == 2) unsatisfiable. See section 6 of docs/keep-spec.md.
+            end = f"T{last}" if last == len(path_nodes) else f"T{last} - 1"
 
             rules.append(f"% keep {i}: {inv}, held from {start} to {end}\n")
             for body in inv.asp_violation_bodies():
@@ -244,7 +264,11 @@ class Planner:
             else:
                 # a keep comparing consecutive steps has nothing to compare inside a one-step window
                 rules.append(f"keep_held({i},t,t) :- time(t).\n")
-            args = [f"T{j}" if f"T{j}" in (start, end) else "_" for j in range(1, len(path_nodes) + 1)]
+            # A phase of length zero gives an empty window, which is held by anything. Without
+            # this the goal rule could never fire for such a split.
+            rules.append(f"keep_held({i},t,t-1) :- time(t).\n")
+            wanted = {first - 1, last}
+            args = [f"T{j}" if j in wanted else "_" for j in range(1, len(path_nodes) + 1)]
             rules.append(f"keep_window({i},{start},{end},t) :- goal({','.join(args)},t).\n")
             literals.append(f"keep_held({i},{start},{end})")
 

@@ -37,6 +37,7 @@ from plan_checks import (
     Planner,
     all_of,
     gap_between,
+    in_keep_window,
     in_keep_windows,
     lane_constant,
     lane_equals,
@@ -75,6 +76,12 @@ CASES: List[Case] = [
         "keep_phase_scope.osc",
         "keep on one phase of a serial only",
         invariant=all_of(lane_not_constant("car1"), in_keep_windows(lane_equals("car1", 2))),
+    ),
+    Case(
+        "keep_adjacent_phases.osc",
+        "different lane keeps on consecutive phases, the windows must not share a step",
+        invariant=all_of(in_keep_window(1, lane_equals("car1", 1)),
+                         in_keep_window(2, lane_equals("car1", 2))),
     ),
     Case(
         "keep_lane_free.osc",

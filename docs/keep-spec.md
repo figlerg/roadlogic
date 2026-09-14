@@ -324,17 +324,34 @@ constraint. It is added to the goal rule instead, and a split only counts if eve
 over its invocation's steps:
 
 ```prolog
-goal(T1,T2,t) :- goal1(T1), goal2(T2), 0 <= T1<=T2 <= t, t > T2 + 1, keep_held(1,T1,T2).
+goal(T1,T2,t) :- goal1(T1), goal2(T2), 0 <= T1<=T2 <= t, keep_held(1,T1,T2).
 
 keep_broken(1,t) :- holds(state(car1, loc(_,X), dyn(_,_)), t), X != 2.
 keep_held(1,t,t) :- time(t), not keep_broken(1,t).
+keep_held(1,t,t-1) :- time(t).            % an empty window is held by anything
 #program step(t).
 keep_held(I,Ta,t) :- keep_held(I,Ta,t-1), not keep_broken(I,t).
 ```
 
-Phase k is the k-th node of the chosen path, from `T(k-1)` to `Tk` with `T0 = 0`. After parallel
-composition a node is a tuple of component states, so an invocation covers the consecutive
-phases whose node contains it. `keep_window(i,From,To,t)` records the steps a keep covered, for
+**The windows tile the plan (decided 2026-09-14).** Phase k is the k-th node of the chosen path
+and covers `T(k-1)` up to but **excluding** `Tk`, with `T0 = 0`. Only the last phase keeps its
+closed end, so every step of the plan belongs to exactly one phase. Sharing the boundary step
+instead would force the keeps of two neighbouring phases to hold at the same step, which makes an
+ordinary spec unsatisfiable:
+
+```osc
+A0: car1.drive() with:
+    keep(car1.lane == 1)
+A1: car1.drive() with:
+    keep(car1.lane == 2)      # no step can have both, so the closed reading rejects this
+```
+
+That is `keep_adjacent_phases.osc`. A phase of length zero gives an empty window, which is held by
+anything, hence the extra base rule above. Durations are unaffected and still measure from one
+goal time to the other, both included.
+
+After parallel composition a node is a tuple of component states, so an invocation covers the
+consecutive phases whose node contains it. `keep_window(i,From,To,t)` records the steps a keep covered, for
 tests and the verbose mode. It carries the horizon t like `goal/n`, since incremental solving does
 not allow the same atom to be defined at two horizons.
 

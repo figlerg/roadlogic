@@ -49,6 +49,12 @@ These are already baked into code and tests. If any is wrong, the cost of findin
 
 Ordered by how much judgement went into it.
 
+- [ ] **Keep windows tile the plan.** Your call, and a fix to what I had shipped: a keep on phase
+      k covers T(k-1) up to but excluding Tk, and only the last phase keeps its closed end. Before,
+      neighbouring phases shared their boundary step, so `keep(lane == 1)` followed by
+      `keep(lane == 2)` came out as an inconsistent specification. New test
+      `keep_adjacent_phases.osc`. Worth a look since it changes the meaning of every phase-scoped
+      keep, though no other test changed its verdict.
 - [ ] **`keep_lane()` and `keep_speed()`.** Both become the same "never changes" invariant as
       `keep(car1.lane == car1_lane)`, limited to the invocation they are written in. Written with
       an argument they are rejected. Worth a look: whether `keep_speed_modifier.osc` says what you

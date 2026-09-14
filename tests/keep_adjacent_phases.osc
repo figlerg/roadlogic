@@ -1,0 +1,22 @@
+# Two keeps on consecutive phases, each pinning a different lane. This is a plain spec: car1
+# drives in lane 1 for a while and in lane 2 afterwards. It is only satisfiable if the two
+# windows do not share the boundary step, since no single step has the lane equal to 1 and 2.
+#
+# The windows therefore tile the plan: phase k covers T(k-1) up to but excluding Tk, and the
+# last phase keeps its closed end. See section 6 of docs/keep-spec.md.
+#
+# car1 starts at 7mps because controller.lp forbids a lane change below min_change_speed = 6.
+
+scenario lane_change:
+    car1: car
+
+    do serial:
+        A0: car1.drive() with:
+            lane(1, at: start)
+            position(0m, at: start)
+            speed(7mps, at: start)
+            keep(car1.lane == 1)
+
+        A1: car1.drive() with:
+            lane(2, at: end)
+            keep(car1.lane == 2)
