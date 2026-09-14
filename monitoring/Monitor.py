@@ -135,6 +135,54 @@ def covered_locations(inv: Invariant, nodes):
     return {node for node in nodes if inv.scope in flatten_node(node)}
 
 
+# The time of the current step, in seconds, written into every valuation. A duration bound
+# becomes a guard over it.
+TIME_VARIABLE = "current_t"
+
+
+def duration_guard(duration):
+    """low <= current_t <= high, the bound a duration puts on the step that ends it."""
+    now = VariableNode(TIME_VARIABLE)
+    return AndNode(GEQNode(now, ConstantNode(duration.low)),
+                   LEQNode(now, ConstantNode(duration.high)))
+
+
+def duration_regions(T):
+    """(covered locations, duration) per duration of the scenario.
+
+    A duration bounds the time from the start of the first behavior it covers to the end of the
+    last one. Only the current time is available to a guard, so the bound can be checked directly
+    when the region starts with the scenario, which is the case for a duration on the top-level
+    composition. A duration that starts later would need the time at which its region was entered,
+    and that differs between the runs the monitor follows in parallel, so a single variable cannot
+    carry it. Such a duration is rejected rather than quietly ignored.
+    """
+    first = {w for _, w in T.graph.out_edges(T.initial)}
+    regions = []
+    for duration in sorted(T.durations, key=str):
+        covered = {node for node in T.graph.nodes if duration.labels & flatten_node(node)}
+        if not covered:
+            continue
+        if not first <= covered:
+            raise NotImplementedError(
+                f"{duration} does not start with the scenario, so the monitor would have to "
+                f"remember when its region was entered. Only a duration covering the whole "
+                f"scenario can be checked for now. See docs/keep-spec.md."
+            )
+        regions.append((covered, duration))
+    return regions
+
+
+def duration_guards_for_transition(passed, target, regions):
+    """Guards for every duration region this step leaves.
+
+    `passed` are the locations the step comes through, one for an ordinary transition and several
+    for a shortcut.
+    """
+    return [duration_guard(duration) for covered, duration in regions
+            if target not in covered and any(node in covered for node in passed)]
+
+
 # How many phases one step may cross. The planner allows any number of goals at the same step,
 # but each extra one costs shortcut transitions, and more than a couple at once does not happen in
 # practice.
@@ -441,6 +489,10 @@ class Monitor:
                 syma_aut.add_var(name, domain=(-100, 100))  # TODO these limits are hardcoded
             guards.append((covered_locations(inv, T.graph.nodes), convert_invariant(inv)))
 
+        regions = duration_regions(T)
+        if regions:
+            syma_aut.add_var(TIME_VARIABLE, domain=(0, 10000))  # seconds, see read_valuations
+
         # The constraints of each edge on their own, without the keeps, so a shortcut transition
         # can be built from them below.
         edge_guards = dict()
@@ -486,7 +538,8 @@ class Monitor:
                 edge_guards[(v, w)] = self._edge_guard(syma_aut, T[v, w])
 
                 cons_syma_node = conjoin(edge_guards[(v, w)],
-                                         guards_for_transition(v, w, T.final, guards))
+                                         guards_for_transition(v, w, T.final, guards)
+                                         + duration_guards_for_transition([v], w, regions))
 
                 if cons_syma_node is None:
                     cons_syma_node = TrueNode()
@@ -511,7 +564,9 @@ class Monitor:
             # whose keep is checked. It matters when the chain ends at the final location, where
             # the closed end of the window belongs to the phase before it, not to the one the
             # shortcut started from.
-            node = conjoin(node, guards_for_transition(chain[-1][0], target, T.final, guards))
+            node = conjoin(node, guards_for_transition(chain[-1][0], target, T.final, guards)
+                           + duration_guards_for_transition([edge[0] for edge in chain], target,
+                                                            regions))
             if node is None:
                 node = TrueNode()
             syma_aut.add_transition(location_by_id[source], location_by_id[target],
@@ -587,6 +642,7 @@ class Monitor:
         for t in times:
             val = OrderedDict()
             all_ids = set(lane_data.get(t, {})) | set(pos_data.get(t, {}))
+            val[TIME_VARIABLE] = t
             for hash_id in all_ids:
                 name = decode(hash_id)
                 if hash_id in lane_data.get(t, {}):
@@ -717,7 +773,9 @@ def with_previous(valuations):
         row = OrderedDict(val)
         source = previous if previous is not None else val
         for name, value in val.items():
-            quantity, _, actor = name.partition("(")
+            quantity, bracket, actor = name.partition("(")
+            if not bracket:
+                continue  # not a quantity of an actor, such as the current time
             row[f"{quantity}_prev({actor}"] = source.get(name, value)
         out.append(row)
         previous = val

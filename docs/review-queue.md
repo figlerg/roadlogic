@@ -180,8 +180,13 @@ Nineteen specs. The ones where I made a judgement call:
       overtake trace negative over a 1e-4 miss, where MinMax plus the summary's 1e-3 tolerance had
       always called it positive. `TolerantBooleanMonitor` keeps the plain verdict and the old
       slack. Worth checking you agree with 1e-3.
-- [ ] **The monitor ignores durations.** The planner enforces them, the automaton has no time, so
-      the monitor accepts some traces the planner would not. Deferred on purpose.
+- [ ] **Durations are monitored, if they start with the scenario.** Your idea: the current time is
+      a variable in the valuation, and the bound becomes a guard on the step that ends the region.
+      That works for a duration on the top-level composition, which is what every benchmark spec
+      uses. A duration on a later phase needs the time its region was entered, which differs
+      between the runs the monitor follows at once, so it raises instead of passing quietly.
+      Checked on five simulated benchmark traces: still positive, so the bound is not spuriously
+      tripping.
 
 ## 7. Known issues, no action needed
 

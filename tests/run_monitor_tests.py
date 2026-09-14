@@ -31,7 +31,7 @@ for vendored in ("monitoring/syma", "monitoring/syma-arv"):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from monitoring.Monitor import Monitor, with_previous
+from monitoring.Monitor import Monitor, TIME_VARIABLE, with_previous
 from syma_arv.monitor.boolean import BooleanMonitor
 
 
@@ -39,7 +39,7 @@ def valuations_from_plan(model):
     """The plan as a list of monitor valuations, one per time step."""
     rows = {}
     for actor, t, segment, lane, v_lon, _v_lat in states(model):
-        row = rows.setdefault(t, {})
+        row = rows.setdefault(t, {TIME_VARIABLE: float(t)})
         row[f"l({actor})"] = lane
         row[f"p({actor})"] = segment
         row[f"v({actor})"] = v_lon
@@ -55,7 +55,14 @@ def stretch(trace, factor=3):
     problem. See docs/keep-spec.md.
     """
     plain = [{k: v for k, v in row.items() if "_prev(" not in k} for row in trace]
-    return with_previous([row for row in plain for _ in range(factor)])
+    repeated = []
+    for row in plain:
+        for i in range(factor):
+            copy_of = dict(row)
+            # keep the clock moving, the way a simulation samples several times per second
+            copy_of[TIME_VARIABLE] = row[TIME_VARIABLE] + i / factor
+            repeated.append(copy_of)
+    return with_previous(repeated)
 
 
 def verdict(spec_path, trace):
@@ -106,6 +113,22 @@ def bump_at(variable, step, delta):
     return perturb
 
 
+def scale_time(factor):
+    """Stretch or squeeze the clock, leaving every other value alone.
+
+    Only the duration guards look at the clock, so this isolates them: the trace still meets every
+    goal in the same order, it just takes a different amount of time to do it.
+    """
+    def perturb(trace):
+        out = copy.deepcopy(trace)
+        for row in out:
+            row[TIME_VARIABLE] = row[TIME_VARIABLE] * factor
+        return _rebuild(out)
+
+    perturb.description = f"clock scaled by {factor}"
+    return perturb
+
+
 @dataclass
 class Case:
     spec: str
@@ -150,6 +173,16 @@ CASES: List[Case] = [
         "keep_relational_distance.osc",
         "relational keep on the gap between two cars",
         perturbation=set_at("p(ego)", 1, -500),
+    ),
+    Case(
+        "keep.osc",
+        "the scenario's duration is [3s..20s]: finishing in a fraction of the time is rejected",
+        perturbation=scale_time(0.05),
+    ),
+    Case(
+        "keep.osc",
+        "the same duration the other way: taking ten times as long is rejected",
+        perturbation=scale_time(10),
     ),
     Case(
         "speed_start_end.osc",

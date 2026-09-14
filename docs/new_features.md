@@ -24,6 +24,11 @@ What has been added for the journal version.
   end when the goals are met, which is 2 to 8 times faster on the benchmarks. Simulated scenarios
   complete just as before. The old behaviour is one switch away, for reproducing the paper.
 
+- **Checking the simulation, not just the plan.** The monitor used to check only that the cars
+  reached their goals in order. It now also checks the invariants and the scenario's duration
+  against the finished simulation, so a run that meets every goal but breaks a `keep` on the way,
+  or takes far too long, is reported as a failure.
+
 - **Units.** Values are given in m, s and mps, and are used exactly as written. Other units are
   rejected instead of being silently misread.
 
