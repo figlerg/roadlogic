@@ -135,6 +135,33 @@ def covered_locations(inv: Invariant, nodes):
     return {node for node in nodes if inv.scope in flatten_node(node)}
 
 
+# How many phases one step may cross. The planner allows any number of goals at the same step,
+# but each extra one costs shortcut transitions, and more than a couple at once does not happen in
+# practice.
+MAX_SKIPPED_PHASES = 2
+
+
+def skipped_chains(graph, max_skipped=MAX_SKIPPED_PHASES):
+    """Chains of two or more edges, as (source, target, [edge, ...]).
+
+    These become shortcut transitions, so that a step which meets several phase goals at once can
+    be taken. Cycles are not followed, and a chain skips at most `max_skipped` locations.
+    """
+    for source in graph.nodes:
+        stack = [(source, [], {source})]
+        while stack:
+            node, edges, seen = stack.pop()
+            if len(edges) > max_skipped:
+                continue
+            for _, nxt in graph.out_edges(node):
+                if nxt in seen:
+                    continue
+                chain = edges + [(node, nxt)]
+                if len(chain) >= 2:
+                    yield source, nxt, chain
+                stack.append((nxt, chain, seen | {nxt}))
+
+
 def guards_for_transition(source, target, final, guards):
     """The keep guards that apply to one transition, as a list of nodes.
 
@@ -414,6 +441,10 @@ class Monitor:
                 syma_aut.add_var(name, domain=(-100, 100))  # TODO these limits are hardcoded
             guards.append((covered_locations(inv, T.graph.nodes), convert_invariant(inv)))
 
+        # The constraints of each edge on their own, without the keeps, so a shortcut transition
+        # can be built from them below.
+        edge_guards = dict()
+
         i = T.initial
         q.append(i)
         location_by_id[i] = Location(i, initial=True, final=False)
@@ -452,54 +483,65 @@ class Monitor:
                 # # 2 -- 0<=a<5 --> 3
                 # aut.add_transition(loc_2, loc_3, constraint_3)
 
-                cons_osc:Set[BaseConstraint] = T[v,w]
+                edge_guards[(v, w)] = self._edge_guard(syma_aut, T[v, w])
 
-                cons_syma_node = None
-
-                # add cons one by one via the and operation
-                for con in cons_osc:
-
-                    # potentially we introduce new variables
-                    con:Union[RelativeConstraint, AbsoluteConstraint]
-
-                    if isinstance(con, RelativeConstraint):
-                        v1 = con.exp1
-                        v2 = con.exp2
-
-                        syma_aut.add_var(v1, domain=(-100, 100))  # TODO these limits are hardcoded
-                        syma_aut.add_var(v2, domain=(-100, 100))  # TODO these limits are hardcoded
-
-                        new_con = convert_relative_constraint(con)
-                    
-                    elif isinstance(con, AbsoluteConstraint):
-                        v1 = con.exp
-                        syma_aut.add_var(v1, domain=(-100, 100))  # TODO these limits are hardcoded
-
-                        new_con = convert_absolute_constraint(con)
-                        
-
-                    # first node
-                    if not cons_syma_node:
-                        cons_syma_node = new_con
-                    else:
-                        cons_syma_node = AndNode(cons_syma_node, new_con)
-
-                if cons_syma_node is None and not guards_for_transition(v, w, T.final, guards):
-                    cons_syma_node = TrueNode()
-
-                cons_syma_node = conjoin(cons_syma_node,
+                cons_syma_node = conjoin(edge_guards[(v, w)],
                                          guards_for_transition(v, w, T.final, guards))
+
+                if cons_syma_node is None:
+                    cons_syma_node = TrueNode()
 
                 cons_syma = Constraint(formula=cons_syma_node)  # TODO not sure if the alphabet param is ecpected
 
                 
                 syma_aut.add_transition(location_by_id[v],location_by_id[w], constraint=cons_syma)
 
+        # A step may meet several phase goals at once: the planner only asks for
+        # 0 <= T1 <= ... <= Tn, so a phase can have length zero, while the automaton takes one
+        # transition per step. A shortcut transition carries the constraints of every edge it
+        # skips, which is what meeting them all at one step means. The skipped phase has an empty
+        # window, so its keep is not checked there, matching the keep_held(i,t,t-1) base rule on
+        # the planner side.
+        for source, target, chain in skipped_chains(T.graph):
+            node = None
+            for edge in chain:
+                if edge_guards.get(edge) is not None:
+                    node = conjoin(node, [edge_guards[edge]])
+            # The step belongs to the last phase the chain passes through, so that is the phase
+            # whose keep is checked. It matters when the chain ends at the final location, where
+            # the closed end of the window belongs to the phase before it, not to the one the
+            # shortcut started from.
+            node = conjoin(node, guards_for_transition(chain[-1][0], target, T.final, guards))
+            if node is None:
+                node = TrueNode()
+            syma_aut.add_transition(location_by_id[source], location_by_id[target],
+                                    Constraint(formula=node))
+
         add_self_loops(syma_aut, guards=guards, final=T.final)
 
         self.syma_aut = syma_aut
             
 
+
+    @staticmethod
+    def _edge_guard(syma_aut, cons_osc: Set[BaseConstraint]):
+        """One transition guard from the constraints of a translation-graph edge, or None."""
+        node = None
+        for con in cons_osc:
+            con: Union[RelativeConstraint, AbsoluteConstraint]
+
+            if isinstance(con, RelativeConstraint):
+                syma_aut.add_var(con.exp1, domain=(-100, 100))  # TODO these limits are hardcoded
+                syma_aut.add_var(con.exp2, domain=(-100, 100))  # TODO these limits are hardcoded
+                new_con = convert_relative_constraint(con)
+            elif isinstance(con, AbsoluteConstraint):
+                syma_aut.add_var(con.exp, domain=(-100, 100))  # TODO these limits are hardcoded
+                new_con = convert_absolute_constraint(con)
+            else:
+                raise NotImplementedError(f"Cannot monitor a {type(con).__name__} on an edge.")
+
+            node = new_con if node is None else AndNode(node, new_con)
+        return node
 
     # GPT
     def read_valuations(self,
