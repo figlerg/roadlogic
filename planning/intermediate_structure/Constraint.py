@@ -227,6 +227,8 @@ class AbsoluteConstraint(BaseConstraint):
             out = f"p({self.actor})"
         elif self.modifier == Modifier.LANE:
             out = f"l({self.actor})"
+        elif self.modifier == Modifier.SPEED:
+            out = f"v({self.actor})"
         else:
             raise NotImplementedError(f"Unsupported modifier in AbsoluteConstraint: {self.modifier}")
 

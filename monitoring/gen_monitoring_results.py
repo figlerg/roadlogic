@@ -2,7 +2,7 @@ import click
 import pickle
 # from monitoring.overtake_monitor import manual_monitor as mon  # fixed automaton without self-loops
 # from monitoring.overtake_monitor import gen_monitor as default_mon       # generated monitoring with full setup
-from monitoring.Monitor import Monitor
+from monitoring.Monitor import Monitor, TolerantBooleanMonitor
 from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
 from planning.parse.TranslationGraphVisitor import TranslationGraphVisitor
 from planning.parse.generated.openscenario2Lexer import openscenario2Lexer
@@ -32,7 +32,9 @@ def gen_monitoring_results(output_folder, osc_file=None, check_plan=None):
     Prints the resulting state from the monitor.
     """
 
-    mon = Monitor.from_osc2_file(osc_file,ring=MinMaxMonitor)
+    # Boolean is the meaningful ring here: MinMax mixes lanes and metres into one number,
+    # so a lane apart counts the same as a metre apart. MinMax stays useful for debugging.
+    mon = Monitor.from_osc2_file(osc_file, ring=TolerantBooleanMonitor)
 
     mon_result = mon.eval_trace(output_folder)
 

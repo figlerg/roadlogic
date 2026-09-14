@@ -168,6 +168,21 @@ Nineteen specs. The ones where I made a judgement call:
       `keep_scenario_scope.osc` uses 13m..25m and is the first spec in the corpus that exercises
       a genuine merge-back. Worth deciding whether the benchmark should too.
 
+## 6b. Monitoring, new and worth your eyes
+
+- [ ] **Simulated speed does not follow the plan.** Measured on `speed_rampup_then_hold.osc`: the
+      spec asks for 6mps held, the simulation reaches 9.87mps, and the distance covered per second
+      goes 1.77, 5.33, 7.13. Passing the plan's velocity to the motion planner changed almost
+      nothing in an A/B run. Every car also starts from a standstill, so a keep on the first
+      segment can never hold. Speed keeps are a planning-level guarantee for now.
+      `tests/check_speed_fluctuation.py` reports this on any simulated folder.
+- [ ] **The default ring is now a boolean one with a tolerance.** Strict boolean called a normal
+      overtake trace negative over a 1e-4 miss, where MinMax plus the summary's 1e-3 tolerance had
+      always called it positive. `TolerantBooleanMonitor` keeps the plain verdict and the old
+      slack. Worth checking you agree with 1e-3.
+- [ ] **The monitor ignores durations.** The planner enforces them, the automaton has no time, so
+      the monitor accepts some traces the planner would not. Deferred on purpose.
+
 ## 7. Known issues, no action needed
 
 - [ ] **`docs/known-issues-exp-parallel.md`.** Two pre-existing bugs that keep `exp_parallel` from
