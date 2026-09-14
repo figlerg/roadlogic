@@ -531,6 +531,12 @@ from cr_scenario_handler.planner_interfaces.planner_interface import PlannerInte
 from cr_scenario_handler.utils.utils_coordinate_system import smooth_ref_path, extend_ref_path_both_ends
 from cr_scenario_handler.utils.velocity_planner import VelocityPlanner
 
+# Frenetix aims at the first goal state only, which leaves a multi-goal plan without a
+# speed target after the first waypoint. See velocity_patch for what this changes and how
+# to switch it off.
+from commonroad_extensions.scenario_execution.velocity_patch import apply_velocity_patch
+apply_velocity_patch()
+
 from behavior_planner.behavior_module import BehaviorModule
 
 from frenetix_motion_planner.reactive_planner import ReactivePlannerPython
