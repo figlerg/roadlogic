@@ -1,0 +1,17 @@
+# The speed_rampup_then_hold.osc scenario, with a duration on the first segment as well. Every
+# simulated car starts from rest and needs about two seconds to reach 6mps. Without a duration on the
+# ramp the plan starts the car at 6mps right away, since its start speed is free, and spends no time
+# accelerating, so the simulation gets far less time for the hold than the plan promised. With the
+# monitor's clocks that shows up as a broken duration on the second segment.
+
+scenario ramp_up_then_hold:
+    car1: car
+
+    do serial:
+        A0: car1.drive(duration: [2s..4s]) with:
+            lane(2, at: start)
+            position(0m, at: start)
+            speed(6mps, at: end)
+
+        A1: car1.drive(duration: [3s..6s]) with:
+            speed(6mps, at: all)

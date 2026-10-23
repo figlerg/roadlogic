@@ -84,6 +84,12 @@ CASES: List[Case] = [
                          in_keep_window(2, lane_equals("car1", 2))),
     ),
     Case(
+        "keep_lane_change_from_rest.osc",
+        "the same two keeps without a start speed, so a simulated car can follow the plan",
+        invariant=all_of(in_keep_window(1, lane_equals("car1", 1)),
+                         in_keep_window(2, lane_equals("car1", 2))),
+    ),
+    Case(
         "keep_lane_free.osc",
         "constant lane via a free parameter, the desugared keep_lane",
         invariant=lane_constant("car1"),

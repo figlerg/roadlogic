@@ -29,6 +29,7 @@ from plan_checks import (
     in_keep_windows,
     all_of,
     run_cases,
+    span_between,
     speed_at_goal,
     speed_at_start,
     speed_between,
@@ -58,6 +59,13 @@ CASES = [
         "a segment to reach the speed, then a segment holding it. The shape a simulated speed "
         "keep needs, since every car starts from a standstill",
         invariant=all_of(speed_at_goal("car1", 1, 6), in_keep_windows(speed_equals("car1", 6))),
+    ),
+    Case(
+        "speed_rampup_then_hold_timed.osc",
+        "the same, with a duration on the ramp too, so the plan spends time accelerating like a car",
+        invariant=all_of(span_between(0, 1, 2, 4), speed_at_goal("car1", 1, 6),
+                         in_keep_windows(speed_equals("car1", 6))),
+        imax=14,
     ),
     Case(
         "speed_reach_target.osc",
