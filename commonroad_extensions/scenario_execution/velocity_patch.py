@@ -23,7 +23,9 @@ import os
 
 from cr_scenario_handler.utils.velocity_planner import VelocityPlanner
 
-ENABLED = os.environ.get("ROADLOGIC_VELOCITY_PATCH", "1") != "0"
+# Off by default: as first committed it made the paper's benchmark collide. The fix is the speed
+# windows in map_plan.py with SOURCE=range and SCOPE=constrained, see tests/demo.ipynb section 8.
+ENABLED = os.environ.get("ROADLOGIC_VELOCITY_PATCH", "0") != "0"
 
 # How the waypoint's speed window is used. "clamp" forces the target into it. "average" ignores it
 # and aims only at the speed needed to reach the waypoint on time. The window comes from the plan's
