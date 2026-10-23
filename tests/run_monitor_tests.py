@@ -129,6 +129,15 @@ def scale_time(factor):
     return perturb
 
 
+def truncate_after(seconds):
+    """Cut the trace off after a time, as when a simulation stops early."""
+    def perturb(trace):
+        return _rebuild([row for row in copy.deepcopy(trace) if row[TIME_VARIABLE] <= seconds])
+
+    perturb.description = f"trace cut after {seconds}s"
+    return perturb
+
+
 @dataclass
 class Case:
     spec: str
@@ -183,6 +192,18 @@ CASES: List[Case] = [
         "keep.osc",
         "the same duration the other way: taking ten times as long is rejected",
         perturbation=scale_time(10),
+    ),
+    Case(
+        "duration_invocation.osc",
+        "a clock per run: B lasts [2s..5s] and starts mid-scenario. Twice as fast, A drops below "
+        "its 3s",
+        perturbation=scale_time(0.5),
+    ),
+    Case(
+        "duration_invocation.osc",
+        "a clock per run: B starts when A ends, at 3s, and must last 2s, so a trace that stops at "
+        "4s breaks it. Without the clock this went unchecked",
+        perturbation=truncate_after(4.0),
     ),
     Case(
         "speed_start_end.osc",

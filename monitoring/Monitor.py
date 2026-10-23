@@ -37,6 +37,21 @@ from functools import lru_cache
 # applied to the MinMax cost, moved into the comparison itself.
 COMPARISON_EPSILON = 1e-3
 
+# How far a position or a speed may be from a value it is required to equal, in metres or mps. The
+# planner's world is discrete, one unit is one metre or one mps, while a simulated trace is sampled
+# every 0.1s and crosses a value without landing on it: aiming for 6.000 mps, the closest sample was
+# 0.016 off. Half a unit is what "equals 6" means in that discretisation. Lanes are integers and stay
+# exact. This may need tuning, see docs/review-queue.md. Set ROADLOGIC_EQUALITY_TOLERANCE=0 to compare
+# exactly again, up to COMPARISON_EPSILON.
+EQUALITY_TOLERANCE = float(os.environ.get("ROADLOGIC_EQUALITY_TOLERANCE", "0.5"))
+CONTINUOUS = (Modifier.POSITION, Modifier.SPEED)
+
+
+def tolerant_equal(lhs, rhs, tolerance):
+    """|lhs - rhs| <= tolerance, as a guard node."""
+    tol = ConstantNode(tolerance)
+    return AndNode(LEQNode(MinusNode(lhs, rhs), tol), LEQNode(MinusNode(rhs, lhs), tol))
+
 
 class TolerantBooleanEvaluator(BooleanEvaluator):
     """Boolean verdicts, but a comparison of continuous values may miss by COMPARISON_EPSILON.
@@ -147,30 +162,37 @@ def duration_guard(duration):
                    LEQNode(now, ConstantNode(duration.high)))
 
 
+# A duration on a phase that does not start with the scenario needs the time its region was
+# entered, and that differs between the runs the monitor follows at once. TimedBooleanMonitor keeps
+# that time per run, as a clock. ROADLOGIC_TIMED_MONITOR=0 refuses such durations instead.
+TIMED_MONITOR = os.environ.get("ROADLOGIC_TIMED_MONITOR", "1") != "0"
+
+
 def duration_regions(T):
-    """(covered locations, duration) per duration of the scenario.
+    """(anchored, timed), each a list of (covered locations, duration).
 
     A duration bounds the time from the start of the first behavior it covers to the end of the
-    last one. Only the current time is available to a guard, so the bound can be checked directly
-    when the region starts with the scenario, which is the case for a duration on the top-level
-    composition. A duration that starts later would need the time at which its region was entered,
-    and that differs between the runs the monitor follows in parallel, so a single variable cannot
-    carry it. Such a duration is rejected rather than quietly ignored.
+    last one. When its region starts with the scenario it was entered at time 0, so the bound is a
+    plain guard on the current time, on the step that leaves the region. That is the anchored list,
+    and every duration on a top-level composition is in it. Any other duration goes to the timed
+    list, for TimedBooleanMonitor, which remembers per run when the region was entered.
     """
     first = {w for _, w in T.graph.out_edges(T.initial)}
-    regions = []
+    anchored, timed = [], []
     for duration in sorted(T.durations, key=str):
         covered = {node for node in T.graph.nodes if duration.labels & flatten_node(node)}
         if not covered:
             continue
-        if not first <= covered:
+        if first <= covered:
+            anchored.append((covered, duration))
+        elif TIMED_MONITOR:
+            timed.append((covered, duration))
+        else:
             raise NotImplementedError(
-                f"{duration} does not start with the scenario, so the monitor would have to "
-                f"remember when its region was entered. Only a duration covering the whole "
-                f"scenario can be checked for now. See docs/keep-spec.md."
+                f"{duration} does not start with the scenario, so the monitor has to remember when "
+                f"its region was entered. ROADLOGIC_TIMED_MONITOR=0 turns that off."
             )
-        regions.append((covered, duration))
-    return regions
+    return anchored, timed
 
 
 def duration_guards_for_transition(passed, target, regions):
@@ -233,6 +255,66 @@ def conjoin(node, extra):
     return node
 
 
+class TimedBooleanMonitor:
+    """A boolean monitor with a clock for every duration that does not start with the scenario.
+
+    The rings in syma_arv keep one value per location. That is not enough here, since runs that sit
+    in the same location may have entered a timed region at different times. So this tracks
+    configurations instead: a location together with the time each currently open region was
+    entered. A step follows every transition whose guard holds. Entering a region starts its clock.
+    Leaving it checks low <= now - start <= high, and a configuration that fails is dropped. A trace
+    is accepted when some configuration reaches the final location.
+
+    Guards are evaluated with the evaluator of the ring the monitor was asked for, so the tolerance
+    on continuous comparisons is the same as everywhere else.
+    """
+
+    def __init__(self, aut, regions, passed, evaluator):
+        self.aut = aut
+        self.regions = regions        # [(covered locations, duration)]
+        self.passed = passed          # (source id, target id, edge key) -> locations a step crosses
+        self.c_evaluator = evaluator
+        self.configurations = set()
+
+    def initialize(self):
+        self.configurations = {(loc, ()) for loc in self.aut.init_locations}
+
+    def _clocks_after(self, starts, crossed, target, now):
+        """The open regions after a step, or None when the step breaks a duration."""
+        starts = dict(starts)
+        for index, (covered, duration) in enumerate(self.regions):
+            if index in starts:
+                if target not in covered:
+                    if not duration.low <= now - starts.pop(index) <= duration.high:
+                        return None
+            elif target in covered:
+                starts[index] = now
+            elif any(node in covered for node in crossed[1:]):
+                # a shortcut ran through the whole region in one step, so it lasted no time
+                if not duration.low <= 0 <= duration.high:
+                    return None
+        return tuple(sorted(starts.items()))
+
+    def update(self, vals):
+        now = vals[TIME_VARIABLE]
+        following = set()
+        for location, starts in self.configurations:
+            for key, source, target, constraint in self.aut.outgoing[location]:
+                if self.c_evaluator.evaluate(constraint, vals):
+                    continue  # a cost other than zero means the guard does not hold
+                crossed = self.passed.get((source.id, target.id, key), [source.id])
+                clocks = self._clocks_after(starts, crossed, target.id, now)
+                if clocks is not None:
+                    following.add((target, clocks))
+        self.configurations = following
+
+    @property
+    def state(self):
+        """Per location, False when some run is there and True when none is, as the boolean ring."""
+        alive = {location for location, _ in self.configurations}
+        return {location: location not in alive for location in self.aut.locations}
+
+
 class Monitor:
     
     """ This is a class for monitoring an OSC2 specification.
@@ -254,6 +336,8 @@ class Monitor:
         
         self.syma_aut = None
         self._translation_graph = None
+        self.timed_regions = []
+        self.passed = dict()
         # self.populate_syma_aut()
         self.ring = ring
         self.monitor = None
@@ -446,6 +530,13 @@ class Monitor:
 
     def initialize(self):
         mon = self.ring(self.syma_aut)
+        if self.timed_regions:
+            if not isinstance(mon, BooleanMonitor):
+                raise NotImplementedError(
+                    "A duration on a later phase is checked with clocks, which only the boolean "
+                    "rings support. Use TolerantBooleanMonitor, the default.")
+            mon = TimedBooleanMonitor(self.syma_aut, self.timed_regions, self.passed,
+                                      mon.c_evaluator)
         mon.initialize()
         self.monitor = mon
 
@@ -489,9 +580,10 @@ class Monitor:
                 syma_aut.add_var(name, domain=(-100, 100))  # TODO these limits are hardcoded
             guards.append((covered_locations(inv, T.graph.nodes), convert_invariant(inv)))
 
-        regions = duration_regions(T)
-        if regions:
+        regions, self.timed_regions = duration_regions(T)
+        if regions or self.timed_regions:
             syma_aut.add_var(TIME_VARIABLE, domain=(0, 10000))  # seconds, see read_valuations
+        self.passed = dict()
 
         # The constraints of each edge on their own, without the keeps, so a shortcut transition
         # can be built from them below.
@@ -548,6 +640,8 @@ class Monitor:
 
                 
                 syma_aut.add_transition(location_by_id[v],location_by_id[w], constraint=cons_syma)
+                key = syma_aut.outgoing[location_by_id[v]][-1][0]
+                self.passed[(v, w, key)] = [v]
 
         # A step may meet several phase goals at once: the planner only asks for
         # 0 <= T1 <= ... <= Tn, so a phase can have length zero, while the automaton takes one
@@ -571,6 +665,8 @@ class Monitor:
                 node = TrueNode()
             syma_aut.add_transition(location_by_id[source], location_by_id[target],
                                     Constraint(formula=node))
+            key = syma_aut.outgoing[location_by_id[source]][-1][0]
+            self.passed[(source, target, key)] = [edge[0] for edge in chain]
 
         add_self_loops(syma_aut, guards=guards, final=T.final)
 
@@ -813,7 +909,10 @@ def convert_relative_constraint(con:RelativeConstraint) -> Node:
     match con.relation.value:
 
         case '==':
-            out = EqualNode(lhs,rhs)
+            if con.modifier in CONTINUOUS and EQUALITY_TOLERANCE > 0:
+                out = tolerant_equal(lhs, rhs, EQUALITY_TOLERANCE)
+            else:
+                out = EqualNode(lhs,rhs)
             
         case '<=':
             out = LEQNode(lhs,rhs)
@@ -855,7 +954,10 @@ def convert_absolute_constraint(con: AbsoluteConstraint) -> Node:
 
     match con.relation.value:
         case '==':
-            out = EqualNode(lhs, rhs)
+            if con.modifier in CONTINUOUS and EQUALITY_TOLERANCE > 0:
+                out = tolerant_equal(lhs, rhs, EQUALITY_TOLERANCE)
+            else:
+                out = EqualNode(lhs, rhs)
         case '<=':
             out = LEQNode(lhs, rhs)
         case '>=':
