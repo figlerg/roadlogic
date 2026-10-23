@@ -7,6 +7,96 @@ Tick items off as you go. If something is fine, delete the entry.
 
 ---
 
+## 0. Start here: the logic worth reading, in order
+
+Everything else in this file is background. This section is the code itself, about 1600 lines
+across 9 files. For a live walkthrough of what it does, run `python tests/demo.py`.
+
+### The planner
+
+- [ ] **`planning/Planner.py:224`, `_invocation_keep_rules`.** The heart of the keep feature. A
+      keep inside an invocation cannot be a standalone constraint, because a phase has no fixed
+      boundaries, so it goes into the goal rule and a split only counts if the keep held over its
+      window. Check the window arithmetic: phase k covers `T(k-1)` to `Tk - 1`, and only the last
+      phase keeps its closed end. Check the empty-window rule `keep_held(i,t,t-1) :- time(t)`,
+      which is what makes a zero-length phase legal.
+- [ ] **`planning/Planner.py:172` and `:191`, `_phase_indices` and `_phase_window`.** The mapping
+      from a behavior label to phases of the chosen path, including the tuple nodes that parallel
+      composition produces. Durations use the closed window, keeps the half-open one. If this
+      mapping is wrong, every keep and every duration is wrong.
+- [ ] **`planning/Planner.py:203`, `_duration_literals`.** A duration covering phases k1..k2
+      becomes `low <= T(k2) - T(k1-1) <= high`. Also returns the horizon cap, which is what makes
+      an unsatisfiable duration terminate instead of searching to imax.
+- [ ] **`planning/Planner.py:267` onwards, the initial state.** Which actors get a free initial
+      velocity, and why a speed constraint must not count towards groundability. This is the part
+      most likely to have a case I did not think of.
+
+### Representation and parsing
+
+- [ ] **`planning/intermediate_structure/Constraint.py:797` and `:952`, `Invariant` and
+      `StabilityInvariant`.** `asp_violation_bodies` writes each keep as its own negation, which
+      is the whole trick for turning an invariant into ASP. `StabilityInvariant` is the one that
+      compares two consecutive steps, for `keep_lane()` and a keep against a free parameter.
+- [ ] **`planning/parse/TranslationGraphVisitor.py:416`, `_build_keep_invariants`.** What a keep
+      body may contain and what it is rejected with. The neighbouring `_build_relational_invariants`
+      at `:351` handles `space_gap`.
+- [ ] **`planning/parse/TranslationGraphVisitor.py:510`, `visitModifier_application`.** An `at:`
+      that is missing now means the invariant form rather than an error, which is where the
+      modifier sugar meets the keep machinery. `STABILITY_MODIFIERS` at `:563` is the `keep_lane()`
+      and `keep_speed()` desugaring.
+
+### The monitor
+
+- [ ] **`monitoring/Monitor.py:470`, `populate_syma_aut`.** The assembly: guards from the edge
+      constraints, keeps folded in, shortcut transitions, self loops. Read it with `:213`
+      `guards_for_transition` next to it, which is the rule we agreed on, a keep goes on the edges
+      entering its locations and on their self loops, never on the one leaving, with the edge into
+      the final location as the exception.
+- [ ] **`monitoring/Monitor.py:192`, `skipped_chains`.** Why a step may cross several phases, and
+      the cost of it. `MAX_SKIPPED_PHASES` is 2, which is a guess, not a derived number.
+- [ ] **`monitoring/Monitor.py:150`, `duration_regions`.** Your current_t idea, plus the check
+      that refuses a duration which does not start with the scenario. That refusal is the thing to
+      decide about, since it is what the clock work would replace.
+- [ ] **`monitoring/Monitor.py:41`, `TolerantBooleanEvaluator`.** The verdict algebra. Boolean
+      with a 1e-3 slack on continuous comparisons. Agrees with your MinMax on 5 of 5 benchmark
+      traces, where strict boolean flipped 3 of them to negative.
+- [ ] **`TimedBooleanMonitor` in `monitoring/Monitor.py`, the clocks.** Used only for a duration
+      that does not start with the scenario, which the monitor used to refuse. It tracks
+      (location, entry time per open region) instead of one value per location, enters a region's
+      clock on the transition into it, and checks `low <= now - start <= high` on the transition out.
+      `_clocks_after` is the whole mapping, about twenty lines. Boolean rings only.
+      `ROADLOGIC_TIMED_MONITOR=0` restores the refusal. Worth a careful read, since it replaces the
+      syma ring's update loop for those specs.
+- [ ] **Speed windows, `ROADLOGIC_GOAL_VELOCITY_SOURCE=range` in `map_plan.py`.** For a car whose
+      speed the spec constrains, the window spans the lowest to highest speed the plan uses on the
+      stretch to the waypoint. `segment` (the average) pinned an accelerating car to half its target
+      speed. Recommended default together with `SCOPE=constrained`, see the notebook, sections 8 and 11.
+- [ ] **`EQUALITY_TOLERANCE` in `monitoring/Monitor.py`, 0.5, may need tuning.** A required equality
+      on a position or a speed now holds within half a unit (0.5 m, 0.5 mps), since a sampled trace
+      never lands exactly on a value. Lanes stay exact. Override with
+      `ROADLOGIC_EQUALITY_TOLERANCE`. Checked on every simulated run in `demo_output/`: no keep run or
+      benchmark trace changes its verdict. Known weak spot: a speed keep on a later segment can pass
+      a run that only touched the value once, because its window can shrink to that moment. Only
+      clocks fix that, see `tests/demo.ipynb` section 10.
+- [ ] **`monitoring/Monitor.py:912`, `add_self_loops`.** One line of real consequence: the initial
+      location gets no self loop, so a scenario starts with the trace.
+
+### Execution
+
+- [ ] **`commonroad_extensions/scenario_execution/velocity_patch.py:59`,
+      `calculate_desired_velocity`.** The Frenetix replacement. Picks the waypoint the car is
+      heading for and clamps to its speed window. This one changes every simulation, so it
+      deserves a careful read even though it is short. **Known bad:** in a two-car overtake it
+      makes ego rear-end car1 after 2.1s, because the plan's per-step speeds are jerky and the
+      patch hands them to Frenetix as hard targets. Without the patch the same run is fine. It
+      should be off by default until fixed, see `tests/demo.ipynb` section 8. **Update 2026-10-23:**
+      the cause is that the window used the speed a car leaves a waypoint with. A fix behind two
+      switches in `map_plan.py` passes the overtake, the speed hold and the benchmark. The default
+      as committed crashes the paper benchmark too, so the default needs your decision.
+- [ ] **`commonroad_extensions/plan_execution/map_plan.py:250`.** The plan's speed becomes a
+      velocity window on each goal state. Measured effect on its own: almost none. It matters
+      because the patch above reads it.
+
 ## 1. Decisions I made that you have not read back
 
 These are already baked into code and tests. If any is wrong, the cost of finding out later grows.

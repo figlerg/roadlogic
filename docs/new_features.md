@@ -25,9 +25,14 @@ What has been added for the journal version.
   complete just as before. The old behaviour is one switch away, for reproducing the paper.
 
 - **Checking the simulation, not just the plan.** The monitor used to check only that the cars
-  reached their goals in order. It now also checks the invariants and the scenario's duration
-  against the finished simulation, so a run that meets every goal but breaks a `keep` on the way,
-  or takes far too long, is reported as a failure.
+  reached their goals in order. It now also checks the invariants and the durations against the
+  finished simulation, so a run that meets every goal but breaks a `keep` on the way, or takes too
+  long or too short for one of its parts, is reported as a failure.
+
+- **Clocks in the monitor.** A duration on a part of the scenario that starts partway through needs
+  to know when that part began. The monitor now keeps a clock per possible run, started when a part
+  begins and checked when it ends. Without it, a car could pass a speed requirement by meeting it for
+  a single moment.
 
 - **Units.** Values are given in m, s and mps, and are used exactly as written. Other units are
   rejected instead of being silently misread.
