@@ -72,8 +72,23 @@ def main(osc_file, n, output_folder, cr_scenario, step_length, constants_overrid
 
     for i,plan in enumerate(plans):
         print(p:=os.path.join(output_folder,'cr_scenarios',f'scenario_{i+1:04d}.xml'))
-        new_planning_problem_set = map_plan(scenario=scenario, plan_model=plan, anchor_lane_idx=1, save_path=p)
+        new_planning_problem_set = map_plan(scenario=scenario, plan_model=plan, anchor_lane_idx=1, save_path=p,
+                                            speed_actors=speed_constrained_actors(translator.translation_graph))
         # draw(scenario, new_planning_problem_set)
+
+def speed_constrained_actors(graph):
+    """Names of the cars whose speed the specification constrains, at a boundary or as a keep."""
+    from planning.intermediate_structure.Constraint import AbsoluteConstraint, Modifier
+    actors = set()
+    for u, v in graph.edges:
+        for con in graph[u, v]:
+            if con.modifier == Modifier.SPEED:
+                actors |= {con.actor} if isinstance(con, AbsoluteConstraint) else {con.actor_1, con.actor_2}
+    for inv in graph.invariants:
+        if inv.modifier == Modifier.SPEED:
+            actors |= set(inv.actors)
+    return {str(a) for a in actors}
+
 
 if __name__ == '__main__':
     main()

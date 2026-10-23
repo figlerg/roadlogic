@@ -77,9 +77,26 @@ def get_orientation_from_xy(xy: np.ndarray, coordinate_system: CoordinateSystem)
 # is how the HSCC paper's simulations were produced.
 CONSTRAIN_GOAL_VELOCITY = os.environ.get("ROADLOGIC_GOAL_VELOCITY", "1") != "0"
 GOAL_VELOCITY_TOLERANCE = float(os.environ.get("ROADLOGIC_GOAL_VELOCITY_TOLERANCE", "1.0"))
+# Which speed of the plan the window is built around. "departure" is the plan's speed at the
+# waypoint. In dynamics.lp a car's position at t is its position at t-1 plus its speed at t-1, so
+# that is the speed it leaves the waypoint with, not the one it arrives with, and for a jerky plan it
+# can be far from both. "segment" is the average speed over the stretch leading to the waypoint,
+# distance over time since the previous one, which is what the positions in the plan imply. "range"
+# spans the lowest to the highest speed the plan uses on that stretch, which also covers a stretch
+# where the plan accelerates and the speed at its end is what the specification asks for.
+GOAL_VELOCITY_SOURCE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SOURCE", "departure")
+# Which cars get a speed window. "all" gives one to every car. "constrained" gives one only to cars
+# whose speed the specification constrains. Every simulated car starts from rest while the plan does
+# not, so a car runs behind the plan's schedule, and catching up means driving faster than planned.
+# A window forbids that. That is right for a car whose speed the specification fixes, and wrong for
+# one that has to complete an overtake on time. See tests/demo.ipynb, section 8.
+GOAL_VELOCITY_SCOPE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SCOPE", "all")
 
 
-def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_path = None, config_sim=dummy_config_sim):
+def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_path = None, config_sim=dummy_config_sim,
+             speed_actors=None):
+    # speed_actors: the cars whose speed the specification constrains, used when
+    # GOAL_VELOCITY_SCOPE is "constrained". None means unknown, and then every car gets a window.
 
     predicates = plan_model.holds  # get only holds predicates
 
@@ -196,6 +213,8 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
     for agent_id in agent_ids:
         goal_states = []
         initial_state = None
+        previous = None  # (time, position) of the last waypoint, for the segment speed
+        segment_velocity = None
         for t in time_steps:
             frame = df_by_time.get(t)
             if agent_id not in frame.index:
@@ -248,12 +267,39 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
                 # value, since the plan is discrete (one segment per step) and the simulation is
                 # not. See GOAL_VELOCITY_TOLERANCE.
                 goal_velocity = None
-                if CONSTRAIN_GOAL_VELOCITY and "lon_vel" in row:
+                windowed = CONSTRAIN_GOAL_VELOCITY and not (
+                    GOAL_VELOCITY_SCOPE == "constrained" and speed_actors is not None
+                    and str(agent_id) not in speed_actors)
+                if not windowed:
+                    planned = None
+                elif GOAL_VELOCITY_SOURCE == "range":
+                    # in dynamics.lp the stretch from the previous waypoint to t is driven with the
+                    # speeds at the steps before t
+                    if previous is not None and t > previous[0]:
+                        used = [float(df_by_time[k].loc[agent_id, "lon_vel"])
+                                for k in range(int(previous[0]), int(t)) if k in df_by_time
+                                and agent_id in df_by_time[k].index]
+                        if used:
+                            segment_velocity = (min(used), max(used))
+                    planned = segment_velocity
+                elif GOAL_VELOCITY_SOURCE == "segment":
+                    # two goals at the same step share a waypoint, and keep its speed
+                    if previous is not None and t > previous[0]:
+                        segment_velocity = (float(lon_pos) - previous[1]) / (t - previous[0])
+                    planned = segment_velocity
+                elif "lon_vel" in row:
                     planned = float(row["lon_vel"])
-                    goal_velocity = Interval(max(0.0, planned - GOAL_VELOCITY_TOLERANCE),
-                                             planned + GOAL_VELOCITY_TOLERANCE)
+                else:
+                    planned = None
+                if planned is not None:
+                    low, high = planned if isinstance(planned, tuple) else (planned, planned)
+                    goal_velocity = Interval(max(0.0, low - GOAL_VELOCITY_TOLERANCE),
+                                             max(0.0, high) + GOAL_VELOCITY_TOLERANCE)
                 goal_state = ExtendedPMState(time_step=Interval(*time_interval), position=rect, velocity=goal_velocity)
                 goal_states.append(goal_state)
+
+            if previous is None or t > previous[0]:
+                previous = (t, float(lon_pos))
 
         if initial_state is not None and goal_states:
             # new_planning_problem_2 = PlanningProblem(43,x0_2,GoalRegion([goal_state_1_2,goal_state_2_2,goal_state_3_2]))

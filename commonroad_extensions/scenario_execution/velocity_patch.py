@@ -25,6 +25,12 @@ from cr_scenario_handler.utils.velocity_planner import VelocityPlanner
 
 ENABLED = os.environ.get("ROADLOGIC_VELOCITY_PATCH", "1") != "0"
 
+# How the waypoint's speed window is used. "clamp" forces the target into it. "average" ignores it
+# and aims only at the speed needed to reach the waypoint on time. The window comes from the plan's
+# speed at the waypoint, which in dynamics.lp is the speed the car leaves that step with, not the one
+# it arrives with, so for a jerky plan it can point the wrong way. See tests/demo.ipynb, section 8.
+MODE = os.environ.get("ROADLOGIC_VELOCITY_PATCH_MODE", "clamp")
+
 _ATTRIBUTE = "_roadlogic_original_calculate_desired_velocity"
 
 
@@ -82,7 +88,7 @@ def calculate_desired_velocity(self, x_0, s_position) -> float:
             return getattr(self, _ATTRIBUTE)(x_0, s_position)
         target = sum(bounds) / 2
 
-    if bounds is not None:
+    if bounds is not None and MODE == "clamp":
         target = min(max(target, bounds[0]), bounds[1])
 
     return self.clip_velocity(target, x_0.velocity)
