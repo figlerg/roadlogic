@@ -253,3 +253,159 @@ def show_images(items, width=430):
         cells.append(f"<td style='vertical-align:top;text-align:left'><b>{title}</b><br>"
                      f"<img src='data:image/{kind};base64,{data}' width='{width}'></td>")
     display(HTML("<table><tr>" + "".join(cells) + "</tr></table>"))
+
+
+def draw_monitor_automaton(spec, title=None):
+    """The monitor's automaton for a spec, drawn as a timed automaton with every guard written out.
+
+    Each transition is labelled with its guard and, after a slash, its clock resets. t is the current
+    time, a clock that is never reset. Every duration that starts later than the scenario gets its own
+    clock x, reset to 0 on the transition into its region and checked on the one leaving it, which is
+    what the code does with x = current_t - start. Colours tell the sources apart: goals in black,
+    keeps in purple, guards on t in teal, clocks in orange.
+
+    Locations are laid out in columns by their distance from the start, alternatives of a one_of one
+    above the other. Shortcut transitions are drawn dashed below a graph that is a single path. On a
+    branching graph they would bury the picture, so they are returned instead, as fig.shortcuts, a list
+    of (from, to, guard) for printing.
+    """
+    import matplotlib.pyplot as plt
+    import networkx as nx
+    from matplotlib.patches import FancyArrowPatch
+    from monitoring.Monitor import Monitor, covered_locations, duration_regions, skipped_chains
+
+    T = Monitor.from_osc2_file(spec)._translation_graph
+    G = T.graph
+    keeps = [(covered_locations(inv, G.nodes), inv) for inv in T.invariants]
+    anchored, timed = duration_regions(T)
+    clock = {k: f"x{k + 1}" for k in range(len(timed))}
+    GOAL, KEEP, TIME, CLOCK, GREY = "#1c2228", "#6a1b9a", "#00796b", "#c25e00", "#5a6570"
+
+    def owner(d):
+        if d.source.startswith("the invocation "):
+            return d.source[len("the invocation "):].replace(".drive", "")
+        return d.source.split(":")[0] if ":" in d.source else "scenario"
+
+    def name(node):
+        return " | ".join(map(str, node)) if isinstance(node, tuple) else str(node)
+
+    def nice(text):
+        import re
+        text = re.sub(r"\b([lpv])_(\w+)", r"\1(\2)", text)   # relational constraints print l_car2
+        for a, b in ((" == ", " = "), (" <= ", " ≤ "), (" >= ", " ≥ "), (".0 ", " "), (".0)", ")")):
+            text = text.replace(a, b)
+        return text[:-2] if text.endswith(".0") else text
+
+    def label(source, target, crossed, goals):
+        """Lines of (text, colour) for one transition, guard first and resets last."""
+        lines = [(nice(g), GOAL) for g in goals]
+        last = crossed[-1]
+        lines += [(nice(str(inv.constraint)) if inv.constraint is not None
+                   else f"{inv.modifier}({inv.actor}) unchanged", KEEP)
+                  for covered, inv in keeps if target in covered or (target == T.final and last in covered)]
+        lines += [(f"{d.low} ≤ t ≤ {d.high} ({owner(d)})", TIME) for covered, d in anchored
+                  if target not in covered and any(n in covered for n in crossed)]
+        resets = []
+        for k, (covered, d) in enumerate(timed):
+            inside = any(n in covered for n in crossed[1:])
+            if target in covered and source not in covered:
+                resets.append(f"{clock[k]} := 0")
+            elif source in covered and target not in covered:
+                lines.append((f"{d.low} ≤ {clock[k]} ≤ {d.high}", CLOCK))
+            elif inside and target not in covered:
+                never = "" if d.low <= 0 <= d.high else ", never true"
+                lines.append((f"{d.low} ≤ 0 ≤ {d.high} ({owner(d)} crossed in one sample{never})", CLOCK))
+        if not lines:
+            lines = [("true", GOAL)]
+        if resets:
+            lines.append(("/ " + ", ".join(resets), CLOCK))
+        return lines
+
+    # layout: a column per distance from the start, branches spread vertically, merges in between
+    order = list(nx.topological_sort(G))
+    depth, y = {}, {}
+    for v in order:
+        preds = list(G.predecessors(v))
+        depth[v] = 1 + max((depth[p] for p in preds), default=-1)
+        if not preds:
+            y[v] = 0.0
+        elif len(preds) > 1:
+            y[v] = sum(y[p] for p in preds) / len(preds)
+        else:
+            siblings = list(G.successors(preds[0]))
+            y[v] = y[preds[0]] + (siblings.index(v) - (len(siblings) - 1) / 2) * 2.5
+    x = {v: 3.6 * depth[v] for v in G.nodes}
+    linear = all(G.out_degree(v) <= 1 for v in G.nodes)
+
+    chains = list(skipped_chains(G))
+    shortcuts = []
+    for source, target, chain in chains:
+        goals = sorted({str(c) for edge in chain for c in T[edge]})
+        lines = label(source, target, [e[0] for e in chain], goals)
+        guard = "  ∧  ".join(t for t, _ in lines if not t.startswith("/"))
+        reset = " ".join(t for t, _ in lines if t.startswith("/"))
+        shortcuts.append((name(source), name(target), (guard + ("  " + reset if reset else "")).strip()))
+
+    low_y, high_y = min(y.values()), max(y.values())
+    bottom = low_y - (0.95 + 0.5 * len(chains) if linear else 0.9)
+    top = high_y + 2.4
+    fig, ax = plt.subplots(figsize=(3.6 * (max(depth.values()) + 1) + 0.6, 1.25 * (top - bottom)))
+
+    def stack(cx, cy, lines, upward=True, size=8.5, box=False):
+        for k, (text, colour) in enumerate(lines):
+            offset = (len(lines) - 1 - k) * 0.17 if upward else -k * 0.17
+            ax.text(cx, cy + offset, text, ha="center", va="bottom" if upward else "top", fontsize=size,
+                    color=colour, zorder=5,
+                    bbox=dict(facecolor="white", edgecolor="none", pad=0.6) if box else None)
+
+    for v in G.nodes:
+        colour = "#2e7d32" if v == T.initial else "#c62828" if v == T.final else "#1565c0"
+        ax.add_patch(plt.Circle((x[v], y[v]), 0.22, color=colour, zorder=3))
+        ax.text(x[v], y[v] - 0.32, name(v), ha="center", va="top", fontsize=9, fontweight="bold", zorder=5,
+                bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
+        if v != T.initial:
+            ax.add_patch(FancyArrowPatch((x[v] - 0.12, y[v] + 0.18), (x[v] + 0.12, y[v] + 0.18),
+                                         connectionstyle="arc3,rad=-2.6", arrowstyle="-|>",
+                                         mutation_scale=10, lw=1, color=GREY))
+            stack(x[v], y[v] + 0.78, label(v, v, [v], []))
+    for u, v in G.edges:
+        dx, dy = x[v] - x[u], y[v] - y[u]
+        length = (dx ** 2 + dy ** 2) ** 0.5
+        ux, uy = dx / length, dy / length
+        ax.add_patch(FancyArrowPatch((x[u] + 0.24 * ux, y[u] + 0.24 * uy), (x[v] - 0.24 * ux, y[v] - 0.24 * uy),
+                                     arrowstyle="-|>", mutation_scale=12, lw=1.4, color=GOAL))
+        stack((x[u] + x[v]) / 2, (y[u] + y[v]) / 2 + 0.08, label(u, v, [u], sorted(str(c) for c in T[u, v])),
+              box=not linear)
+
+    if linear:
+        for k, (source, target, chain) in enumerate(sorted(chains, key=lambda c: (x[c[0]], x[c[1]]))):
+            shift = 0.09 * (k - (len(chains) - 1) / 2)
+            x0, x1 = x[source] + shift, x[target] + shift
+            level = low_y - (0.75 + 0.5 * k)
+            ax.plot([x0, x0, x1, x1], [low_y - 0.22, level, level, low_y - 0.22], ls="--", lw=1, color="#8a959f")
+            ax.annotate("", xy=(x1, low_y - 0.22), xytext=(x1, level),
+                        arrowprops=dict(arrowstyle="-|>", lw=1, ls="--", color="#8a959f"))
+            guard = next(g for s_, t_, g in shortcuts if s_ == name(source) and t_ == name(target))
+            ax.text((x0 + x1) / 2, level - 0.05, "shortcut: " + guard, ha="center", va="top", fontsize=7.5,
+                    color=GREY, zorder=4, bbox=dict(facecolor="white", edgecolor="none", pad=1.5))
+
+    left = min(x.values()) - 0.4
+    legend = [("goal", GOAL), ("keep", KEEP), ("duration from the start, on t", TIME),
+              ("later duration, on its own clock", CLOCK)]
+    for k, (text, colour) in enumerate(legend):
+        ax.text(left + 2.6 * k, top - 0.15, "■ " + text, color=colour, fontsize=8.5, ha="left")
+    notes = "= on a position or speed allows ±0.5 · t is the current time · guard / reset"
+    if timed:
+        notes += " · " + ", ".join(f"{clock[k]} times {owner(d)} ({d.low}..{d.high}s)"
+                                    for k, (_, d) in enumerate(timed))
+    ax.text(left, top - 0.36, notes, fontsize=8, color=GREY, ha="left")
+    if not linear and shortcuts:
+        ax.text(left, bottom + 0.15, f"{len(shortcuts)} shortcut transitions not drawn, listed below the figure",
+                fontsize=8, color=GREY, ha="left")
+    ax.set_xlim(min(x.values()) - 0.8, max(x.values()) + 0.8)
+    ax.set_ylim(bottom, top)
+    ax.axis("off")
+    ax.set_title(title or os.path.basename(spec), fontsize=11)
+    fig.tight_layout()
+    fig.shortcuts = shortcuts
+    return fig

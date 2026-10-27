@@ -81,6 +81,11 @@ across 9 files. For a live walkthrough of what it does, run `python tests/demo.p
 - [ ] **`monitoring/Monitor.py:912`, `add_self_loops`.** One line of real consequence: the initial
       location gets no self loop, so a scenario starts with the trace.
 
+- [ ] **`planning/Planner.py`, `_on_path`.** A keep or duration inside a `one_of` alternative the plan
+      does not take is skipped instead of raising. Found through `tests/one_of_nested.osc`. The
+      bigger issue behind it, that the planner only ever plans the first path through the
+      automaton, is the next piece of work, see `.claude/PLAN.md`.
+
 ### Execution
 
 - [ ] **`commonroad_extensions/scenario_execution/velocity_patch.py:59`,
@@ -93,6 +98,11 @@ across 9 files. For a live walkthrough of what it does, run `python tests/demo.p
       the cause is that the window used the speed a car leaves a waypoint with. A fix behind two
       switches in `map_plan.py` passes the overtake, the speed hold and the benchmark. The default
       as committed crashes the paper benchmark too, so the default needs your decision.
+- [ ] **`ROADLOGIC_FINAL_SLACK` in `map_plan.py`, off by default, experimental.** One extra waypoint
+      per car, that many seconds after the plan ends, at the car's final speed. Brought exp_007 from
+      0 to 7 of 10 positive in simulation. It does not help when a car runs ahead of the plan.
+- [ ] **`paper_journal/benchmark/`.** Reruns the paper's benchmark on the current code with the
+      paper's own sampled instances, plus new examples. Only 7 of 30 cases have run so far.
 - [ ] **`commonroad_extensions/plan_execution/map_plan.py:250`.** The plan's speed becomes a
       velocity window on each goal state. Measured effect on its own: almost none. It matters
       because the patch above reads it.
