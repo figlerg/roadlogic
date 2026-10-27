@@ -91,6 +91,12 @@ GOAL_VELOCITY_SOURCE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SOURCE", "departu
 # A window forbids that. That is right for a car whose speed the specification fixes, and wrong for
 # one that has to complete an overtake on time. See tests/demo.ipynb, section 8.
 GOAL_VELOCITY_SCOPE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SCOPE", "all")
+# Seconds of slack after the plan's end: one more waypoint per car, that many seconds later, where the
+# car would be if it kept its final speed in its final lane. Simulated cars start from rest and lag
+# the plan, and a car leaves the simulation when it reaches or passes its last waypoint, which can cut
+# the trace before a slower car has done its part. The planner's two padding steps used to provide this
+# slack, at a large cost in planning time. 0 adds nothing.
+FINAL_SLACK = int(os.environ.get("ROADLOGIC_FINAL_SLACK", "0"))
 
 
 def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_path = None, config_sim=dummy_config_sim,
@@ -300,6 +306,21 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
 
             if previous is None or t > previous[0]:
                 previous = (t, float(lon_pos))
+
+        if FINAL_SLACK > 0 and goal_states:
+            last = max(t for t in time_steps if agent_id in df_by_time[t].index)
+            final = df_by_time[last].loc[agent_id]
+            lon_slack = float(final["lon_pos"]) + float(final["lon_vel"]) * FINAL_SLACK
+            try:
+                xy_slack = coordinate_system.convert_to_cartesian_coords(lon_slack + padding_distance_left, 0)
+                (x_s, y_s), _ = project_to_polyline(xy_slack, lane_centerlines[final["lat_pos"]])
+                orientation_s = get_orientation_from_xy((x_s, y_s), coordinate_system)
+                start = (last + FINAL_SLACK) * 10
+                goal_states.append(ExtendedPMState(time_step=Interval(start, start + 10),
+                                                   position=Rectangle(1., 2., np.array([x_s, y_s]), orientation_s),
+                                                   velocity=goal_states[-1].velocity))
+            except Exception as e:  # past the end of the road: no slack for this car
+                warnings.warn(f"No final slack for {agent_id}: {e}")
 
         if initial_state is not None and goal_states:
             # new_planning_problem_2 = PlanningProblem(43,x0_2,GoalRegion([goal_state_1_2,goal_state_2_2,goal_state_3_2]))
