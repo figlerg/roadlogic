@@ -409,3 +409,213 @@ def draw_monitor_automaton(spec, title=None):
     fig.tight_layout()
     fig.shortcuts = shortcuts
     return fig
+
+
+# ---------------------------------------------------------------- section 8: plan speed versus simulation
+
+# one colour per run setting, the same in every section 8 figure
+RUN_COLOURS = {"no patch": "#8a959f", "patch as committed": "#c62828", "average": "#c25e00",
+               "segment": "#1565c0", "fix": "#00796b"}
+PLAN_COLOUR = "#1c2228"
+
+
+def load_plan(name):
+    """The plan a stored run was made from."""
+    path = os.path.join(OUT, "_work", name, "out", "serialized_models", "0001.pkl")
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def plan_rows(model, actor):
+    """{t: (position, lane, speed)} for one actor of a plan."""
+    return {t: (s, lane, v) for a, t, s, lane, v, _ in states(model) if a == actor}
+
+
+def stored_trace(name, metric):
+    """One metric of a stored run (LANE, LONGPOS or CURRV) as a time by car table."""
+    import pandas as pd
+    from commonroad_extensions.plan_execution.id_hash import decode
+
+    path = os.path.join(OUT, name, "trace", f"{metric}.csv")
+    if not os.path.exists(path):
+        path = os.path.join(simulation_folder(name), f"{metric}.csv")
+    table = pd.read_csv(path).pivot(index="time", columns="agent_id", values=pd.read_csv(path).columns[-1])
+    return table.rename(columns=decode)
+
+
+def scenario_windows(name):
+    """{car: [(step, low, high)]}, the waypoints and speed windows a run handed to the simulator.
+
+    `step` is the plan step of the waypoint, low and high are None when it carries no window.
+    """
+    import xml.etree.ElementTree as ET
+    from commonroad_extensions.plan_execution.id_hash import decode
+
+    windows = {}
+    for problem in ET.parse(os.path.join(OUT, name, "scenario.xml")).getroot().iter("planningProblem"):
+        rows = []
+        for goal in problem.iter("goalState"):
+            step = int(goal.find("time").find("intervalStart").text) // 10
+            velocity = goal.find("velocity")
+            low, high = ((float(velocity.find("intervalStart").text), float(velocity.find("intervalEnd").text))
+                         if velocity is not None else (None, None))
+            rows.append((step, low, high))
+        windows[decode(int(problem.get("id")))] = rows
+    return windows
+
+
+def speed_window(model, actor, step, previous, source, tolerance=1.0):
+    """The speed window map_plan.py puts on a waypoint, for one GOAL_VELOCITY_SOURCE.
+
+    Mirrors map_plan.py so the sources can be compared on one plan. departure is the speed stored
+    at the waypoint, segment the average speed from the previous waypoint, range the lowest to
+    highest speed used on that stretch.
+    """
+    rows = plan_rows(model, actor)
+    if source == "departure":
+        low = high = rows[step][2]
+    elif source == "segment":
+        low = high = (rows[step][0] - rows[previous][0]) / (step - previous)
+    else:
+        used = [rows[k][2] for k in range(previous, step)]
+        low, high = min(used), max(used)
+    return max(0.0, low - tolerance), max(0.0, high) + tolerance
+
+
+def plot_plan_legs(model, actor, waypoints, title=None):
+    """Position over time of one actor's plan, each one-second leg labelled with the speed driving it.
+
+    In dynamics.lp the position at t is the position at t-1 plus the speed at t-1, so the leg from
+    t to t+1 is driven at the speed stored at t. The waypoints handed to the simulator are marked.
+    """
+    import matplotlib.pyplot as plt
+
+    rows = plan_rows(model, actor)
+    steps = sorted(rows)
+    fig, ax = plt.subplots(figsize=(8.5, 3.6))
+    ax.plot(steps, [rows[t][0] for t in steps], "-o", color=PLAN_COLOUR, lw=2, ms=6, zorder=3)
+    for t in steps[:-1]:
+        mid = ((t + t + 1) / 2, (rows[t][0] + rows[t + 1][0]) / 2)
+        ax.annotate(f"{rows[t][2]} m/s", mid, xytext=(-6, 8), textcoords="offset points",
+                    ha="right", fontsize=8.5, color="#5a6570")
+    for step in waypoints:
+        ax.axvline(step, color="#00796b", ls="--", lw=1)
+        arrive = rows[step - 1][2]
+        ax.annotate(f"waypoint t={step}\narrives at {arrive} m/s\nstored speed {rows[step][2]} m/s",
+                    (step, rows[step][0]), xytext=(10, -48), textcoords="offset points", fontsize=8.5,
+                    color="#00796b", bbox=dict(facecolor="white", edgecolor="#00796b", pad=3))
+    ax.set_xlabel("plan step t [s]")
+    ax.set_ylabel("position along the road [m]")
+    ax.set_xticks(steps)
+    ax.grid(alpha=0.25)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.set_title(title or f"{actor}'s plan: each leg is driven at the speed stored where it starts", fontsize=11)
+    fig.tight_layout()
+    return fig
+
+
+def plot_speed_windows(model, actors, waypoints, sources=("departure", "segment", "range")):
+    """Per car and waypoint, the window each source gives, next to the speeds the plan really uses
+    on the stretch leading to that waypoint (grey dots)."""
+    import matplotlib.pyplot as plt
+
+    colours = {"departure": RUN_COLOURS["patch as committed"], "segment": RUN_COLOURS["segment"],
+               "range": RUN_COLOURS["fix"]}
+    panels = [(actor, step, previous) for actor in actors
+              for previous, step in zip([0] + list(waypoints[:-1]), waypoints)]
+    fig, axes = plt.subplots(1, len(panels), figsize=(2.6 * len(panels) + 0.6, 3.4), sharey=True)
+    for ax, (actor, step, previous) in zip(axes, panels):
+        rows = plan_rows(model, actor)
+        used = [rows[k][2] for k in range(previous, step)]
+        ax.scatter([-0.9] * len(used), used, color="#8a959f", s=36, zorder=3)
+        for k, source in enumerate(sources):
+            low, high = speed_window(model, actor, step, previous, source)
+            ax.plot([k, k], [low, high], color=colours[source], lw=7, solid_capstyle="round")
+        ax.set_xticks([-0.9] + list(range(len(sources))))
+        ax.set_xticklabels(["used"] + list(sources), rotation=35, ha="right", fontsize=8.5)
+        ax.set_xlim(-1.5, len(sources) - 0.4)
+        ax.set_title(f"{actor}, stretch t={previous}..{step}", fontsize=9.5)
+        ax.grid(axis="y", alpha=0.25)
+        ax.spines[["top", "right"]].set_visible(False)
+    axes[0].set_ylabel("speed [m/s]")
+    fig.suptitle("Speed window per waypoint (bars) against the speeds driven on the way there (dots)",
+                 fontsize=11)
+    fig.tight_layout()
+    return fig
+
+
+def plot_simulated(runs, actors, metric="CURRV", model=None, windows_from=None, ylabel="speed [m/s]",
+                   title=None):
+    """One panel per car, one line per stored run, with the plan's leg speeds as a dashed staircase
+    and the speed windows of `windows_from` as shaded bands. A run that ends early ends in an x."""
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(1, len(actors), figsize=(5.2 * len(actors) + 0.4, 3.5), squeeze=False)
+    tables = {label: stored_trace(name, metric) for label, name in runs.items()}
+    longest = max(t.index.max() for t in tables.values())
+    for ax, actor in zip(axes[0], actors):
+        if windows_from:
+            previous = 0
+            for step, low, high in scenario_windows(windows_from)[actor]:
+                if low is not None:
+                    ax.fill_between([previous, step + 0.5], low, high, color=RUN_COLOURS["patch as committed"],
+                                    alpha=0.12, lw=0)
+                    ax.text(previous + 0.1, high + 0.15, f"window {low:g}..{high:g}", fontsize=7.5,
+                            color=RUN_COLOURS["patch as committed"])
+                previous = step + 0.5
+        if model is not None:
+            rows = plan_rows(model, actor)
+            steps = sorted(rows)
+            ax.step(steps, [rows[t][2] for t in steps], where="post", color=PLAN_COLOUR, ls="--", lw=1.3,
+                    label="plan (speed of each leg)")
+        for k, (label, table) in enumerate(tables.items()):
+            if actor not in table:
+                continue
+            series = table[actor].dropna()
+            # earlier runs wider, so a run lying exactly on top of another stays visible
+            ax.plot(series.index, series.values, color=RUN_COLOURS.get(label, "#5a6570"),
+                    lw=2 + 2.5 * (len(tables) - 1 - k), label=label)
+            if series.index.max() < longest - 1:
+                ax.plot(series.index[-1], series.values[-1], "x", color=RUN_COLOURS.get(label), ms=11, mew=2.5)
+        ax.set_title(actor, fontsize=10)
+        ax.set_xlabel("simulated time [s]")
+        ax.grid(alpha=0.25)
+        ax.spines[["top", "right"]].set_visible(False)
+    axes[0][0].set_ylabel(ylabel)
+    axes[0][-1].legend(fontsize=8.5, loc="upper left", bbox_to_anchor=(1.01, 1))
+    if title:
+        fig.suptitle(title, fontsize=11)
+    fig.tight_layout()
+    return fig
+
+
+def plot_gap(runs, front, back, car_length=4.5):
+    """Distance from `back` to `front` along the road, one line per stored run. Below one car length
+    the two bodies overlap, which is a collision while they share a lane."""
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8.5, 3.4))
+    for label, name in runs.items():
+        table = stored_trace(name, "LONGPOS")
+        lanes = stored_trace(name, "LANE")
+        gap = (table[front] - table[back]).dropna()
+        same = (lanes[front] == lanes[back]).reindex(gap.index).fillna(False)
+        colour = RUN_COLOURS.get(label, "#5a6570")
+        ax.plot(gap.index, gap.values, color=colour, lw=2 + 2.5 * (len(runs) - 1 - list(runs).index(label)),
+                label=label)
+        ax.plot(gap.index[same], gap.values[same], ".", color=colour, ms=4)
+        if gap.index.max() < 4:
+            ax.plot(gap.index[-1], gap.values[-1], "x", color=colour, ms=12, mew=2.5)
+            ax.annotate(f"collision at {gap.index[-1]:.1f}s", (gap.index[-1], gap.values[-1]), xytext=(12, -4),
+                        textcoords="offset points", color=colour, fontsize=9)
+    ax.axhspan(-car_length, car_length, color=RUN_COLOURS["patch as committed"], alpha=0.08, lw=0)
+    ax.text(0.05, car_length - 0.6, "closer than one car length", fontsize=8, color="#5a6570", va="top")
+    ax.axhline(0, color="#5a6570", lw=0.8)
+    ax.set_xlabel("simulated time [s]")
+    ax.set_ylabel(f"{front} ahead of {back} [m]")
+    ax.grid(alpha=0.25)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.legend(fontsize=8.5, title="dots: same lane", title_fontsize=8)
+    ax.set_title(f"How far {front} is ahead of {back}", fontsize=11)
+    fig.tight_layout()
+    return fig
