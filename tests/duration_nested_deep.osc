@@ -1,0 +1,27 @@
+# Durations at every level of nesting: the scenario, a parallel and a serial inside it, and single
+# invocations inside those. The path through the automaton has three phases: (a, b), then c, then d.
+# Each duration bounds the time from the start of its first phase to the end of its last one, so
+#   whole scenario   T3 - 0   in [5, 9]
+#   first, and a     T1 - 0   in [2, 3]
+#   second           T3 - T1  in [3, 6]
+#   c                T2 - T1  in [1, 2]
+#   d                T3 - T2  in [2, 4]
+# The bounds have to agree with each other, for instance second can last at most 2 + 4 = 6 because
+# c and d can, and the whole scenario at least 2 + 1 + 2 = 5.
+
+scenario nested_durations:
+    car1: car
+    car2: car
+
+    do serial(duration: [5s..9s]):
+        first: parallel(duration: [2s..3s]):
+            a: car1.drive(duration: [2s..3s]) with:
+                lane(1, at: start)
+                position(0m, at: start)
+            b: car2.drive() with:
+                lane(same_as: car1, at: start)
+                position([15m..25m], ahead_of: car1, at: start)
+        second: serial(duration: [3s..6s]):
+            c: car1.drive(duration: [1s..2s])
+            d: car1.drive(duration: [2s..4s]) with:
+                lane(2, at: end)

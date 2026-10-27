@@ -53,6 +53,17 @@ CASES = [
         invariant=all_of(span_between(0, 1, 2, 3), span_between(1, 2, 4, 6)),
     ),
     Case(
+        "one_of_nested.osc",
+        "durations and a keep inside the alternatives of a one_of: only the chosen one's apply",
+        invariant=last_goal_between(4, 12),
+    ),
+    Case(
+        "duration_nested_deep.osc",
+        "durations on every level: scenario, parallel, serial and single invocations",
+        invariant=all_of(span_between(0, 1, 2, 3), span_between(1, 2, 1, 2), span_between(2, 3, 2, 4),
+                         span_between(1, 3, 3, 6), last_goal_between(5, 9)),
+    ),
+    Case(
         "duration_invocation.osc",
         "durations on single invocations, inside a composition duration",
         invariant=all_of(span_between(0, 1, 3, 4), span_between(1, 2, 2, 5),
