@@ -1,0 +1,32 @@
+# Phase-scoped keep: car1 runs a serial of two drives and the invariant is attached to the
+# second one only. The window is a strict subset of the scenario lifetime, so this is the
+# case that actually discriminates the two scoping rules of 7.3.11.2.
+# Expected: car1 may change lane during A0 but must hold lane 2 for all of A1.
+#
+# car1 gets an absolute position as well as an absolute lane because grounding currently
+# requires both to anchor an actor without a relative constraint. See the note about
+# exp_parallel in docs/known-issues-exp-parallel.md, which fails for the same reason.
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: serial:
+            A0: car1.drive() with:
+                lane(1, at:start)
+                position(20m, at:start)
+
+            A1: car1.drive() with:
+                lane(2, at:start)
+                keep(car1.lane == 2)
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                lane(left_of:car1, at:end)
+                position([1m..10m], ahead_of:car1, at:end)

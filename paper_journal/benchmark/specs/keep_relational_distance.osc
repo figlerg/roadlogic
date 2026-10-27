@@ -1,0 +1,34 @@
+# Relational invariant, canonical form: ego stays between 5m and 100m behind car1 for the whole
+# window, written with the domain model's own distance method rather than a modifier.
+# physical_object (8.7) declares
+#   def space_gap(reference: physical_object, direction: road_distance_direction) -> length
+# so this is standard syntax, not invented. It parses with the current grammar via
+# function_application_pe.
+# The gap is signed: positive means the receiver is ahead of the reference, which is the
+# convention the standard uses in its keep_space_gap semantics (8.8). So this says car1 runs
+# 5m to 100m ahead of ego, equivalently ego stays that far behind car1.
+#
+# The direction is always longitudinal here. This tool has no lateral distance: the lateral
+# axis is lane indices rather than a length, so a lateral gap has no meaning and is rejected.
+#
+# Declared as a scenario member so the window is the whole scenario. The equivalent modifier
+# form in keep_relational_modifier.osc sits inside a with block and is therefore phase scoped,
+# so the two cannot be compared until phase scoping lands.
+
+scenario follow:
+    car1: car
+    ego: car
+
+    keep(car1.space_gap(ego, longitudinal) in [5m..100m])
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                lane(same_as:car1, at:end)

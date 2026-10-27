@@ -1,0 +1,18 @@
+# The same two keeps as keep_adjacent_phases.osc, lane 1 and then lane 2, but without fixing the
+# speed at the start. Every simulated car starts from a standstill, so a start speed can never
+# hold in simulation and the monitor rejects the trace on its first sample. Here the planner has
+# to accelerate on its own before the lane change (controller.lp asks for at least 6mps for one),
+# which a simulation can follow.
+
+scenario lane_change:
+    car1: car
+
+    do serial:
+        A0: car1.drive() with:
+            lane(1, at: start)
+            position(0m, at: start)
+            keep(car1.lane == 1)
+
+        A1: car1.drive() with:
+            lane(2, at: end)
+            keep(car1.lane == 2)

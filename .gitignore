@@ -245,3 +245,6 @@ __marimo__/
 
 # regenerable output of tests/demo.ipynb and the benchmark runs
 demo_output/
+
+# output of paper_journal/benchmark, large and regenerable
+paper_journal/benchmark/out/

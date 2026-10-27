@@ -1,0 +1,20 @@
+# Relative speed via the standard's faster_than argument. The speed modifier declares
+#   [, faster_than: physical_object | slower_than: physical_object | same_as: physical_object]
+# which mirrors how lane() already handles same_as, left_of and right_of, so this maps onto a
+# RelativeConstraint with Modifier.SPEED.
+#
+# Written with at: end, a point constraint at the phase goal, which is what the speed modifier
+# alone supports. The at: all variant is the invariant form and belongs with the keep work.
+
+scenario chase:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: ego.drive() with:
+            lane(same_as:car1, at:start)
+            position([10m..20m], behind:car1, at:start)
+            speed(faster_than: car1, at: end)

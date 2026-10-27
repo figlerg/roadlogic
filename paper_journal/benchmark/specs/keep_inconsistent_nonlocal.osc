@@ -1,0 +1,33 @@
+# Negative test, must be UNSAT. This is 7.6.2.3 case 2, non-local unsatisfiability through
+# interplay. No single constraint here is contradictory and no two of them share a scope.
+# The specification is unsatisfiable only because of how they interact over time:
+# ego must stay within 5m..10m of car1, car1 must do more than 8mps, and ego is capped below
+# 4mps. Every constraint is satisfiable on its own and all of them hold at t=0, where the start
+# position agrees with the gap. The contradiction only appears once time is taken into account:
+# car1 gains at least 9 - 3 = 6 segments per step, so a gap that starts at most 10 exceeds 10
+# after a single step, and following the leader would need a speed ego is not allowed.
+# All three keeps are scenario members, so the window is the whole trace and this does not
+# depend on phase scoping.
+#
+# Note how sensitive this is to the horizon. An earlier version used a 5m..40m gap, which stays
+# satisfiable for about five steps and so found plans: the specification was inconsistent only
+# beyond the search bound. That is the bounded-unsatisfiability caveat in section 8 of
+# docs/keep-spec.md made concrete.
+# This is the case the standard describes and does not mechanise. It only becomes decidable
+# once keep is read over traces, see section 2 of docs/keep-spec.md.
+
+scenario follow:
+    car1: car
+    ego: car
+
+    keep(car1.speed > 8mps)
+    keep(ego.speed < 4mps)
+    keep(car1.space_gap(ego, longitudinal) in [5m..10m])
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: ego.drive() with:
+            lane(same_as:car1, at:start)
+            position([5m..10m], behind:car1, at:start)
