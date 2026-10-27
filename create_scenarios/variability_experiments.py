@@ -53,6 +53,12 @@ def main(osc_file, input_folder, output_folder, cr_scenario, time_limit, overrid
 
     scenario, _ = CommonRoadFileReader(cr_scenario).open()
 
+    # The cars whose speed the specification constrains, for the speed windows in map_plan, as in
+    # create_plan_scenarios.py. The specification is the same for every partition.
+    import tempfile
+    from create_scenarios.create_plan_scenarios import speed_constrained_actors
+    speed_actors = speed_constrained_actors(Planner(osc_file, out_path=tempfile.mkdtemp()).translation_graph)
+
     names = list()
     report = dict()
 
@@ -82,7 +88,8 @@ def main(osc_file, input_folder, output_folder, cr_scenario, time_limit, overrid
                 names.append(name)
                 plans.append(new_plan)
                 print(p:=os.path.join(output_folder,'cr_scenarios',f'scenario_{name}.xml'))
-                new_planning_problem_set = map_plan(scenario=scenario, plan_model=new_plan, anchor_lane_idx=1, save_path=p)
+                new_planning_problem_set = map_plan(scenario=scenario, plan_model=new_plan, anchor_lane_idx=1, save_path=p,
+                                                    speed_actors=speed_actors)
 
     out_path = os.path.join(output_folder, "summary.json")
     with open(out_path, "w") as f:
