@@ -188,6 +188,15 @@ class Planner:
         return phases
 
     @staticmethod
+    def _on_path(labels, aut_path):
+        """Whether any phase of the chosen path belongs to `labels`.
+
+        A keep or duration inside an alternative of a one_of that the chosen path does not take
+        does not apply to this plan, so callers skip it rather than treat it as an error.
+        """
+        return any(set(labels) & flatten_node(node) for node in aut_path[1:-1])
+
+    @staticmethod
     def _phase_window(labels, aut_path, what):
         """Goal times bounding the phases that contain any of `labels`, as ASP terms.
 
@@ -210,6 +219,8 @@ class Planner:
         literals, comments, cap = [], [], None
         last = f"T{len(aut_path) - 2}"
         for duration in sorted(G.durations, key=str):
+            if not self._on_path(duration.labels, aut_path):
+                continue  # inside an alternative this path does not take
             start, end = self._phase_window(duration.labels, aut_path, str(duration))
             span = end if start == "0" else f"{end} - {start}"
             if duration.low == duration.high:
@@ -237,7 +248,9 @@ class Planner:
                                     solving forbids defining the same atom at two horizons
         and the literal keep_held(i,From,To) is added to the goal rule.
         """
-        keeps = sorted((inv for inv in G.invariants if inv.scope is not None), key=str)
+        # a keep inside an alternative of a one_of that this path does not take does not apply
+        keeps = sorted((inv for inv in G.invariants
+                        if inv.scope is not None and self._on_path({inv.scope}, aut_path)), key=str)
         if not keeps:
             return [], ""
 
