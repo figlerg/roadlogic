@@ -98,9 +98,15 @@ across 9 files. For a live walkthrough of what it does, run `python tests/demo.p
       the cause is that the window used the speed a car leaves a waypoint with. A fix behind two
       switches in `map_plan.py` passes the overtake, the speed hold and the benchmark. The default
       as committed crashes the paper benchmark too, so the default needs your decision.
-- [ ] **`ROADLOGIC_FINAL_SLACK` in `map_plan.py`, off by default, experimental.** One extra waypoint
-      per car, that many seconds after the plan ends, at the car's final speed. Brought exp_007 from
-      0 to 7 of 10 positive in simulation. It does not help when a car runs ahead of the plan.
+- [ ] **Cars stay in the simulation, `ROADLOGIC_FINAL_SLACK` (default 2 s, 0 is the paper).** A car that
+      drives past a waypoint it could not satisfy moves on to the next one instead of leaving
+      (`macro_agent_simulation.py`, `step_agent`), and every car gets a hidden last goal with a time
+      only, so it holds its speed and lane until the plan's end plus the slack (`map_plan.py`). Each
+      skipped waypoint is warned about and logged in `missed_waypoints.csv`, read by
+      `monitoring/plan_deviation.py`, and counted as positive but deviated in
+      `aggregate_monitoring_results.py`. `paper_journal/plots/vis_success_rates.py --split-deviated`
+      draws those apart. Check the reason logged in `_log_missed_goal`, it is taken from the last step
+      the car spent inside the waypoint's area.
 - [ ] **`paper_journal/benchmark/`.** Reruns the paper's benchmark on the current code with the
       paper's own sampled instances, plus new examples. Only 7 of 30 cases have run so far.
 - [ ] **`commonroad_extensions/plan_execution/map_plan.py:250`.** The plan's speed becomes a

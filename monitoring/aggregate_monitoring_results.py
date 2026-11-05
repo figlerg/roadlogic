@@ -4,6 +4,8 @@ import json
 import click
 import math
 
+from monitoring.plan_deviation import missed_waypoints
+
 
 @click.command()
 @click.argument("parent_folder", type=click.Path(exists=True, file_okay=False))
@@ -57,7 +59,8 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
             elif not has_csv:
                 print(f"Missing monitoring_results.csv in {os.path.abspath(gen_folder)}")
 
-        runs[name] = {"cost": cost, "has_folder": has_folder, "has_csv": has_csv}
+        missed = missed_waypoints(gen_folder) if has_folder else []
+        runs[name] = {"cost": cost, "has_folder": has_folder, "has_csv": has_csv, "missed": missed}
 
     num_runs = len(expected)
     successful_costs = [r["cost"] for r in runs.values() if r["cost"] is not None]
@@ -79,6 +82,8 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
         name for name, r in runs.items()
         if r["cost"] is not None and not math.isclose(r["cost"], 0.0, abs_tol=1e-3)
     )
+    # positive, but a car skipped a waypoint it could not satisfy, see monitoring/plan_deviation.py
+    deviated_traces = [name for name in positive_traces if runs[name]["missed"]]
     no_monitoring_results = sorted(
         name for name, r in runs.items()
         if r["cost"] is None
@@ -98,6 +103,10 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
         "positive traces": positive_traces,
         "negative traces": negative_traces,
         "no monitoring results": no_monitoring_results,
+        "num_positive_deviated": len(deviated_traces),
+        "positive deviated traces": deviated_traces,
+        "missed waypoints": {name: [f"{m['car']} waypoint {m['waypoint']}: {m['reason']}" for m in r["missed"]]
+                             for name, r in runs.items() if r["missed"]},
         "costs": {name: r["cost"] for name, r in runs.items()},
     }
 

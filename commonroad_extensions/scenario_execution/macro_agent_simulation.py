@@ -1,6 +1,7 @@
 
 # TODO Clean up the imports
 import os
+import warnings
 import copy
 import random
 import time
@@ -87,6 +88,10 @@ from cr_scenario_handler.utils.visualization import visualize_agent_at_timestep
 from commonroad_extensions.scenario_execution.stitched_execution import custom_visualize_multiagent_scenario_at_timestep
 
 from shapely.geometry import Point
+
+# Seconds of slack after the plan's end, see FINAL_SLACK in plan_execution/map_plan.py.
+FINAL_SLACK = int(os.environ.get("ROADLOGIC_FINAL_SLACK", "2"))
+
 
 class MacroAgent(Agent):
     """
@@ -199,6 +204,10 @@ class MacroAgent(Agent):
         self.is_static_object = False
 
         for index, goal_state in enumerate(self.original_planning_problem.goal.state_list):
+            if not hasattr(goal_state, "position"):
+                # the hidden last goal of FINAL_SLACK: a time and nothing else
+                self.msg_logger.critical(f"Agent {self.id} keeps driving until time {goal_state.time_step.start}")
+                continue
             distance_to_goal = Point(planning_problem.initial_state.position).distance(Point(goal_state.position.center))
             self.msg_logger.critical(f"Agent {self.id} must reach goal {index} within time {goal_state.time_step.start} and {goal_state.time_step.end} at distance {distance_to_goal}")
             # TODO An vehicle can be static only for a period/goal. But for the moment, it's ALL OR NOTHING!
@@ -289,10 +298,66 @@ class MacroAgent(Agent):
 
         super().update_agent(self.scenario, time_step, global_predictions, collision)
 
+    def _remember_goal_status(self, time_step):
+        """Keep the goal check of the last step the agent spent inside its current goal's area, so a
+        missed goal can say what failed there."""
+        status = getattr(self.agent_state.goal_checker, "status", None)
+        if status and status[0].get("position"):
+            self._last_inside_goal = (time_step, float(self.planner_interface.x_0.velocity), dict(status[0]))
+
+    def _log_missed_goal(self, time_step):
+        """Warn about a goal the agent drove past without reaching it, and add it to
+        missed_waypoints.csv in the simulation folder."""
+        goal = self.original_planning_problem.goal.state_list[self.current_goal_index]
+        window = goal.time_step
+        inside = getattr(self, "_last_inside_goal", None)
+        if inside is None:
+            reason = "never inside the waypoint's area, wrong lane or position"
+        else:
+            step, velocity, status = inside
+            # the checks are numpy booleans, so test them by truth value
+            failed = {key for key, ok in status.items() if key != "timing_flag" and not ok}
+            reasons = []
+            if "time_step" in failed:
+                reasons.append(f"there at {step / 10:g} s, too {'early' if step < window.start else 'late'}")
+            if "velocity" in failed:
+                reasons.append(f"speed {velocity:.1f} outside {goal.velocity.start:g}..{goal.velocity.end:g}")
+            reasons += sorted(failed - {"time_step", "velocity"})
+            reason = ", ".join(reasons) or "not reached"
+        message = (f"Agent {self.id} missed waypoint {self.current_goal_index} "
+                   f"(window {window.start / 10:g}..{window.end / 10:g} s) at {time_step / 10:g} s: {reason}")
+        self.msg_logger.critical(message)
+        warnings.warn(message)
+        folder = os.path.dirname(os.path.normpath(self.config_simulation.log_path))
+        path = os.path.join(folder, "missed_waypoints.csv")
+        new_file = not os.path.exists(path)
+        with open(path, "a", newline="") as f:
+            writer = csv.writer(f)
+            if new_file:
+                writer.writerow(["agent_id", "waypoint", "window_start_s", "window_end_s", "time_s", "reason"])
+            writer.writerow([self.id, self.current_goal_index, window.start / 10, window.end / 10,
+                             time_step / 10, reason])
+
+    def _passed_goal(self):
+        """Whether the agent is beyond the end of its current goal along its reference path."""
+        return (self.planner_interface.planner.x_cl[0][0] -
+                self.planner_interface.planner.x_0.velocity * self.scenario.dt >
+                self.agent_state.goal_checker.last_goal_position)
+
     def step_agent(self, time_step):
         """ Execute one planning step.
 
         """
+        # With final slack, a goal the agent drove past without reaching it, too early, too late or at
+        # the wrong speed, is skipped rather than ending the agent. The monitor judges the trace.
+        last_goal = len(self.original_planning_problem.goal.state_list) - 1
+        while (FINAL_SLACK > 0 and self.agent_state.status != AgentStatus.COLLISION
+               and self.current_goal_index < last_goal and self._passed_goal()):
+            self._log_missed_goal(time_step)
+            self.current_goal_index += 1
+            self._last_inside_goal = None
+            self._setup_planning_problem()
+
         # Check for collisions in previous timestep
         if self.agent_state.status == AgentStatus.COLLISION:
             self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} collided")
@@ -308,9 +373,7 @@ class MacroAgent(Agent):
             self.agent_state.log_timelimit(time_step)
             self.postprocessing()
 
-        elif (self.planner_interface.planner.x_cl[0][0] -
-              self.planner_interface.planner.x_0.velocity * self.scenario.dt >
-              self.agent_state.goal_checker.last_goal_position):
+        elif self._passed_goal():
             self.msg_logger.critical(f"Timestep {time_step} Agent {self.id} has passed the goal position {self.agent_state.goal_checker.last_goal_position}")
             self.agent_state.log_max_s_position(time_step)
             self.planning_times.append(0)
@@ -321,6 +384,7 @@ class MacroAgent(Agent):
             # TODO: This sets the agent_state properties: self.running, self.status, self.goal_checker_status, self.message 
             #   and possibly other properties of other objects!
             self.agent_state.check_goal_reached(self.record_state_list, self.planner_interface.planner.x_cl)
+            self._remember_goal_status(time_step)
 
             if self.agent_state.status is not AgentStatus.RUNNING:
                 self.msg_logger.critical(f"Completed goal {self.current_goal_index} out of {len(self.original_planning_problem.goal.state_list) - 1} ")

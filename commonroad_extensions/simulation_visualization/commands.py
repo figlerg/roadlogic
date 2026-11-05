@@ -258,7 +258,9 @@ def plot_simulation(ctx, simulation_folder: str, start_from: Optional[int], end_
                 max_y = position_y if position_y > max_y else max_y
     
     # Make sure we visualize all the goals as well
-    for goal_state in [gs for pp in planning_problem_set.planning_problem_dict.values() for gs in pp.goal.state_list]:
+    # (a goal with a time only, the hidden last goal of ROADLOGIC_FINAL_SLACK, has nothing to show)
+    for goal_state in [gs for pp in planning_problem_set.planning_problem_dict.values() for gs in pp.goal.state_list
+                       if hasattr(gs, "position")]:
         position_x, position_y = goal_state.position.center
         min_x = position_x if position_x < min_x else min_x
         min_y = position_y if position_y < min_y else min_y
