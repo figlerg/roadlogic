@@ -37,7 +37,7 @@ from plan_checks import goal_witnesses, states  # noqa: E402
 
 
 # The switches that change how a plan is executed. None of them changes the plans themselves.
-PAPER = {"ROADLOGIC_GOAL_VELOCITY": "0", "ROADLOGIC_VELOCITY_PATCH": "0"}
+PAPER = {"ROADLOGIC_GOAL_VELOCITY": "0", "ROADLOGIC_VELOCITY_PATCH": "0", "ROADLOGIC_FINAL_SLACK": "0"}
 RECOMMENDED = {"ROADLOGIC_GOAL_VELOCITY": "1", "ROADLOGIC_VELOCITY_PATCH": "0"}
 PATCHED = {"ROADLOGIC_GOAL_VELOCITY": "1", "ROADLOGIC_VELOCITY_PATCH": "1"}
 # The fix for the collision in section 8: speed windows from the plan's average speed over each
@@ -153,8 +153,10 @@ def monitor_verdict(spec, sim_folder, ring=None):
 
 
 def monitor_report(spec, sim_folder):
+    from monitoring.plan_deviation import deviation_note
     verdict = monitor_verdict(spec, sim_folder)
-    return f"{verdict}\n\nchecked {sim_folder}\nagainst {spec}\n"
+    note = deviation_note(sim_folder)
+    return f"{verdict}{', ' + note if note else ''}\n\nchecked {sim_folder}\nagainst {spec}\n"
 
 
 def simulation_length(sim_folder):
@@ -182,6 +184,15 @@ def _box(title, text, folded=False):
 
 def _link(path):
     return f"<a href='{REPO}{path}'><code>{path}</code></a>"
+
+
+def folded_table(frame, title):
+    """A table folded away under a one-line title, for detail that a figure already shows."""
+    from IPython.display import HTML, display
+    import pandas as pd
+    with pd.option_context("display.max_colwidth", None):
+        body = frame.to_html()
+    display(HTML(f"<details class='box'><summary style='cursor:pointer;font-size:12px'>{title}</summary>{body}</details>"))
 
 
 def show_spec(name, folded=False):
@@ -406,8 +417,13 @@ def draw_monitor_automaton(spec, title=None, draw_shortcuts=True):
 # ---------------------------------------------------------------- section 8: plan speed versus simulation
 
 # one colour per run setting, the same in every section 8 figure
-RUN_COLOURS = {"no patch": "#8a959f", "patch as committed": "#c62828", "average": "#c25e00",
-               "segment": "#1565c0", "fix": "#00796b"}
+# The versions of the speed handling compared in section 8, by name, with their colours
+NO_PATCH = "no patch"
+V1 = "v1: wrong window"
+NO_WINDOW = "try 1: no window"
+ALL_CARS = "try 2: right window, every car"
+FINAL = "final: right window, where the spec asks"
+RUN_COLOURS = {NO_PATCH: "#8a959f", V1: "#c62828", NO_WINDOW: "#c25e00", ALL_CARS: "#1565c0", FINAL: "#00796b"}
 PLAN_COLOUR = "#1c2228"
 
 
@@ -456,24 +472,6 @@ def scenario_windows(name):
     return windows
 
 
-def speed_window(model, actor, step, previous, source, tolerance=1.0):
-    """The speed window map_plan.py puts on a waypoint, for one GOAL_VELOCITY_SOURCE.
-
-    Mirrors map_plan.py so the sources can be compared on one plan. departure is the speed stored
-    at the waypoint, segment the average speed from the previous waypoint, range the lowest to
-    highest speed used on that stretch.
-    """
-    rows = plan_rows(model, actor)
-    if source == "departure":
-        low = high = rows[step][2]
-    elif source == "segment":
-        low = high = (rows[step][0] - rows[previous][0]) / (step - previous)
-    else:
-        used = [rows[k][2] for k in range(previous, step)]
-        low, high = min(used), max(used)
-    return max(0.0, low - tolerance), max(0.0, high) + tolerance
-
-
 def plot_plan_legs(model, actor, waypoints, title=None):
     """Position over time of one actor's plan, each one-second leg labelled with the speed driving it.
 
@@ -506,32 +504,34 @@ def plot_plan_legs(model, actor, waypoints, title=None):
     return fig
 
 
-def plot_speed_windows(model, actors, waypoints, sources=("departure", "segment", "range")):
-    """Per car and waypoint, the window each source gives, next to the speeds the plan really uses
-    on the stretch leading to that waypoint (grey dots)."""
+def plot_versions(model, actor, versions):
+    """One small panel per version: the plan's speed for one car, and the speed window that version
+    gives it on the way to each waypoint, as a band over the stretch it applies to. versions is a
+    list of (label, run), run None for a version that gives no window. Windows come from each run's
+    scenario file."""
     import matplotlib.pyplot as plt
 
-    colours = {"departure": RUN_COLOURS["patch as committed"], "segment": RUN_COLOURS["segment"],
-               "range": RUN_COLOURS["fix"]}
-    panels = [(actor, step, previous) for actor in actors
-              for previous, step in zip([0] + list(waypoints[:-1]), waypoints)]
-    fig, axes = plt.subplots(1, len(panels), figsize=(2.6 * len(panels) + 0.6, 3.4), sharey=True)
-    for ax, (actor, step, previous) in zip(axes, panels):
-        rows = plan_rows(model, actor)
-        used = [rows[k][2] for k in range(previous, step)]
-        ax.scatter([-0.9] * len(used), used, color="#8a959f", s=36, zorder=3)
-        for k, source in enumerate(sources):
-            low, high = speed_window(model, actor, step, previous, source)
-            ax.plot([k, k], [low, high], color=colours[source], lw=7, solid_capstyle="round")
-        ax.set_xticks([-0.9] + list(range(len(sources))))
-        ax.set_xticklabels(["used"] + list(sources), rotation=35, ha="right", fontsize=8.5)
-        ax.set_xlim(-1.5, len(sources) - 0.4)
-        ax.set_title(f"{actor}, stretch t={previous}..{step}", fontsize=9.5)
-        ax.grid(axis="y", alpha=0.25)
+    rows = plan_rows(model, actor)
+    steps = sorted(rows)
+    fig, axes = plt.subplots(1, len(versions), figsize=(2.7 * len(versions), 2.6), sharey=True)
+    for ax, (label, run) in zip(axes, versions):
+        ax.step(steps, [rows[t][2] for t in steps], where="post", color=PLAN_COLOUR, ls="--", lw=1.2)
+        bands = [w for w in (scenario_windows(run)[actor] if run else []) if w[1] is not None]
+        previous = 0
+        for step, low, high in bands:
+            ax.fill_between([previous, step], low, high, color=RUN_COLOURS[label], alpha=0.25, lw=0)
+            ax.text((previous + step) / 2, high - 0.15, f"{low:g}..{high:g}", ha="center", va="top",
+                    fontsize=8, color=RUN_COLOURS[label])
+            previous = step
+        top = max([rows[t][2] for t in steps] + [w[2] for w in bands]) + 1
+        ax.set_ylim(0, top)
+        ax.set_title(label.replace(": ", ":\n") + ("" if bands or "no window" in label else "\n(no window)"), fontsize=9,
+                     color=RUN_COLOURS[label])
+        ax.set_xticks(steps[::2])
+        ax.set_xlabel("plan step t [s]", fontsize=8)
+        ax.grid(alpha=0.25)
         ax.spines[["top", "right"]].set_visible(False)
-    axes[0].set_ylabel("speed [m/s]")
-    fig.suptitle("Speed window per waypoint (bars) against the speeds driven on the way there (dots)",
-                 fontsize=11)
+    axes[0].set_ylabel(f"{actor} speed [m/s]")
     fig.tight_layout()
     return fig
 
@@ -547,13 +547,13 @@ def plot_simulated(runs, actors, metric="CURRV", model=None, windows_from=None, 
     longest = max(t.index.max() for t in tables.values())
     for ax, actor in zip(axes[0], actors):
         if windows_from:
+            # the windows in the colour of the run that got them
+            shade = RUN_COLOURS.get(next((l for l, n in runs.items() if n == windows_from), None), "#5a6570")
             previous = 0
             for step, low, high in scenario_windows(windows_from)[actor]:
                 if low is not None:
-                    ax.fill_between([previous, step + 0.5], low, high, color=RUN_COLOURS["patch as committed"],
-                                    alpha=0.12, lw=0)
-                    ax.text(previous + 0.1, high + 0.15, f"window {low:g}..{high:g}", fontsize=7.5,
-                            color=RUN_COLOURS["patch as committed"])
+                    ax.fill_between([previous, step + 0.5], low, high, color=shade, alpha=0.12, lw=0)
+                    ax.text(previous + 0.1, high + 0.15, f"window {low:g}..{high:g}", fontsize=7.5, color=shade)
                 previous = step + 0.5
         if model is not None:
             rows = plan_rows(model, actor)
@@ -600,7 +600,7 @@ def plot_gap(runs, front, back, car_length=4.5):
             ax.plot(gap.index[-1], gap.values[-1], "x", color=colour, ms=12, mew=2.5)
             ax.annotate(f"collision at {gap.index[-1]:.1f}s", (gap.index[-1], gap.values[-1]), xytext=(12, -4),
                         textcoords="offset points", color=colour, fontsize=9)
-    ax.axhspan(-car_length, car_length, color=RUN_COLOURS["patch as committed"], alpha=0.08, lw=0)
+    ax.axhspan(-car_length, car_length, color="#8a959f", alpha=0.12, lw=0)
     ax.text(0.05, car_length - 0.6, "closer than one car length", fontsize=8, color="#5a6570", va="top")
     ax.axhline(0, color="#5a6570", lw=0.8)
     ax.set_xlabel("simulated time [s]")
@@ -611,3 +611,79 @@ def plot_gap(runs, front, back, car_length=4.5):
     ax.set_title(f"How far {front} is ahead of {back}", fontsize=11)
     fig.tight_layout()
     return fig
+
+
+# ---------------------------------------------------------------- section 6: the monitor's guards, as tables
+
+def _monitor_parts(spec):
+    from monitoring.Monitor import Monitor, covered_locations, duration_regions
+    T = Monitor.from_osc2_file(spec)._translation_graph
+    keeps = [(covered_locations(inv, T.graph.nodes), inv) for inv in T.invariants]
+    anchored, timed = duration_regions(T)
+    return T, keeps, anchored, timed
+
+
+def _location(node):
+    return " | ".join(map(str, node)) if isinstance(node, tuple) else str(node)
+
+
+def coverage_table(spec):
+    """Each keep and duration of a spec, the locations it covers, and how the monitor checks it."""
+    import pandas as pd
+    _, keeps, anchored, timed = _monitor_parts(spec)
+    rows = [(f"keep {inv.constraint}", c, "a guard on the transitions into these locations") for c, inv in keeps]
+    rows += [(str(d), c, "a guard on current_t, when leaving these locations") for c, d in anchored]
+    rows += [(str(d), c, "a clock per run, started on entry, checked on exit") for c, d in timed]
+    return pd.DataFrame([{"constraint": name, "covers": ", ".join(sorted(map(_location, covered))), "checked as": how}
+                         for name, covered, how in rows]).set_index("constraint")
+
+
+def guard_table(spec):
+    """Every transition of the monitor along the first path, with its guard split by where it comes from."""
+    import networkx as nx
+    import pandas as pd
+    from monitoring.Monitor import skipped_chains
+    T, keeps, anchored, timed = _monitor_parts(spec)
+
+    def row(kind, source, target, crossed, goals):
+        # the keep that applies: target covered, or the step into the final location leaving a covered one
+        keep = [str(inv.constraint) for covered, inv in keeps
+                if target in covered or (target == T.final and crossed[-1] in covered)]
+        guard = [f"{d.low} <= t <= {d.high}" for covered, d in anchored
+                 if target not in covered and any(n in covered for n in crossed)]
+        clock = [f"start the clock of {d.source.split()[-1]}" for covered, d in timed
+                 if target in covered and source not in covered]
+        clock += [f"check {d.low} <= clock <= {d.high}" for covered, d in timed
+                  if target not in covered and any(n in covered for n in crossed)]
+        return {"from": _location(source), "to": _location(target), "kind": kind,
+                "goals": " and ".join(goals) or "true", "keep": " and ".join(keep) or "·",
+                "duration guard": " and ".join(guard) or "·", "clock": "; ".join(clock) or "·"}
+
+    path = next(nx.all_simple_paths(T.graph, T.initial, T.final))
+    rows = [row("edge", u, v, [u], sorted(map(str, T[u, v]))) for u, v in zip(path, path[1:])]
+    rows += [row("self loop", n, n, [n], []) for n in path[1:]]
+    rows += [row("shortcut", s, t, [e[0] for e in chain], sorted({str(c) for e in chain for c in T[e]}))
+             for s, t, chain in skipped_chains(T.graph)]
+    order = {_location(n): k for k, n in enumerate(path)}
+    kinds = {"edge": 0, "self loop": 1, "shortcut": 2}
+    rows.sort(key=lambda r: (order.get(r["from"], 99), kinds[r["kind"]], order.get(r["to"], 99)))
+    return pd.DataFrame(rows).set_index(["from", "to", "kind"])
+
+
+def stored_guard(spec, source, target):
+    """The guard of one transition exactly as the monitor stores it, with the tolerances spelled out."""
+    import re
+    from monitoring.Monitor import Monitor
+    aut = Monitor.from_osc2_file(spec).syma_aut
+    a, b = (next(l for l in aut.locations if str(l.id) == n) for n in (source, target))
+
+    def pretty(formula):
+        text, atom = str(formula), r"[A-Za-z_]+(?:\([A-Za-z0-9_]+\))?|-?\d+(?:\.\d+)?"
+        while True:
+            shorter = re.sub(rf"\(({atom})\)", r"\1", text)
+            if shorter == text:
+                return text
+            text = shorter
+
+    _box(f"the transition {source} to {target} as the monitor stores it",
+         "\n".join(pretty(con.formula) for _, _, t, con in aut.outgoing[a] if t is b))
