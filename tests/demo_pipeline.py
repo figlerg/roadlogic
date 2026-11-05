@@ -164,79 +164,69 @@ def simulation_length(sim_folder):
     return float(frame["time"].max())
 
 
+REPO = "https://github.com/figlerg/roadlogic/blob/feature/keep/"
+
+
+def _box(title, text, folded=False):
+    """Monospace text under a small title, folded away when `folded`. Plain HTML, so it reads the
+    same in Jupyter, VS Code and the exported page, in light and dark themes."""
+    import html
+    from IPython.display import HTML, display
+    pre = (f"<pre style='margin:4px 0 0;padding:6px 10px;border-left:3px solid #8a959f;"
+           f"font-size:12px;line-height:1.4;overflow-x:auto'>{html.escape(text.rstrip())}</pre>")
+    if folded:
+        display(HTML(f"<details class='box'><summary style='cursor:pointer;font-size:12px'>{title}</summary>{pre}</details>"))
+    else:
+        display(HTML(f"<div class='box'><div class='box-title' style='font-size:12px'>{title}</div>{pre}</div>"))
+
+
+def _link(path):
+    return f"<a href='{REPO}{path}'><code>{path}</code></a>"
+
+
+def show_spec(name, folded=False):
+    """A specification as it is written, without its comments. `name` is a path."""
+    path = os.path.relpath(os.path.abspath(name), ROOT)
+    lines = open(name).read().splitlines()
+    body = [line for line in lines if not line.lstrip().startswith("#")]
+    while body and not body[0].strip():
+        body.pop(0)
+    _box(f"spec {_link(path)}", "\n".join(body), folded=folded)
+
+
 def show_code(obj, max_lines=40):
-    """The source of a function, with its file and line, for showing what changed."""
+    """The source of a function, folded away, with its file and line."""
     lines, start = inspect.getsourcelines(obj)
     path = os.path.relpath(inspect.getsourcefile(obj), ROOT)
     shown = lines[:max_lines]
     body = "".join(f"{start + i:>5}  {line}" for i, line in enumerate(shown))
     more = f"\n       ... {len(lines) - max_lines} more lines" if len(lines) > max_lines else ""
-    print(f"{path}:{start}\n\n{body.rstrip()}{more}")
+    _box(f"code: {obj.__qualname__}, {_link(path)} line {start}", body + more, folded=True)
 
 
-def show_lines(path, keep):
-    for line in open(path).read().splitlines():
-        if any(k in line for k in keep):
-            print(line.strip())
+def show_lines(path, keep, title=None):
+    """The lines of a file that contain any of `keep`, under a title."""
+    lines = [line.strip() for line in open(path).read().splitlines() if any(k in line for k in keep)]
+    _box(title or os.path.basename(path), "\n".join(lines))
 
 
-def draw_automaton(spec, title=None):
-    """The monitor's view of a spec along its chosen path, left to right.
+def plan_table(model):
+    """The plan as one small table, a row per car and quantity, a column per step."""
+    import pandas as pd
+    rows = {}
+    for actor, t, segment, lane, v_lon, _v_lat in states(model):
+        for quantity, value in (("position", segment), ("lane", lane), ("speed", v_lon)):
+            rows.setdefault((actor, quantity), {})[t] = value
+    table = pd.DataFrame(rows).T.sort_index(level=0, sort_remaining=False)
+    table.columns.name = "t"
+    return table
 
-    Every guard sits on a transition, as in any symbolic automaton. Black is the guard from the
-    specification's goals, purple is a keep folded into it. A keep goes on the transition entering
-    its location and on that location's self loop, never on the transition leaving it, except that
-    the transition into the final location carries the last segment's keep. The initial location has
-    no self loop, so a run starts with the trace.
-    """
-    import matplotlib.pyplot as plt
-    import networkx as nx
-    from planning.Planner import Planner
-    from planning.intermediate_structure.TranslationGraph import flatten_node
-    import tempfile
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        graph = Planner(spec, out_path=tempfile.mkdtemp()).translation_graph
-    path = next(nx.all_simple_paths(graph.graph, graph.initial, graph.final))
-
-    def keeps_at(node):
-        return [str(inv.constraint) if inv.constraint is not None
-                else f"{inv.modifier}({inv.actor}) unchanged"
-                for inv in sorted(graph.invariants, key=str)
-                if inv.scope is not None and inv.scope in flatten_node(node)]
-
-    fig, ax = plt.subplots(figsize=(2.9 * len(path), 3.6))
-    for i, node in enumerate(path):
-        color = "#2e7d32" if node == graph.initial else "#c62828" if node == graph.final else "#1565c0"
-        ax.add_patch(plt.Circle((i, 0), 0.13, color=color, zorder=3))
-        label = " | ".join(sorted(flatten_node(node))) if isinstance(node, tuple) else str(node)
-        ax.text(i, -0.3, label, ha="center", va="top", fontsize=8)
-        if node == graph.initial:
-            continue
-        # the self loop, drawn above the location, with its guard
-        ax.annotate("", xy=(i + 0.07, 0.12), xytext=(i - 0.07, 0.12),
-                    arrowprops=dict(arrowstyle="->", lw=1, connectionstyle="arc3,rad=-2.4"))
-        loop = keeps_at(node) if node != graph.final else []
-        ax.text(i, 0.62, "\n".join(loop) if loop else "true", ha="center", va="bottom", fontsize=7.5,
-                color="#6a1b9a" if loop else "black")
-    for i, (u, v) in enumerate(zip(path, path[1:])):
-        ax.annotate("", xy=(i + 0.87, 0), xytext=(i + 0.13, 0), arrowprops=dict(arrowstyle="->", lw=1.2))
-        guard = sorted(str(c) for c in graph[u, v])
-        ax.text(i + 0.5, 0.05, "\n".join(guard) if guard else "true", ha="center", va="bottom", fontsize=7.5)
-        folded = keeps_at(u) if v == graph.final else keeps_at(v)
-        if folded:
-            ax.text(i + 0.5, -0.05, "\n".join("and " + k for k in folded), ha="center", va="top",
-                    fontsize=7.5, color="#6a1b9a")
-    scenario_keeps = [str(inv.constraint) for inv in graph.invariants if inv.scope is None]
-    if scenario_keeps:
-        ax.text(-0.2, -0.85, "on every transition: " + ", ".join(scenario_keeps), fontsize=8, color="#6a1b9a")
-    ax.set_xlim(-0.5, len(path) - 0.5)
-    ax.set_ylim(-0.95, 0.95)
-    ax.axis("off")
-    ax.set_title(title or os.path.basename(spec), fontsize=10)
-    fig.tight_layout()
-    return fig
+def quiet():
+    """Silence the solver's progress lines inside a with block."""
+    import contextlib
+    import io
+    return contextlib.redirect_stdout(io.StringIO())
 
 
 def show_images(items, width=430):
@@ -255,7 +245,7 @@ def show_images(items, width=430):
     display(HTML("<table><tr>" + "".join(cells) + "</tr></table>"))
 
 
-def draw_monitor_automaton(spec, title=None):
+def draw_monitor_automaton(spec, title=None, draw_shortcuts=True):
     """The monitor's automaton for a spec, drawn as a timed automaton with every guard written out.
 
     Each transition is labelled with its guard and, after a slash, its clock resets. t is the current
@@ -267,7 +257,7 @@ def draw_monitor_automaton(spec, title=None):
     Locations are laid out in columns by their distance from the start, alternatives of a one_of one
     above the other. Shortcut transitions are drawn dashed below a graph that is a single path. On a
     branching graph they would bury the picture, so they are returned instead, as fig.shortcuts, a list
-    of (from, to, guard) for printing.
+    of (from, to, guard) for printing. draw_shortcuts=False leaves them out of a single path too.
     """
     import matplotlib.pyplot as plt
     import networkx as nx
@@ -336,6 +326,7 @@ def draw_monitor_automaton(spec, title=None):
             y[v] = y[preds[0]] + (siblings.index(v) - (len(siblings) - 1) / 2) * 2.5
     x = {v: 3.6 * depth[v] for v in G.nodes}
     linear = all(G.out_degree(v) <= 1 for v in G.nodes)
+    drawn = linear and draw_shortcuts
 
     chains = list(skipped_chains(G))
     shortcuts = []
@@ -347,7 +338,7 @@ def draw_monitor_automaton(spec, title=None):
         shortcuts.append((name(source), name(target), (guard + ("  " + reset if reset else "")).strip()))
 
     low_y, high_y = min(y.values()), max(y.values())
-    bottom = low_y - (0.95 + 0.5 * len(chains) if linear else 0.9)
+    bottom = low_y - (0.95 + 0.5 * len(chains) if drawn else 0.9)
     top = high_y + 2.4
     fig, ax = plt.subplots(figsize=(3.6 * (max(depth.values()) + 1) + 0.6, 1.25 * (top - bottom)))
 
@@ -377,7 +368,7 @@ def draw_monitor_automaton(spec, title=None):
         stack((x[u] + x[v]) / 2, (y[u] + y[v]) / 2 + 0.08, label(u, v, [u], sorted(str(c) for c in T[u, v])),
               box=not linear)
 
-    if linear:
+    if drawn:
         for k, (source, target, chain) in enumerate(sorted(chains, key=lambda c: (x[c[0]], x[c[1]]))):
             shift = 0.09 * (k - (len(chains) - 1) / 2)
             x0, x1 = x[source] + shift, x[target] + shift
@@ -399,8 +390,9 @@ def draw_monitor_automaton(spec, title=None):
         notes += " · " + ", ".join(f"{clock[k]} times {owner(d)} ({d.low}..{d.high}s)"
                                     for k, (_, d) in enumerate(timed))
     ax.text(left, top - 0.36, notes, fontsize=8, color=GREY, ha="left")
-    if not linear and shortcuts:
-        ax.text(left, bottom + 0.15, f"{len(shortcuts)} shortcut transitions not drawn, listed below the figure",
+    if not drawn and shortcuts:
+        ax.text(left, bottom + 0.15, f"not drawn: {len(shortcuts)} shortcut transitions, each crossing several "
+                "phases in one sample",
                 fontsize=8, color=GREY, ha="left")
     ax.set_xlim(min(x.values()) - 0.8, max(x.values()) + 0.8)
     ax.set_ylim(bottom, top)
