@@ -1,0 +1,64 @@
+{"spec": "one_of_nested.osc", "mode": "first", "early": false, "n": 6, "paths": 2, "plans": 6, "first_s": 0.2, "total_s": 0.2, "peak_mb": 163, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "one_of_nested.osc", "mode": "lazy", "early": false, "n": 6, "paths": 2, "plans": 6, "first_s": 0.2, "total_s": 2.0, "peak_mb": 167, "paths_covered": 2, "mean_similarity": 0.56, "asp_problems": 6}
+{"spec": "one_of_nested.osc", "mode": "spread", "early": false, "n": 6, "paths": 2, "plans": 6, "first_s": 0.9, "total_s": 0.9, "peak_mb": 166, "paths_covered": 2, "mean_similarity": 0.56, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "live", "early": false, "n": 6, "paths": 2, "plans": 6, "first_s": 0.1, "total_s": 0.5, "peak_mb": 193, "paths_covered": 2, "mean_similarity": 0.56, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "first", "early": true, "n": 6, "paths": 2, "plans": 6, "first_s": 0.2, "total_s": 0.2, "peak_mb": 164, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "one_of_nested.osc", "mode": "lazy", "early": true, "n": 6, "paths": 2, "plans": 6, "first_s": 0.2, "total_s": 1.4, "peak_mb": 166, "paths_covered": 2, "mean_similarity": 0.56, "asp_problems": 6}
+{"spec": "one_of_nested.osc", "mode": "spread", "early": true, "n": 6, "paths": 2, "plans": 6, "first_s": 0.4, "total_s": 0.4, "peak_mb": 166, "paths_covered": 2, "mean_similarity": 0.56, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "live", "early": true, "n": 6, "paths": 2, "plans": 6, "first_s": 0.1, "total_s": 0.5, "peak_mb": 193, "paths_covered": 2, "mean_similarity": 0.56, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "first", "early": false, "n": 20, "paths": 2, "plans": 20, "first_s": 0.2, "total_s": 0.2, "peak_mb": 166, "paths_covered": 1, "mean_similarity": 0.864, "asp_problems": 1}
+{"spec": "one_of_nested.osc", "mode": "lazy", "early": false, "n": 20, "paths": 2, "plans": 20, "first_s": 0.1, "total_s": 5.2, "peak_mb": 180, "paths_covered": 2, "mean_similarity": 0.61, "asp_problems": 20}
+{"spec": "one_of_nested.osc", "mode": "spread", "early": false, "n": 20, "paths": 2, "plans": 20, "first_s": 0.7, "total_s": 0.7, "peak_mb": 168, "paths_covered": 2, "mean_similarity": 0.61, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "live", "early": false, "n": 20, "paths": 2, "plans": 20, "first_s": 0.1, "total_s": 0.6, "peak_mb": 195, "paths_covered": 2, "mean_similarity": 0.61, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "first", "early": true, "n": 20, "paths": 2, "plans": 20, "first_s": 0.3, "total_s": 0.3, "peak_mb": 165, "paths_covered": 1, "mean_similarity": 0.864, "asp_problems": 1}
+{"spec": "one_of_nested.osc", "mode": "lazy", "early": true, "n": 20, "paths": 2, "plans": 20, "first_s": 0.1, "total_s": 5.5, "peak_mb": 180, "paths_covered": 2, "mean_similarity": 0.61, "asp_problems": 20}
+{"spec": "one_of_nested.osc", "mode": "spread", "early": true, "n": 20, "paths": 2, "plans": 20, "first_s": 0.7, "total_s": 0.7, "peak_mb": 168, "paths_covered": 2, "mean_similarity": 0.61, "asp_problems": 2}
+{"spec": "one_of_nested.osc", "mode": "live", "early": true, "n": 20, "paths": 2, "plans": 20, "first_s": 0.1, "total_s": 0.5, "peak_mb": 195, "paths_covered": 2, "mean_similarity": 0.61, "asp_problems": 2}
+{"spec": "keep_phase_scope.osc", "mode": "first", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 0.5, "total_s": 0.5, "peak_mb": 171, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "keep_phase_scope.osc", "mode": "lazy", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 0.5, "total_s": 3.1, "peak_mb": 182, "paths_covered": 3, "mean_similarity": 0.805, "asp_problems": 6}
+{"spec": "keep_phase_scope.osc", "mode": "spread", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 1.4, "total_s": 1.4, "peak_mb": 171, "paths_covered": 3, "mean_similarity": 0.805, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "live", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 0.5, "total_s": 1.6, "peak_mb": 236, "paths_covered": 3, "mean_similarity": 0.805, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "first", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 0.6, "total_s": 0.6, "peak_mb": 172, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "keep_phase_scope.osc", "mode": "lazy", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 0.5, "total_s": 4.8, "peak_mb": 171, "paths_covered": 3, "mean_similarity": 0.805, "asp_problems": 6}
+{"spec": "keep_phase_scope.osc", "mode": "spread", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 1.4, "total_s": 1.4, "peak_mb": 171, "paths_covered": 3, "mean_similarity": 0.805, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "live", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 0.5, "total_s": 1.5, "peak_mb": 236, "paths_covered": 3, "mean_similarity": 0.805, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "first", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 0.7, "total_s": 0.7, "peak_mb": 173, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "keep_phase_scope.osc", "mode": "lazy", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 0.7, "total_s": 10.8, "peak_mb": 174, "paths_covered": 3, "mean_similarity": 0.827, "asp_problems": 20}
+{"spec": "keep_phase_scope.osc", "mode": "spread", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 1.6, "total_s": 1.6, "peak_mb": 173, "paths_covered": 3, "mean_similarity": 0.827, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "live", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 0.5, "total_s": 2.6, "peak_mb": 237, "paths_covered": 3, "mean_similarity": 0.827, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "first", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 0.7, "total_s": 0.7, "peak_mb": 173, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "keep_phase_scope.osc", "mode": "lazy", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 0.7, "total_s": 12.5, "peak_mb": 175, "paths_covered": 3, "mean_similarity": 0.827, "asp_problems": 20}
+{"spec": "keep_phase_scope.osc", "mode": "spread", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 2.0, "total_s": 2.0, "peak_mb": 173, "paths_covered": 3, "mean_similarity": 0.827, "asp_problems": 3}
+{"spec": "keep_phase_scope.osc", "mode": "live", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 0.4, "total_s": 1.6, "peak_mb": 238, "paths_covered": 3, "mean_similarity": 0.827, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "first", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 2.3, "total_s": 2.3, "peak_mb": 181, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "spec_parallel.osc", "mode": "lazy", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 2.8, "total_s": 34.7, "peak_mb": 181, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 16}
+{"spec": "spec_parallel.osc", "mode": "spread", "early": false, "n": 6, "paths": 3, "plans": 2, "first_s": 6.8, "total_s": 6.8, "peak_mb": 194, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "live", "early": false, "n": 6, "paths": 3, "plans": 6, "first_s": 2.0, "total_s": 6.4, "peak_mb": 272, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "first", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 2.0, "total_s": 2.0, "peak_mb": 181, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 1}
+{"spec": "spec_parallel.osc", "mode": "lazy", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 1.9, "total_s": 34.3, "peak_mb": 197, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 16}
+{"spec": "spec_parallel.osc", "mode": "spread", "early": true, "n": 6, "paths": 3, "plans": 2, "first_s": 6.9, "total_s": 6.9, "peak_mb": 195, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "live", "early": true, "n": 6, "paths": 3, "plans": 6, "first_s": 2.6, "total_s": 9.7, "peak_mb": 272, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "first", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 2.1, "total_s": 2.1, "peak_mb": 183, "paths_covered": 1, "mean_similarity": 0.977, "asp_problems": 1}
+{"spec": "spec_parallel.osc", "mode": "lazy", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 2.0, "total_s": 121.9, "peak_mb": 186, "paths_covered": 1, "mean_similarity": 0.977, "asp_problems": 58}
+{"spec": "spec_parallel.osc", "mode": "spread", "early": false, "n": 20, "paths": 3, "plans": 7, "first_s": 5.9, "total_s": 5.9, "peak_mb": 195, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "live", "early": false, "n": 20, "paths": 3, "plans": 20, "first_s": 3.5, "total_s": 7.5, "peak_mb": 274, "paths_covered": 1, "mean_similarity": 0.977, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "first", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 2.2, "total_s": 2.2, "peak_mb": 183, "paths_covered": 1, "mean_similarity": 0.977, "asp_problems": 1}
+{"spec": "spec_parallel.osc", "mode": "lazy", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 2.0, "total_s": 157.1, "peak_mb": 185, "paths_covered": 1, "mean_similarity": 0.977, "asp_problems": 58}
+{"spec": "spec_parallel.osc", "mode": "spread", "early": true, "n": 20, "paths": 3, "plans": 7, "first_s": 6.6, "total_s": 6.6, "peak_mb": 180, "paths_covered": 1, "mean_similarity": 1.0, "asp_problems": 3}
+{"spec": "spec_parallel.osc", "mode": "live", "early": true, "n": 20, "paths": 3, "plans": 20, "first_s": 1.7, "total_s": 5.9, "peak_mb": 274, "paths_covered": 1, "mean_similarity": 0.977, "asp_problems": 3}
+{"spec": "par3.osc", "mode": "first", "early": false, "n": 6, "paths": 13, "plans": 1, "first_s": 36.7, "total_s": 36.7, "peak_mb": 943, "paths_covered": 1, "mean_similarity": null, "asp_problems": 1}
+{"spec": "par3.osc", "mode": "lazy", "early": 0, "n": 6, "failed": "timeout or error"}
+{"spec": "par3.osc", "mode": "spread", "early": false, "n": 6, "paths": 13, "plans": 1, "first_s": 0.2, "total_s": 0.2, "peak_mb": 86, "paths_covered": 1, "mean_similarity": null, "asp_problems": 13}
+{"spec": "par3.osc", "mode": "live", "early": 0, "n": 6, "failed": "timeout or error"}
+{"spec": "par3.osc", "mode": "first", "early": true, "n": 6, "paths": 13, "plans": 1, "first_s": 0.0, "total_s": 0.0, "peak_mb": 86, "paths_covered": 1, "mean_similarity": null, "asp_problems": 1}
+{"spec": "par3.osc", "mode": "lazy", "early": true, "n": 6, "paths": 13, "plans": 1, "first_s": 0.0, "total_s": 0.4, "peak_mb": 86, "paths_covered": 1, "mean_similarity": null, "asp_problems": 26}
+{"spec": "par3.osc", "mode": "spread", "early": true, "n": 6, "paths": 13, "plans": 1, "first_s": 0.1, "total_s": 0.1, "peak_mb": 86, "paths_covered": 1, "mean_similarity": null, "asp_problems": 13}
+{"spec": "par3.osc", "mode": "live", "early": true, "n": 6, "paths": 13, "plans": 1, "first_s": 0.0, "total_s": 0.2, "peak_mb": 88, "paths_covered": 1, "mean_similarity": null, "asp_problems": 13}
+{"spec": "par3.osc", "mode": "first", "early": false, "n": 20, "paths": 13, "plans": 1, "first_s": 32.6, "total_s": 32.6, "peak_mb": 943, "paths_covered": 1, "mean_similarity": null, "asp_problems": 1}
+{"spec": "par3.osc", "mode": "lazy", "early": 0, "n": 20, "failed": "timeout or error"}
+{"spec": "par3.osc", "mode": "spread", "early": 0, "n": 20, "failed": "timeout or error"}
+{"spec": "par3.osc", "mode": "live", "early": 0, "n": 20, "failed": "timeout or error"}
+{"spec": "par3.osc", "mode": "first", "early": true, "n": 20, "paths": 13, "plans": 1, "first_s": 0.0, "total_s": 0.0, "peak_mb": 86, "paths_covered": 1, "mean_similarity": null, "asp_problems": 1}
+{"spec": "par3.osc", "mode": "lazy", "early": true, "n": 20, "paths": 13, "plans": 1, "first_s": 0.0, "total_s": 0.4, "peak_mb": 86, "paths_covered": 1, "mean_similarity": null, "asp_problems": 26}
+{"spec": "par3.osc", "mode": "spread", "early": true, "n": 20, "paths": 13, "plans": 1, "first_s": 0.3, "total_s": 0.3, "peak_mb": 87, "paths_covered": 1, "mean_similarity": null, "asp_problems": 13}
+{"spec": "par3.osc", "mode": "live", "early": true, "n": 20, "paths": 13, "plans": 1, "first_s": 0.0, "total_s": 0.3, "peak_mb": 89, "paths_covered": 1, "mean_similarity": null, "asp_problems": 13}

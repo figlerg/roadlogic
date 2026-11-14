@@ -16,6 +16,18 @@ What has been added for the journal version.
 - **Speed.** A scenario can set a car's speed at the start or end of a phase, keep it within a
   range, or require one car to be faster or slower than another.
 
+- **Choices and parallel parts are planned completely.** A scenario that offers alternatives
+  (`one_of`) used to be planned along its first alternative only, and a scenario with parts running
+  in parallel along one order in which those parts end. Now every alternative and every order is
+  planned, and the plans are taken from them in turn. Before, a scenario whose first alternative was
+  impossible was wrongly reported as having no plan. The first plan comes as fast as before, because
+  the alternatives are solved side by side rather than one after another.
+
+- **No long searches for plans that do not exist.** Asking for more plans than a scenario has used
+  to search up to the longest plan length allowed. Now the search for more plans stops shortly after
+  the first one. The search for a first plan is unchanged, so a scenario reported as having no plan
+  still has none.
+
 - **Duration.** The duration written in a scenario, for the whole scenario or for one part of it, is
   now respected. Before, it was ignored. This rules out plans that are too short or too long, and
   detects timings that cannot fit together.

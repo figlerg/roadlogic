@@ -1,0 +1,18 @@
+# one_of_nested.osc with both alternatives made impossible: each ends in lane 4, and lanes are 1..3.
+# No path through the automaton has a plan, so the spec is inconsistent.
+
+scenario choose_a_side:
+    car1: car
+
+    do serial(duration: [4s..12s]):
+        start: car1.drive(duration: [1s..3s]) with:
+            lane(2, at: start)
+            position(0m, at: start)
+        choice: one_of:
+            left: car1.drive(duration: [2s..4s]) with:
+                lane(4, at: end)
+            right: serial(duration: [3s..6s]):
+                r1: car1.drive(duration: [1s..3s]) with:
+                    lane(4, at: end)
+                r2: car1.drive(duration: [2s..3s]) with:
+                    keep(car1.lane == 3)

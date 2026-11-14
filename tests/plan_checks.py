@@ -533,9 +533,11 @@ def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
         printer(_rule("TRANSLATION GRAPH"))
         printer(f"actors : {[a.id for a in graph.actors]}")
         printer(f"nodes  : {list(graph.graph.nodes)}")
-        path = next(nx.all_simple_paths(graph.graph, graph.initial, graph.final))
-        printer(f"path   : {' -> '.join(str(p) for p in path)}")
-        printer("\nconstraints per edge along that path:")
+        paths = list(nx.all_simple_paths(graph.graph, graph.initial, graph.final))
+        for k, p in enumerate(paths, 1):
+            printer(f"path {k} : {' -> '.join(str(node) for node in p)}")
+        path = paths[0]
+        printer(f"\nconstraints per edge along path 1{' of ' + str(len(paths)) if len(paths) > 1 else ''}:")
         for i, (u, v) in enumerate(zip(path, path[1:])):
             gamma = graph.graph.edges[(u, v)]['object']
             role = "init rule" if i == 0 else f"goal{i}"
@@ -564,14 +566,20 @@ def explain(spec_path, n=1, external_rules=None, imax=IMAX, show_source=True,
         plans = planner.plans(n=n, external_rules=rules, visualize=False, imax=imax)
 
     if show_instance:
-        printer(_rule("GENERATED ASP INSTANCE  (instance.lp)"))
-        printer(open(os.path.join(out_dir, "instance.lp")).read().rstrip())
+        # one instance per path, in its own folder when there are several
+        for path_name, (folder, outcome) in planner.path_status.items():
+            title = "GENERATED ASP INSTANCE  (instance.lp)"
+            if len(planner.path_status) > 1:
+                title += f"  path {path_name}, {outcome}"
+            printer(_rule(title))
+            printer(open(os.path.join(folder, "instance.lp")).read().rstrip())
 
     if show_plans:
         printer(_rule(f"PLANS  ({len(plans)} found)"))
         for k, model in enumerate(plans, 1):
             printer(_rule(f"plan {k} of {len(plans)}", "-"))
             witnesses = goal_witnesses(model)
+            printer(f"path: {' -> '.join(getattr(model, 'path', []))}")
             printer(f"goal times (T1..Tn-1) per witness: {witnesses if witnesses else 'none'}")
             windows = sorted({tuple(p.arguments[:3]) for p in model if p.name == "keep_window"})
             if windows:

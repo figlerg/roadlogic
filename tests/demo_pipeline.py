@@ -121,7 +121,8 @@ def simulation_folder(name, scenario="scenario_0001"):
 
 def plan_text(model):
     """The plan as a table per actor, with the goal times and keep windows above it."""
-    lines = [f"last step: {model.max_t}",
+    lines = [f"path: {' -> '.join(getattr(model, 'path', []))}",
+             f"last step: {model.max_t}",
              f"goal times, one tuple per valid split: {goal_witnesses(model)}"]
     windows = sorted({tuple(p.arguments[:3]) for p in model if p.name == "keep_window"})
     if windows:

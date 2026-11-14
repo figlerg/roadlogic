@@ -21,19 +21,19 @@ from matplotlib import pyplot as plt, animation
 from planning.asp.MyModel import MyModel
 from typing import Sequence
 
-def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, save_path=None, verbose=False,
-                   time_limit = None, deterministic=True):
+def plan_generator(files, rules=None, imin=1, imax=20, override_files=False, save_path=None, verbose=False,
+                   time_limit=None, deterministic=True, extra_horizon=None):
     '''
-    The main function implementing incremental solving.
-    @param imin:
-    @param imax:
+    Incremental solving as a generator: yields one MyModel at a time, horizon by horizon, and keeps its
+    clingo Control open between calls. Close it (or let it be collected) to free the grounding.
+    @param extra_horizon: once a plan is found at horizon h, search no further than h + extra_horizon
+        for more. None searches up to imax. It never limits the search for the first plan.
+    @raise TimeoutError: when a horizon starts after time_limit seconds.
     '''
-
     conf = Conf(imin, imax, "SAT")
     ctl = Control()
-    seed = 42
 
-    ctl.configuration.solve.models = n  # 0 for all models, or N (N > 0) for just at most N models
+    ctl.configuration.solve.models = 0  # enumerate lazily, the caller stops pulling when it has enough
 
     if deterministic:
         ctl.configuration.solve.parallel_mode=1
@@ -50,7 +50,7 @@ def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, 
         files = ([  os.path.join(base_dir, "encoding", "constants.lp"),
                     os.path.join(base_dir, "encoding", "facts.lp"),
                     os.path.join(base_dir, "encoding", "dynamics.lp")] +
-                    files)
+                    list(files))
 
     if save_path:
         if not os.path.exists(save_path):
@@ -76,17 +76,17 @@ def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, 
     ctl.add("check", ["t"], "#external query(t).")
 
     step = 0
-    models = []
-
+    first_horizon = None
     start_time = time.time()
 
-    while ((conf.imax is None or step < conf.imax) and (len(models) < n)):
+    while conf.imax is None or step < conf.imax:
+        if extra_horizon is not None and first_horizon is not None and step > first_horizon + extra_horizon:
+            return
 
         # TODO this could take quite a bit longer than the limit as I don't interrupt any clingo runs. Should patch that
         elapsed = time.time() - start_time
         if time_limit and elapsed > time_limit:
             raise TimeoutError(f'Could not find a model within the time limit of {time_limit}s for files = {files}.')
-
 
         parts = []
         parts.append(("check", [Number(step)]))
@@ -104,20 +104,36 @@ def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, 
 
         with ctl.solve(yield_=True) as handle:
             for model in handle:
-                my_model = MyModel(model)
-                models.append(my_model)
-                if verbose:
-                    print(f'\tGenerated model {len(models)}')
-                if len(models) >= n:
-                    break
+                if first_horizon is None:
+                    first_horizon = step
+                yield MyModel(model)
 
         step += 1
 
+
+def generate_plans(files, n, rules=None, imin=1, imax=20, override_files=False, save_path=None, verbose=False,
+                   time_limit = None, deterministic=True, extra_horizon=None):
+    '''
+    The main function implementing incremental solving: up to n models from plan_generator.
+    @param imin:
+    @param imax:
+    '''
+    models = []
+    generator = plan_generator(files, rules=rules, imin=imin, imax=imax, override_files=override_files,
+                               save_path=save_path, verbose=verbose, time_limit=time_limit,
+                               deterministic=deterministic, extra_horizon=extra_horizon)
+    for my_model in generator:
+        models.append(my_model)
+        if verbose:
+            print(f'\tGenerated model {len(models)}')
+        if len(models) >= n:
+            break
+    generator.close()
+
     if len(models) == 0:
-        raise NoModelException(f"Didn't find a model. Config: {conf}")
+        raise NoModelException(f"Didn't find a model. Config: {Conf(imin, imax, 'SAT')}")
 
     return models
-
 
 def visualize_plans(models, max_num=None, save=False, show=True, save_path=None, verbose=False, custom_names:Sequence[str]=None):
     # can visualize results in an animation and/or save gifs.

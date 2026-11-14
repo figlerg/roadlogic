@@ -82,9 +82,19 @@ across 9 files. For a live walkthrough of what it does, run `python tests/demo.p
       location gets no self loop, so a scenario starts with the trace.
 
 - [ ] **`planning/Planner.py`, `_on_path`.** A keep or duration inside a `one_of` alternative the plan
-      does not take is skipped instead of raising. Found through `tests/one_of_nested.osc`. The
-      bigger issue behind it, that the planner only ever plans the first path through the
-      automaton, is the next piece of work, see `.claude/PLAN.md`.
+      does not take is skipped instead of raising. Found through `tests/one_of_nested.osc`.
+- [ ] **`planning/Planner.py`, `plans`, `_plans_on_path`, and `plan_generator` in
+      `planning/asp/generate_plans.py`.** Every path through the translation graph is planned, shortest
+      first, each with its own instance (in `out_path/paths/path_<k>` when there are several). Three
+      modes, `ROADLOGIC_PATH_MODE`: `live` (default) keeps one clingo Control per path open, at most
+      `ROADLOGIC_MAX_OPEN` (8), and takes plans from each in turn, so each path is solved once. `spread`
+      solves every path up front for its share. `first` plans the first path only, as the paper. A plan
+      found on two paths counts once, and in live does not use up a path's turn. No plan on any path is
+      the inconsistency verdict, a timeout on one path is not. Early stop (`ROADLOGIC_EXTRA_HORIZON`,
+      2, -1 off): once a path has a plan at horizon h, more plans are looked for up to h + 2 only. It
+      never limits the search for a path's first plan, so "no plan" stays exhaustive. `generate_plans`
+      is now a thin wrapper over `plan_generator`. Comparison of the modes in `paper_journal/path_modes`.
+      Tests: `tests/run_path_tests.py`.
 
 ### Execution
 

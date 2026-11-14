@@ -10,7 +10,7 @@ from antlr4 import *
 from typing import List,Union, Sequence
 
 from planning.asp.MyModel import MyModel
-from planning.asp.generate_plans import generate_plans, visualize_plans
+from planning.asp.generate_plans import NoModelException, plan_generator, visualize_plans
 from planning.intermediate_structure.TranslationGraph import TranslationGraph
 from planning.intermediate_structure.Constraint import RelativeConstraint, AbsoluteConstraint, Modifier
 from planning.intermediate_structure.TranslationGraph import flatten_node
@@ -35,6 +35,25 @@ PAD_AFTER_GOALS = False
 # the original instances back.
 HONOUR_DURATION = True
 
+# How the paths through the translation graph are planned: each alternative of a one_of, and each
+# order in which the branches of a parallel end their phases. Paths are tried shortest first.
+#   live    one solver per path, at most MAX_OPEN open at once, plans taken from each in turn. A path
+#           closes once it gave its share of the n plans or ran out, the next path opens. Each path is
+#           solved once. The default.
+#   spread  every path solved up front for its share of the n plans, then interleaved. Even coverage,
+#           but no plan before every path is solved.
+#   first   the first path only, as the HSCC paper did.
+# paper_journal/path_modes compares them. A plan found on two paths counts once.
+PATH_MODE = os.environ.get("ROADLOGIC_PATH_MODE", "live")
+MAX_OPEN = int(os.environ.get("ROADLOGIC_MAX_OPEN", "8"))
+# Once a path has a plan at horizon h, look for more of its plans up to h + EXTRA_HORIZON only. Asking
+# for more plans than exist otherwise searches every horizon up to imax. The search for a path's first
+# plan is never limited, so "no plan" still means none up to imax. -1 searches up to imax, as the paper.
+# Off when diversity_step > 1. The paper's experiments give identical plans either way.
+EXTRA_HORIZON = int(os.environ.get("ROADLOGIC_EXTRA_HORIZON", "2"))
+# Above this many paths, warn: parallel interleavings grow quickly.
+MANY_PATHS = 20
+
 
 class Planner:
     """
@@ -42,7 +61,7 @@ class Planner:
     """
 
     def __init__(self, osc_path, verbose=False, out_path=None, animate_plans=False,
-                 pad_after_goals=None, honour_duration=None):
+                 pad_after_goals=None, honour_duration=None, path_mode=None, extra_horizon=None):
         """
         Constructor which does the parsing of the input OSC file and initialises the structures for translation.
 
@@ -64,6 +83,12 @@ class Planner:
 
         # Read the module switch at call time, so changing it at runtime takes effect.
         self.pad_after_goals = PAD_AFTER_GOALS if pad_after_goals is None else pad_after_goals
+        self.path_mode = PATH_MODE if path_mode is None else path_mode
+        if self.path_mode not in ("live", "spread", "first"):
+            raise ValueError(f"Unknown path mode {self.path_mode!r}, use live, spread or first.")
+        self.extra_horizon = EXTRA_HORIZON if extra_horizon is None else extra_horizon
+        # path, as its phases joined by ' -> ', to (folder, outcome), for the last call to plans()
+        self.path_status = {}
         self.honour_duration = HONOUR_DURATION if honour_duration is None else honour_duration
         self._horizon_cap = None
 
@@ -114,42 +139,72 @@ class Planner:
     def plans(self, n, external_rules: Union[str, os.PathLike, Sequence[Union[str, os.PathLike]]] = None,
               visualize=True, imin=1, imax=30, show=False, diversity_step=1, time_limit = None,
               rules_override = False, deterministic=True) -> List[MyModel]:
-        # simply returns plans in ASP format
+        """Up to n plans over the paths through the translation graph, as self.path_mode says.
 
+        Each path has its own instance, in out_path when there is one path and in
+        out_path/paths/path_<k> otherwise. time_limit applies per path. Each plan records its path as
+        model.path, and self.path_status says what each path gave.
+        """
         G = self._translation_graph
-        actor_ids = [actor.id for actor in G.actors]
+        paths = sorted(nx.all_simple_paths(G.graph, G.initial, G.final), key=len)
+        if self.path_mode == "first":
+            paths = paths[:1]
+        if len(paths) > MANY_PATHS:
+            warnings.warn(f"{len(paths)} paths through the translation graph, planned in {self.path_mode} mode")
 
-        # we select one path from the tree-like
-        aut_path = next(nx.all_simple_paths(G.graph, G.initial, G.final))
-        warnings.warn('Picked one qualitative path from the translation graph. '
-                      'If one_of operator is used, this constrains the search.'
-                      'Finding all models may be addressed in a future release.')
+        self.path_status = {}
+        opened = lambda k: self._plans_on_path(paths, k, len(paths) == 1, external_rules, imin, imax,
+                                              diversity_step, time_limit, rules_override, deterministic)
+        share = -(-n // len(paths))
+        models, seen = [], set()
 
-        self.create_asp_instance(actor_ids, aut_path)
+        def take(model):
+            key = str(sorted(model.holds, key=str))  # the same notion as MyModel.__eq__
+            if key not in seen:
+                seen.add(key)
+                models.append(model)
 
-        this_dir = os.path.dirname(__file__)
-        parent_dir = os.path.dirname(this_dir)
-        files = [os.path.join(self.__out_path, 'instance.lp'),
-                #  os.path.join(parent_dir, "asp/encoding/optimizations.lp")
-                 ]
+        if self.path_mode == "spread":
+            found = []
+            for k in range(len(paths)):
+                generator = opened(k)
+                found.append([m for _, m in zip(range(share), generator)])
+                generator.close()
+            while len(models) < n and any(found):
+                for queue in found:
+                    if queue and len(models) < n:
+                        take(queue.pop(0))
+        else:
+            # live, and first as live over a single path
+            waiting, open_ = list(range(len(paths))), {}
+            while len(models) < n and (open_ or waiting):
+                while waiting and len(open_) < MAX_OPEN:
+                    k = waiting.pop(0)
+                    open_[k] = [opened(k), 0]
+                for k in list(open_):
+                    generator = open_[k][0]
+                    try:
+                        # a plan another path already gave does not use up this path's turn
+                        before = len(models)
+                        while len(models) == before:
+                            take(next(generator))
+                        open_[k][1] += 1
+                    except (StopIteration, TimeoutError):
+                        del open_[k]
+                        continue
+                    if open_[k][1] >= share and waiting:
+                        generator.close()  # gave its share, make room for a path still waiting
+                        del open_[k]
+                    if len(models) >= n:
+                        break
+            for generator, _ in open_.values():
+                generator.close()
 
-        if external_rules:
-            if isinstance(external_rules, (list, tuple)):  # in case one loads multiple files at once
-                for p in external_rules:
-                    files.append(p)
-            else:
-                files.append(external_rules)  # can also use a simple path
-
-
-        if self._horizon_cap is not None and not self.pad_after_goals:
-            # Without padding a plan ends at its last goal, and the top-level duration bounds that,
-            # so no plan can be longer. Searching further would only prove that there is none.
-            imax = min(imax, self._horizon_cap + 1)
-
-        models = generate_plans(files=files, rules=self.__additional_single_rules, n=diversity_step * n, imin=imin,
-                                imax=imax, save_path=self.__out_path, verbose=self.verbose, time_limit=time_limit,
-                                override_files=rules_override, deterministic=deterministic)
-        models = models[::diversity_step]
+        if not models:
+            outcomes = [outcome for _, outcome in self.path_status.values()]
+            if "timeout" in outcomes:
+                raise TimeoutError(f"No plan on any of the {len(paths)} paths, and {outcomes.count('timeout')} timed out.")
+            raise NoModelException(f"No plan on any of the {len(paths)} paths through the translation graph.")
 
         if self.verbose:
             print(models)
@@ -158,6 +213,59 @@ class Planner:
             visualize_plans(models, save=True, show=show, save_path=self.__out_path, verbose=self.verbose, max_num=n)
 
         return models
+
+    def _plans_on_path(self, paths, k, alone, external_rules, imin, imax, diversity_step, time_limit,
+                       rules_override, deterministic):
+        """A generator over the plans along path k, every diversity_step-th one, tagged with the path.
+
+        Its instance is written when the first plan is asked for, so a path that is never reached
+        costs nothing. self.path_status[path] is updated as plans come, and on the outcome.
+        """
+        aut_path = paths[k]
+        folder = self.__out_path
+        if not alone:
+            folder = os.path.join(self.__out_path, "paths", f"path_{k + 1}")
+            os.makedirs(folder, exist_ok=True)
+        self.create_asp_instance([actor.id for actor in self._translation_graph.actors], aut_path, folder)
+
+        files = [os.path.join(folder, 'instance.lp')]
+        if external_rules:
+            if isinstance(external_rules, (list, tuple)):  # in case one loads multiple files at once
+                files.extend(external_rules)
+            else:
+                files.append(external_rules)  # can also use a simple path
+
+        if self._horizon_cap is not None and not self.pad_after_goals:
+            # Without padding a plan ends at its last goal, and the top-level duration bounds that,
+            # so no plan can be longer. Searching further would only prove that there is none.
+            imax = min(imax, self._horizon_cap + 1)
+
+        labels = [" | ".join(sorted(flatten_node(node))) if isinstance(node, tuple) else str(node)
+                  for node in aut_path[1:-1]]
+        name = " -> ".join(labels)
+        given = 0
+        # Thinning out with diversity_step asks for many models to pick from, which early stop would cut.
+        extra_horizon = None if self.extra_horizon < 0 or diversity_step > 1 else self.extra_horizon
+        self.path_status[name] = (folder, "searching")
+        generator = plan_generator(files, rules=self.__additional_single_rules, imin=imin, imax=imax,
+                                   override_files=rules_override, save_path=folder, verbose=self.verbose,
+                                   time_limit=time_limit, deterministic=deterministic,
+                                   extra_horizon=extra_horizon)
+        try:
+            for i, model in enumerate(generator):
+                if i % diversity_step:
+                    continue
+                model.path = labels
+                given += 1
+                self.path_status[name] = (folder, f"{given} plans")
+                yield model
+        except TimeoutError:
+            self.path_status[name] = (folder, "timeout" if not given else f"{given} plans, then timeout")
+            raise
+        finally:
+            generator.close()
+        if not given:
+            self.path_status[name] = (folder, "no plan")
 
     def add_rule(self, rule: str):
         if self.__additional_single_rules is None:
@@ -287,9 +395,9 @@ class Planner:
 
         return rules, ", " + ", ".join(literals)
 
-    def create_asp_instance(self, actor_ids, aut_path):
+    def create_asp_instance(self, actor_ids, aut_path, folder=None):
 
-        instance_file_target = os.path.join(self.__out_path, 'instance.lp')
+        instance_file_target = os.path.join(folder or self.__out_path, 'instance.lp')
 
         G = self.translation_graph
 

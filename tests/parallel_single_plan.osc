@@ -1,0 +1,22 @@
+# Two cars, each driving three phases in parallel, with no constraint beyond the start. The
+# translation graph has 13 paths, one per order in which the phases can end, and the only plan is
+# the empty one at step 0. Asking for more plans than that used to search every horizon up to the
+# limit on every path. With early stop it returns at once.
+
+scenario stress:
+    car1: car
+    car2: car
+
+    do parallel:
+        first: serial:
+            a0: car1.drive() with:
+                lane(1, at: start)
+                position(0m, at: start)
+            a1: car1.drive()
+            a2: car1.drive()
+        second: serial:
+            b0: car2.drive() with:
+                lane(3, at: start)
+                position(10m, at: start)
+            b1: car2.drive()
+            b2: car2.drive()

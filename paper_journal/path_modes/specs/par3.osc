@@ -1,0 +1,17 @@
+scenario stress:
+    car1: car
+    car2: car
+
+    do parallel:
+        first: serial:
+            a0: car1.drive() with:
+                lane(1, at: start)
+                position(0m, at: start)
+            a1: car1.drive()
+            a2: car1.drive()
+        second: serial:
+            b0: car2.drive() with:
+                lane(3, at: start)
+                position(10m, at: start)
+            b1: car2.drive()
+            b2: car2.drive()
