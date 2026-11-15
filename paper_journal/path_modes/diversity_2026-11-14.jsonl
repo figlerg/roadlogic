@@ -1,0 +1,20 @@
+{"spec": "exp_002", "method": "step60", "plans": 10, "models_seen": 541, "seconds": 2.4, "mean_similarity": 1.0, "lengths": [5]}
+{"spec": "exp_002", "method": "random", "plans": 10, "models_seen": 14, "seconds": 15.6, "mean_similarity": 0.977, "lengths": [5]}
+{"spec": "exp_002", "method": "cells_ban", "plans": 10, "models_seen": 10, "seconds": 27.5, "mean_similarity": 0.74, "lengths": [5, 6]}
+{"spec": "exp_002", "method": "lanes", "plans": 5, "models_seen": 5, "seconds": 35.0, "mean_similarity": 0.485, "lengths": [5, 6, 7]}
+{"spec": "exp_002", "method": "goals", "plans": 2, "models_seen": 2, "seconds": 26.3, "mean_similarity": 0.879, "lengths": [5, 6]}
+{"spec": "exp_005", "method": "step60", "plans": 10, "models_seen": 541, "seconds": 7.0, "mean_similarity": 1.0, "lengths": [7]}
+{"spec": "exp_005", "method": "random", "plans": 10, "models_seen": 10, "seconds": 18.7, "mean_similarity": 0.983, "lengths": [7]}
+{"spec": "exp_005", "method": "cells_ban", "plans": 10, "models_seen": 10, "seconds": 20.3, "mean_similarity": 0.945, "lengths": [7]}
+{"spec": "exp_005", "method": "lanes", "plans": 2, "models_seen": 2, "seconds": 37.9, "mean_similarity": 0.906, "lengths": [7]}
+{"spec": "exp_005", "method": "goals", "plans": 2, "models_seen": 2, "seconds": 34.8, "mean_similarity": 0.608, "lengths": [7, 9]}
+{"spec": "exp_007", "method": "step60", "plans": 10, "models_seen": 541, "seconds": 0.3, "mean_similarity": 0.779, "lengths": [4, 5]}
+{"spec": "exp_007", "method": "random", "plans": 10, "models_seen": 34, "seconds": 0.5, "mean_similarity": 0.581, "lengths": [4, 5]}
+{"spec": "exp_007", "method": "cells_ban", "plans": 10, "models_seen": 10, "seconds": 0.3, "mean_similarity": 0.566, "lengths": [4, 5]}
+{"spec": "exp_007", "method": "lanes", "plans": 10, "models_seen": 10, "seconds": 0.9, "mean_similarity": 0.467, "lengths": [4, 5, 6]}
+{"spec": "exp_007", "method": "goals", "plans": 3, "models_seen": 3, "seconds": 0.4, "mean_similarity": 0.873, "lengths": [4, 5, 6]}
+{"spec": "keep_scenario_scope.osc", "method": "step60", "plans": 10, "models_seen": 541, "seconds": 82.1, "mean_similarity": 0.996, "lengths": [9]}
+{"spec": "keep_scenario_scope.osc", "method": "random", "plans": 2, "models_seen": 2, "seconds": 127.0, "mean_similarity": 0.979, "lengths": [9]}
+{"spec": "keep_scenario_scope.osc", "method": "cells_ban", "plans": 10, "models_seen": 10, "seconds": 123.3, "mean_similarity": 0.917, "lengths": [9]}
+{"spec": "keep_scenario_scope.osc", "method": "lanes", "plans": 4, "models_seen": 4, "seconds": 78.0, "mean_similarity": 0.827, "lengths": [9, 10, 11]}
+{"spec": "keep_scenario_scope.osc", "method": "goals", "plans": 1, "models_seen": 1, "seconds": 93.5, "mean_similarity": null, "lengths": [9]}

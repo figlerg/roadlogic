@@ -1,0 +1,12 @@
+{"spec": "exp_002", "theta": 1.0, "n": 50, "plans": 50, "seconds": 71.8, "seconds_per_plan": 1.44, "mean_similarity": 0.848, "max_similarity": 0.986, "lengths": [5, 6]}
+{"spec": "exp_002", "theta": 0.9, "n": 50, "plans": 2, "seconds": 49.8, "seconds_per_plan": 24.9, "mean_similarity": 0.255, "max_similarity": 0.255, "lengths": [5, 7]}
+{"spec": "exp_002", "theta": 0.8, "n": 50, "plans": 3, "seconds": 54.8, "seconds_per_plan": 18.27, "mean_similarity": 0.691, "max_similarity": 0.8, "lengths": [5, 6]}
+{"spec": "exp_002", "theta": 0.7, "n": 50, "plans": 4, "seconds": 59.9, "seconds_per_plan": 14.97, "mean_similarity": 0.466, "max_similarity": 0.694, "lengths": [5, 6, 7]}
+{"spec": "exp_005", "theta": 1.0, "n": 36, "plans": 32, "seconds": 86.3, "seconds_per_plan": 2.7, "mean_similarity": 0.92, "max_similarity": 0.988, "lengths": [7, 8, 9]}
+{"spec": "exp_005", "theta": 0.9, "n": 36, "plans": 3, "seconds": 77.8, "seconds_per_plan": 25.93, "mean_similarity": 0.868, "max_similarity": 0.9, "lengths": [7, 8]}
+{"spec": "exp_005", "theta": 0.8, "n": 36, "plans": 1, "seconds": 66.9, "seconds_per_plan": 66.9, "mean_similarity": null, "max_similarity": null, "lengths": [7]}
+{"spec": "exp_005", "theta": 0.7, "n": 36, "plans": 1, "seconds": 66.0, "seconds_per_plan": 66.0, "mean_similarity": null, "max_similarity": null, "lengths": [7]}
+{"spec": "exp_007", "theta": 1.0, "n": 39, "plans": 39, "seconds": 2.3, "seconds_per_plan": 0.06, "mean_similarity": 0.535, "max_similarity": 0.976, "lengths": [4, 5]}
+{"spec": "exp_007", "theta": 0.9, "n": 39, "plans": 33, "seconds": 22.8, "seconds_per_plan": 0.69, "mean_similarity": 0.497, "max_similarity": 0.9, "lengths": [4, 5, 6]}
+{"spec": "exp_007", "theta": 0.8, "n": 39, "plans": 9, "seconds": 9.9, "seconds_per_plan": 1.1, "mean_similarity": 0.45, "max_similarity": 0.787, "lengths": [4, 5, 6]}
+{"spec": "exp_007", "theta": 0.7, "n": 39, "plans": 6, "seconds": 9.3, "seconds_per_plan": 1.55, "mean_similarity": 0.416, "max_similarity": 0.7, "lengths": [4, 5]}

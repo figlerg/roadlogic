@@ -1,0 +1,12 @@
+{"spec": "exp_001", "method": "basic_restart", "n": 50, "plans": 50, "seconds": 256.6, "seconds_per_plan": 5.13, "mean_similarity": 0.469, "max_similarity": 0.958, "lengths": [4]}
+{"spec": "exp_001", "method": "strict_restart", "n": 50, "plans": 50, "seconds": 339.9, "seconds_per_plan": 6.8, "mean_similarity": 1.0, "max_similarity": 1.0, "lengths": [4]}
+{"spec": "exp_002", "method": "strict_restart", "n": 50, "plans": 50, "seconds": 452.5, "seconds_per_plan": 9.05, "mean_similarity": 1.0, "max_similarity": 1.0, "lengths": [5]}
+{"spec": "exp_002", "method": "basic_restart", "n": 50, "plans": 22, "seconds": 1700.6, "seconds_per_plan": 77.3, "mean_similarity": 0.734, "max_similarity": 1.0, "lengths": [5, 6]}
+{"spec": "exp_003", "method": "basic_restart", "n": 50, "plans": 50, "seconds": 1208.1, "seconds_per_plan": 24.16, "mean_similarity": 0.859, "max_similarity": 1.0, "lengths": [5]}
+{"spec": "exp_003", "method": "strict_restart", "n": 50, "plans": 50, "seconds": 905.1, "seconds_per_plan": 18.1, "mean_similarity": 0.995, "max_similarity": 1.0, "lengths": [5]}
+{"spec": "exp_005", "method": "strict_restart", "n": 50, "plans": 1, "seconds": 17.4, "seconds_per_plan": 17.4, "mean_similarity": null, "max_similarity": null, "lengths": [7]}
+{"spec": "exp_006", "method": "basic_restart", "n": 50, "plans": 50, "seconds": 35.9, "seconds_per_plan": 0.72, "mean_similarity": 0.485, "max_similarity": 1.0, "lengths": [3]}
+{"spec": "exp_006", "method": "strict_restart", "n": 50, "plans": 50, "seconds": 32.2, "seconds_per_plan": 0.64, "mean_similarity": 1.0, "max_similarity": 1.0, "lengths": [3]}
+{"spec": "exp_007", "method": "basic_restart", "n": 50, "plans": 9, "seconds": 5.0, "seconds_per_plan": 0.56, "mean_similarity": 0.557, "max_similarity": 0.939, "lengths": [4, 5]}
+{"spec": "exp_007", "method": "strict_restart", "n": 50, "plans": 1, "seconds": 0.3, "seconds_per_plan": 0.3, "mean_similarity": null, "max_similarity": null, "lengths": [4]}
+{"spec": "exp_005", "method": "basic_restart", "n": 50, "plans": 22, "seconds": 1756.6, "seconds_per_plan": 79.85, "mean_similarity": 0.962, "max_similarity": 1.0, "lengths": [7, 8]}

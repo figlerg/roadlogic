@@ -1,0 +1,7 @@
+# exp_002, rise0.7, 50 plans, conflict budgets, each run twice (50000 once): identical plans per budget
+conflicts   2000 run 1: 50 plans, 64.8 s, mean 0.828, k10 [0.802, 48.3], k20 [0.838, 52.5], thetas [0.7, 0.8, 1.0], lengths [5, 6]
+conflicts   2000 run 2: 50 plans, 61.9 s, mean 0.828, k10 [0.802, 46.7], k20 [0.838, 49.7], thetas [0.7, 0.8, 1.0], lengths [5, 6]
+conflicts  10000 run 1: 50 plans, 256.2 s, mean 0.667, k10 [0.699, 136.1], k20 [0.657, 216.5], thetas [0.7, 0.8, 0.9, 1.0], lengths [5, 6]
+conflicts  10000 run 2: 50 plans, 270.5 s, mean 0.667, k10 [0.699, 144.3], k20 [0.657, 229.8], thetas [0.7, 0.8, 0.9, 1.0], lengths [5, 6]
+conflicts  50000 run 1: 50 plans, 1098.9 s, mean 0.677, k10 [0.68, 429.3], k20 [0.687, 594.9], thetas [0.7, 0.8, 0.9, 1.0], lengths [5, 6]
+conflicts  50000 run 2: 50 plans, 1692.7 s, mean 0.677, k10 [0.68, 844.1], k20 [0.687, 1256.4], thetas [0.7, 0.8, 0.9, 1.0], lengths [5, 6]

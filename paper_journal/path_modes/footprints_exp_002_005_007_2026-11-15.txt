@@ -1,0 +1,11 @@
+# count_footprints.py <spec> 20000 <rule_injection>: distinct footprints per horizon, up to 20000 models each
+== exp_002
+horizon 5: 3540 models (all), 5 distinct footprints, 5 distinct starts, 85.6 s
+horizon 6: 20000 models (limit), 9 distinct footprints, 8 distinct starts, 350.2 s
+horizon 7: 20000 models (limit), 45 distinct footprints, 6 distinct starts, 361.7 s
+== exp_005
+horizon 7: 20000 models (limit), 6 distinct footprints, 5 distinct starts, 415.2 s
+== exp_007
+horizon 4: 18 models (all), 2 distinct footprints, 1 distinct starts, 0.5 s
+horizon 5: 9698 models (all), 122 distinct footprints, 1 distinct starts, 277.5 s
+horizon 6: 20000 models (limit), 189 distinct footprints, 1 distinct starts, 621.3 s
