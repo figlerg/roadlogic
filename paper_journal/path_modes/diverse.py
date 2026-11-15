@@ -12,6 +12,7 @@ Methods, each a way to steer the next plan away from the earlier ones:
   combo           after each plan, forbid its combination of start configuration and driving
                   parameters (brake_turn, accel_turn when DIVERSE_CONTROLLER chooses them): the paper's
                   "one plan per sampled parameter combination", without restarting
+  risecombo<theta>  rise and combo together: a new parameter combination and IoU <= theta
   rise<theta>     as iou, but whenever no plan comes within the budget, once there is a first plan,
                   theta goes up by 0.1, up to 1 (identical footprints forbidden). At 1 the search moves
                   to the next horizon, which starts again at theta, since an incremental Control
@@ -67,7 +68,7 @@ ENC = os.path.join("planning", "asp", "encoding")
 BASE = [os.path.join(ENC, f) for f in ("constants.lp", "facts.lp", "dynamics.lp")]
 
 STEP = int(METHOD[4:]) if METHOD.startswith("step") else 1
-THETA = Fraction(METHOD[3:] if METHOD.startswith("iou") else METHOD[4:]).limit_denominator(20) \
+THETA = Fraction(METHOD[3:] if METHOD.startswith("iou") else METHOD.replace("risecombo", "rise")[4:]).limit_denominator(20) \
     if METHOD.startswith(("iou", "rise")) else None
 FOOTPRINT_METHOD = THETA is not None
 
@@ -141,14 +142,14 @@ def steer_away(plan, horizon):
         states = step1_states(plan)
         if states:
             add(f":- {', '.join(states)}.")
-    elif METHOD == "combo":
+    if METHOD == "combo" or METHOD.startswith("risecombo"):
         chosen = [str(h).replace(" ", "") for h in plan.holds if h[-1] == 0]
         chosen += [str(a) for a in plan if getattr(a, "name", "") in ("brake_turn", "accel_turn")]
         add(f":- {', '.join(chosen)}.")
-    elif METHOD == "strict":
+    if METHOD == "strict":
         for state in step1_states(plan):
             add(f":- {state}.")
-    elif FOOTPRINT_METHOD:
+    if FOOTPRINT_METHOD:
         k = len(footprints)
         cells = get_covered_cell(plan, float("inf"))
         add("".join(f"b{k}({x},{l})." for x, l in sorted(cells))

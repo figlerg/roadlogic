@@ -149,7 +149,22 @@ specs (fewer on exp_005), more distinct goal timings on four. The restarts have 
 configurations on four specs, since they sample the start gap by design (on exp_007 the obstacle's
 position, where rise0.7 keeps one start).
 
-**7. What did not work, kept for the record.** Projections (`#project` on lanes, cells, goal timings):
+**7. The starting θ matters little** (`sensitivity_2026-11-15.jsonl`, 10000 conflicts). Mean
+similarity over 50 plans for θ starting at 0.5 / 0.6 / 0.7 / 0.8: exp_001 0.47 / 0.49 / 0.48 / 0.46,
+exp_002 0.75 / 0.68 / 0.67 / 0.68, exp_003 0.72 / 0.70 / 0.71 / 0.70, exp_005 0.92 / 0.92 / 0.94 / 0.92,
+exp_006 0.46 / 0.47 / 0.47 / 0.49, exp_007 0.58 / 0.53 / 0.51 / 0.53. 0.7 and 0.8 are the best overall,
+0.8 is often faster. 0.7 was chosen early from exp_007, the check confirms it is not a lucky value.
+
+**8. The paper's own heuristic works without restarts, but only on exp_005.** `combo` over the
+parameter space (one plan per combination of start and driving constants, as the variability
+experiments do) with the conflict budget (`combo_2026-11-15.jsonl`): exp_005 0.85 in 259 s against the
+restarts' 0.83 in 1140 s, close to their variety at a quarter of the time. On the other specs it is far
+behind rise0.7 (0.66 to 0.96), because consecutive combinations in one solver are neighbours, while the
+paper samples them at random. `risecombo0.7` (both constraints together, `risecombo_2026-11-15.jsonl`)
+is no general improvement: slightly better on exp_001 and exp_003, worse on exp_002 (0.84), 12 plans on
+exp_007 (one start, 12 combinations), and on exp_005 the same as combo at four times the time.
+
+**9. What did not work, kept for the record.** Projections (`#project` on lanes, cells, goal timings):
 varied but slow and rarely reach n (`diversity_2026-11-14.jsonl`). Random restarts on one Control
 (other seed, random signs): unreliable, 0.73 in one run and 0.98 in the next. A domain heuristic towards
 unused cells: no gain. A fixed IoU bound below 1: few plans on the hard specs. Capping θ below 1 and
@@ -160,9 +175,11 @@ but not more varied, and no gain on exp_005 either.
 ### Limits and open questions
 
 - exp_005 is the one spec where the restarts stay more varied. Its shortest plans have only 6 distinct
-  footprints, and the restarts reach others through the driving constants. Even with those constants as
-  choices in one solver, rise0.7 does not find them: 0.93 with 50000 conflicts, with and without the
-  parameter space (`conflicts_extra_2026-11-15.jsonl`).
+  footprints, and the restarts reach others through the driving constants. rise0.7 does not find them,
+  0.93 even with 50000 conflicts, with and without the parameter space
+  (`conflicts_extra_2026-11-15.jsonl`). combo over the parameter space comes close (0.85 vs 0.83, item
+  8), so for a spec like this the parameter space is where variety lies. Which spec needs which is not
+  known in advance, so the recommendation stays rise0.7.
 - The IoU constraint optimises the measure the paper reports. Item 6 shows it also does well on others,
   except start configurations.
 - The budget is a knob between time and variety. 10000 conflicts worked on all seven specs.
@@ -186,6 +203,8 @@ but not more varied, and no gain on exp_005 either.
 | `conflicts_extra_2026-11-15.jsonl` | exp_004, and exp_005 with the parameter space and larger budgets |
 | `calibration_exp_002_2026-11-15.txt` | budget calibration on exp_002, 2000 / 10000 / 50000, repeated |
 | `restart_2026-11-15.jsonl` | BASIC and STRICT with restarts |
+| `sensitivity_2026-11-15.jsonl` | rise with θ starting at 0.5, 0.6, 0.8, 10000 conflicts |
+| `combo_2026-11-15.jsonl`, `risecombo_2026-11-15.jsonl` | combo and combo plus rise over the parameter space, 10000 conflicts |
 | `diversity.py`, `diversity_2026-11-14.jsonl` | first prototype: projections, random restarts, cell bans |
 | `diverse_iou.py`, `iou_2026-11-15.jsonl` | first IoU prototype, fixed θ (superseded by `diverse.py`) |
 

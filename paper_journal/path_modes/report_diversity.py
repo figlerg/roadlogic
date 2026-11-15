@@ -3,8 +3,8 @@
     python paper_journal/path_modes/report_diversity.py
 
 Reads paper_curves_*.jsonl (the paper's restarts, rerun), conflicts_*.jsonl (rise0.7 with conflict
-budgets), final_*.jsonl (the candidate grid with wall-clock budgets) and independent_*.jsonl, and prints
-markdown. Every run in those files is shown, none is left out.
+budgets), sensitivity_*, combo_*, risecombo_*.jsonl, final_*.jsonl (the candidate grid with wall-clock
+budgets) and independent_*.jsonl, and prints markdown. Every run in those files is shown, none is left out.
 """
 import glob, json, os
 
@@ -43,13 +43,27 @@ for spec in SPECS:
         p = dict(paper[spec])
         print(row("paper restarts (rerun)", p))
     for r in sorted(runs, key=lambda r: (r.get("controller", ""), r.get("conflicts", 0), r.get("repetition", 0))):
-        label = f"rise0.7, {r.get('conflicts')} conflicts"
+        label = f"{r['method']}, {r.get('conflicts')} conflicts"
         if r.get("controller") == "controller_params.lp":
             label += ", parameter space"
         if r.get("repetition"):
             label += f", run {r['repetition']}"
         print(row(label, r))
     print()
+
+print("## Other runs with a conflict budget of 10000: starting theta, combo and risecombo\n")
+print("sensitivity_*: rise with theta starting at 0.5, 0.6, 0.8 (0.7 is above). combo_* and risecombo_*:")
+print("over the parameter space of controller_params.lp.\n")
+print("| spec | method | plans | k = 10 | k = 20 | k = 50 | mean, all plans |")
+print("|---|---|---|---|---|---|---|")
+for r in sorted(load("sensitivity_*.jsonl") + load("combo_*.jsonl") + load("risecombo_*.jsonl"),
+                key=lambda r: (r["spec"], r["method"])):
+    if r.get("failed"):
+        print(f"| {r['spec']} | {r['method']} | failed: {r['failed']} | | | | |")
+        continue
+    c = r.get("curve")
+    print(f"| {r['spec']} | {r['method']} | {r['plans']} | {cell(c, 10)} | {cell(c, 20)} | {cell(c, 50)} | {r['mean_similarity']} |")
+print()
 
 print("## The candidate grid (wall-clock budget of 10 s per plan, 4 jobs at a time)\n")
 print("These depend on machine load, see the README. Kept for completeness.\n")
