@@ -29,6 +29,9 @@ Settings from the environment:
                   choices
   DIVERSE_CAP     for rise: the loosest theta allowed, default 1. Below 1, a horizon where nothing comes
                   even at the cap is left for the next one, so longer plans are preferred over near-copies
+  DIVERSE_FORGET  e.g. varScores,signs: the solver forgets its variable scores and saved signs on every
+                  step (clasp --forget-on-step), keeping grounding and learned nogoods, so it is not
+                  drawn back towards its previous plan
   DIVERSE_SAVE    a folder to pickle the plans into, 0001.pkl, ... in the order found
   DIVERSE_HEUR    1: clingo's domain heuristic, told to prefer leaving the cells of earlier plans empty
                   (#heuristic fp(X,L,T) : b_k(X,L). [1, false]), for the footprint methods
@@ -95,6 +98,9 @@ ctl.configuration.solve.models = 0
 ctl.configuration.solve.parallel_mode = 1
 if HEUR:
     ctl.configuration.solver.heuristic = "Domain"
+FORGET = os.environ.get("DIVERSE_FORGET", "")
+if FORGET:
+    ctl.configuration.solver.forget_on_step = FORGET
 if FOOTPRINT_METHOD:
     ctl.add("check", ["t"], FOOTPRINT)
 for f in BASE + [os.path.join(folder, "instance.lp")] + RULES:
@@ -258,7 +264,7 @@ for k in (5, 10, 20, 30, 40, 50):
         sub = matrix[:k, :k]
         curve[k] = [round(float(sub[~np.eye(k, dtype=bool)].mean()), 3), round(found_at[k - 1], 1)]
 print(json.dumps({"spec": SPEC.split("/")[-3] if "experiments_src" in SPEC else os.path.basename(SPEC),
-                  "method": METHOD, "extra": EXTRA, "budget": BUDGET, "heur": HEUR, "cap": float(CAP), "conflicts": CONFLICTS, "n": N, "plans": len(plans),
+                  "method": METHOD, "extra": EXTRA, "budget": BUDGET, "heur": HEUR, "cap": float(CAP), "conflicts": CONFLICTS, "forget": FORGET, "n": N, "plans": len(plans),
                   "seconds": seconds, "seconds_per_plan": round(seconds / max(len(plans), 1), 2),
                   "mean_similarity": mean, "max_similarity": worst,
                   "lengths": sorted({p.max_t for p in plans}),

@@ -96,6 +96,19 @@ Budget per plan 10 s once there is a first plan (never before), early stop 2 hor
 
 ### Findings
 
+In short:
+
+- The paper's `diversity_step=60` gives almost no variety: the shortest plans of a spec often have only
+  a handful of distinct footprints, and the thousands of models between them differ in speeds only.
+- **Recommended: `rise0.7` with a budget of 10000 solver conflicts.** Each new plan must have footprint
+  IoU at most θ with every earlier plan, added to the running solver without restarting, θ loosened
+  from 0.7 when stuck. More varied than the paper's variability restarts on five of seven specs, as
+  varied on one, 1.6 to 36 times faster, deterministic. The loss is exp_005.
+- The paper's own variability experiment also works without restarts: its sampled instances as
+  assumptions in one solver that forgets its search state each step. Same variety on two specs, better
+  on two, worse on two, faster on five.
+- Wall-clock budgets made results depend on machine load. Budgets in solver conflicts do not.
+
 All tables: `python paper_journal/path_modes/report_diversity.py`, from the result files listed below.
 
 **1. Thinning out (step60) gives almost no variety.** On the overtake (exp_002) all 50 plans of
@@ -164,7 +177,29 @@ paper samples them at random. `risecombo0.7` (both constraints together, `riseco
 is no general improvement: slightly better on exp_001 and exp_003, worse on exp_002 (0.84), 12 plans on
 exp_007 (one start, 12 combinations), and on exp_005 the same as combo at four times the time.
 
-**9. What did not work, kept for the record.** Projections (`#project` on lanes, cells, goal timings):
+**9. The paper's variability experiment works without restarts, if the solver forgets.**
+`sample_assume.py` takes exactly the paper's 50 sampled instances (from the partition files of the
+rerun) and solves each as a set of assumptions in one open solver: its start and driving constants
+true, the other starts false. Assumptions need no grounding. Done naively, the plans are much more alike
+than with restarts (exp_001: 0.76 vs 0.52), because an open solver keeps its variable scores and saved
+signs and is drawn back towards its previous plan. With clasp's `forget_on_step=varScores,signs` it
+forgets those on every step while keeping the grounding and the learned nogoods
+(`sampled_assumptions_2026-11-15.jsonl`):
+
+| spec | one solver, forgetting | paper's restarts | |
+|---|---|---|---|
+| exp_001 | 0.52, 31 s | 0.52, 195 s | same variety, 6x faster |
+| exp_002 | 0.77, 338 s | 0.77, 1419 s | same variety, 4x faster |
+| exp_003 | 0.86, 592 s | **0.78**, 1379 s | less varied, 2.3x faster |
+| exp_005 | **0.72**, 36 plans, 2849 s | 0.83, 44 plans, 1140 s | more varied, slower, fewer plans |
+| exp_006 | **0.63**, 2 s | 0.72, 97 s | more varied, 48x faster |
+| exp_007 | 0.63, 302 s | **0.53**, 724 s | less varied, 2.4x faster |
+
+Random decision signs alone do not help (exp_001: 0.84). The same forgetting does not help rise0.7
+(`rise_forget_2026-11-15.jsonl`): slightly better on exp_001 and exp_003, worse on exp_002 (0.76 vs
+0.67), so the recommendation keeps rise0.7 without it.
+
+**10. What did not work, kept for the record.** Projections (`#project` on lanes, cells, goal timings):
 varied but slow and rarely reach n (`diversity_2026-11-14.jsonl`). Random restarts on one Control
 (other seed, random signs): unreliable, 0.73 in one run and 0.98 in the next. A domain heuristic towards
 unused cells: no gain. A fixed IoU bound below 1: few plans on the hard specs. Capping θ below 1 and
@@ -178,8 +213,9 @@ but not more varied, and no gain on exp_005 either.
   footprints, and the restarts reach others through the driving constants. rise0.7 does not find them,
   0.93 even with 50000 conflicts, with and without the parameter space
   (`conflicts_extra_2026-11-15.jsonl`). combo over the parameter space comes close (0.85 vs 0.83, item
-  8), so for a spec like this the parameter space is where variety lies. Which spec needs which is not
-  known in advance, so the recommendation stays rise0.7.
+  8), and the paper's own instances in one solver with forgetting beat it (0.72, item 9), though slowly
+  and with 36 plans. So for a spec like this the parameter space is where variety lies. Which spec needs
+  which is not known in advance, so the recommendation stays rise0.7.
 - The IoU constraint optimises the measure the paper reports. Item 6 shows it also does well on others,
   except start configurations.
 - The budget is a knob between time and variety. 10000 conflicts worked on all seven specs.
@@ -205,6 +241,8 @@ but not more varied, and no gain on exp_005 either.
 | `restart_2026-11-15.jsonl` | BASIC and STRICT with restarts |
 | `sensitivity_2026-11-15.jsonl` | rise with θ starting at 0.5, 0.6, 0.8, 10000 conflicts |
 | `combo_2026-11-15.jsonl`, `risecombo_2026-11-15.jsonl` | combo and combo plus rise over the parameter space, 10000 conflicts |
+| `sample_assume.py` -> `sampled_assumptions_2026-11-15.jsonl` | the paper's sampled instances as assumptions in one solver, with forgetting |
+| `rise_forget_2026-11-15.jsonl` | rise0.7 with the same forgetting |
 | `diversity.py`, `diversity_2026-11-14.jsonl` | first prototype: projections, random restarts, cell bans |
 | `diverse_iou.py`, `iou_2026-11-15.jsonl` | first IoU prototype, fixed θ (superseded by `diverse.py`) |
 

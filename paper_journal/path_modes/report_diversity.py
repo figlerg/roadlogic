@@ -65,6 +65,20 @@ for r in sorted(load("sensitivity_*.jsonl") + load("combo_*.jsonl") + load("rise
     print(f"| {r['spec']} | {r['method']} | {r['plans']} | {cell(c, 10)} | {cell(c, 20)} | {cell(c, 50)} | {r['mean_similarity']} |")
 print()
 
+print("## The paper's sampled instances in one solver, and rise with forgetting\n")
+print("sampled_assumptions_*: the 50 instances of the paper's variability runs, as assumptions in one")
+print("solver that forgets its scores and signs each step. rise_forget_*: rise0.7 with the same forgetting.\n")
+print("| spec | method | plans | k = 10 | k = 20 | k = 50 | mean, all plans |")
+print("|---|---|---|---|---|---|---|")
+for r in sorted(load("sampled_assumptions_*.jsonl") + load("rise_forget_*.jsonl"), key=lambda r: (r["spec"], r["method"])):
+    if r.get("failed"):
+        print(f"| {r['spec']} | {r['method']} | failed: {r['failed']} | | | | |")
+        continue
+    c = r.get("curve")
+    label = r["method"] + (", forget" if r.get("forget") else "")
+    print(f"| {r['spec']} | {label} | {r['plans']} | {cell(c, 10)} | {cell(c, 20)} | {cell(c, 50)} | {r['mean_similarity']} |")
+print()
+
 print("## The candidate grid (wall-clock budget of 10 s per plan, 4 jobs at a time)\n")
 print("These depend on machine load, see the README. Kept for completeness.\n")
 for spec in SPECS:
