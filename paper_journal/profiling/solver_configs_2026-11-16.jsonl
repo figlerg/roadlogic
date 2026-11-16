@@ -1,0 +1,9 @@
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "auto", "threads": "1", "seconds": 872.3, "result": "UNSAT"}
+{"config": "frumpy", "threads": "1", "horizon": 9, "failed": "timeout (1500 s)"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "jumpy", "threads": "1", "seconds": 830.0, "result": "UNSAT"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "tweety", "threads": "1", "seconds": 740.1, "result": "UNSAT"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "handy", "threads": "1", "seconds": 450.4, "result": "UNSAT"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "trendy", "threads": "1", "seconds": 371.9, "result": "UNSAT"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "auto", "threads": "4,compete", "seconds": 269.1, "result": "UNSAT"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "crafty", "threads": "1", "seconds": 1169.1, "result": "UNSAT"}
+{"spec": "experiments_src/exp_004/in/spec.osc", "horizon": 9, "config": "many", "threads": "4,compete", "seconds": 357.0, "result": "UNSAT"}
