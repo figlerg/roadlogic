@@ -4,7 +4,9 @@ Three groups:
 
   paper          the 14 experiments of experiments_src, with the paper's N, its 100s planning
                  limit for the variability runs, and the paper's own sampled instances, so the
-                 comparison is instance for instance. experiments_src itself is only read.
+                 comparison is instance for instance. experiments_src itself is only read. The
+                 seven vanilla runs use the pure OpenSCENARIO versions in specs_paper/, without the
+                 paper's hand-written rule injections.
   new            specifications exercising what is new: keeps, speed, durations on segments.
   inconsistent   specifications that contradict themselves. Success is finding no plan.
 
@@ -38,6 +40,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(HERE, "out")
 SPECS = os.path.join(HERE, "specs")
+# The paper's seven specs in pure OpenSCENARIO: what the paper did with hand-written ASP (car1's lane in
+# exp_004, the static obstacle in exp_005 and exp_007) is written with keep and start modifiers here, so
+# the vanilla runs need no rule injection. check_specs_paper.py compares them with the originals.
+SPECS_PAPER = os.path.join(HERE, "specs_paper")
 CR_SCENARIO = os.path.join(ROOT, "cr_scenarios", "threelanes.xml")
 PYTHON = sys.executable
 
@@ -196,8 +202,7 @@ def run_one(name, sim_jobs):
     started = time.time()
     try:
         if name in PAPER_VANILLA:
-            source = os.path.join(ROOT, "experiments_src", name, "in")
-            times = vanilla(name, os.path.join(source, "spec.osc"), os.path.join(source, "rule_injection.lp"),
+            times = vanilla(name, os.path.join(SPECS_PAPER, f"{name}.osc"), None,
                             10, sim_jobs)
         elif name in PAPER_VARIABILITY:
             times = variability(name, sim_jobs)

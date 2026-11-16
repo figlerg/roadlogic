@@ -1,0 +1,32 @@
+# The HSCC paper's exp_004, overtake with car1 held in its lane. The paper did this with a hand-written
+# ASP constraint (experiments_src/exp_004/in/rule_injection.lp, no lateral velocity for car1). Here it is
+# a scenario-level keep, so the specification is pure OpenSCENARIO and needs no rule injection.
+#
+# Lane 2 is car1's lane at the start: ego starts in lane 2 (the planner's default start, which this spec
+# does not override) and car1 in ego's lane. keep_lane() on car1's drive says the same without naming
+# the lane, but its keep is scoped to the drive and goes through the per-segment keep windows, which
+# made planning twice as slow as the injection. The scenario-level keep is a single constraint and was
+# faster than the injection (645 s vs 899 s for 10 plans, check_specs_paper.py).
+
+scenario overtake:
+    car1: car
+    ego: car
+
+    keep(car1.lane == 2)
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            A: ego.drive() with:
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+                position([10m..20m], behind:car1, at:start)
+
+            B: ego.drive() with:
+                position([1m..10m], ahead_of:car1, at:end)
+
+            C: ego.drive() with:
+                lane(same_as: car1, at: end)
+                position([5m..10m], ahead_of: car1, at: end)

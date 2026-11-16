@@ -472,15 +472,6 @@ class Planner:
         remaining = set(actor_ids) - grounded
         remaining = sorted(remaining)
 
-        try:
-            remaining.remove('obstacle')
-            warnings.warn(
-                "'obstacle' is a special variable name and is used to encode static obstacles. "
-                "Make sure this is what you want."
-            )
-        except (KeyError, ValueError):
-            pass
-
         pair_subconstraints = defaultdict(set)   # each pair of actors may have relational constraints
         abs_constraints = defaultdict(set)       # absolute constraints per actor
 
@@ -498,6 +489,16 @@ class Planner:
                 pair_subconstraints[key_flipped].add(con)
             elif isinstance(con, AbsoluteConstraint):
                 abs_constraints[con.actor].add(con)
+
+        # 'obstacle' is a special name: dynamics.lp lets only it stand still. Its start used to come from
+        # an init(...) fact injected by hand, so it is not grounded here, unless the specification places
+        # it itself with an absolute lane and position at its start.
+        if 'obstacle' in remaining and not {"l", "p"} <= {c.modifier.value for c in abs_constraints.get('obstacle', set())}:
+            remaining.remove('obstacle')
+            warnings.warn(
+                "'obstacle' is a special variable name and is used to encode static obstacles. "
+                "Its start is not taken from the specification, it has to be given as an init fact."
+            )
 
         # --- if we are in absolute-aware mode, first ground actors that are fully constrained absolutely ---
         if has_absolute:

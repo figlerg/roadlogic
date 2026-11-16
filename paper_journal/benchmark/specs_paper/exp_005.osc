@@ -1,0 +1,37 @@
+# The HSCC paper's exp_005, overtake with a static obstacle. The paper placed the obstacle and kept it
+# still with hand-written ASP (experiments_src/exp_005/in/rule_injection.lp). Here it is pure
+# OpenSCENARIO: the obstacle starts in lane 2 at 30 m, a scenario-level keep holds its speed at 0 (a single
+# constraint, as fast as the injection, while a keep inside its drive took 5 times longer), and ego's start, which the
+# planner used to fix implicitly at 0 m in lane 2, is written out. The name obstacle is still needed,
+# since the dynamics allow only a car of that name to stand still.
+
+scenario overtake:
+    car1: car
+    ego: car
+    obstacle: car
+
+    keep(obstacle.speed == 0mps)
+
+    do parallel(duration:  [3s..20s]):
+
+        parallel:
+            c0: car1.drive()
+
+            c1: serial:
+                A: ego.drive() with:
+                    lane(2, at: start)
+                    position(0m, at: start)
+                    lane(same_as:car1, at:start)
+                    lane(left_of:car1, at:end)
+                    position([10m..20m], behind:car1, at:start)
+
+                B: ego.drive() with:
+                    position([1m..10m], ahead_of:car1, at:end)
+
+                C: ego.drive() with:
+                    lane(same_as: car1, at: end)
+                    position([30m..40m], ahead_of: car1, at: end)
+
+        c2: obstacle.drive() with:
+            lane(2, at: start)
+            position(30m, at: start)
