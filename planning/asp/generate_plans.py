@@ -7,6 +7,7 @@ import time
 import cProfile
 import numpy as np
 import os
+import shlex
 import pickle
 import pstats
 import shutil
@@ -31,11 +32,14 @@ def plan_generator(files, rules=None, imin=1, imax=20, override_files=False, sav
     @raise TimeoutError: when a horizon starts after time_limit seconds.
     '''
     conf = Conf(imin, imax, "SAT")
-    ctl = Control()
+    # extra clingo options, e.g. "--configuration=trendy", see paper_journal/profiling. Threads
+    # ("--parallel-mode=4,compete") make the order of the plans depend on timing.
+    clasp_args = shlex.split(os.environ.get("ROADLOGIC_CLASP_ARGS", ""))
+    ctl = Control(clasp_args)
 
     ctl.configuration.solve.models = 0  # enumerate lazily, the caller stops pulling when it has enough
 
-    if deterministic:
+    if deterministic and not any(a.startswith("--parallel-mode") for a in clasp_args):
         ctl.configuration.solve.parallel_mode=1
 
     ## NONE OF THESE HELP WITH THE SEARCH TREE ORDER
