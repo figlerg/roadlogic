@@ -12,9 +12,10 @@ Three groups:
 
 Every simulated experiment is planned once and simulated under two settings:
 
-  now        the defaults before 2026-11-18: no speed patch (the name is kept for report.py)
-  speedfix   the current defaults: the Frenetix speed patch on, with speed windows spanning the
-             planned speeds, only for cars whose speed the specification constrains
+  paper      the HSCC paper's simulation settings on the current code: no speed patch, no speed in
+             the goals, cars leave the simulation at their last waypoint
+  default    the current defaults: the speed fix (tests/demo.ipynb section 8), and cars keep driving
+             2 s after the plan's end
 
 Output goes to paper_journal/benchmark/out/, which git ignores. report.py turns it into tables.
 
@@ -61,6 +62,11 @@ NEW = {
     "speed_relative": "ego faster than car1 at the end of a segment",
     "speed_rampup_then_hold_timed": "reach 6 m/s within 2 to 4 s, then hold it for 3 to 6 s",
     "duration_invocation": "durations on two invocations, one starting mid-scenario",
+    "duration_nested": "durations on a parallel inside a serial, at two levels",
+    "keep_speed_modifier": "the keep_speed() shorthand: hold the start speed for 3 to 5 s",
+    "speed_rampup_then_hold": "reach 6 m/s, then hold it: needs the speed fix in simulation",
+    "one_of_nested": "a choice: left in one segment, or right and keep that lane; both are planned",
+    "one_of_first_impossible": "a choice whose first alternative is impossible: only planning every path finds a plan",
 }
 INCONSISTENT = {
     "keep_inconsistent_direct": "two lane keeps on one car",
@@ -70,11 +76,8 @@ INCONSISTENT = {
 }
 NEW_N = 10
 CONFIGS = {
-    # the defaults before the speed fix became the default (2026-11-18)
-    "now": {"ROADLOGIC_VELOCITY_PATCH": "0", "ROADLOGIC_GOAL_VELOCITY_SOURCE": "departure",
-            "ROADLOGIC_GOAL_VELOCITY_SCOPE": "all", "ROADLOGIC_GOAL_VELOCITY_TOLERANCE": "1.0"},
-    "speedfix": {"ROADLOGIC_VELOCITY_PATCH": "1", "ROADLOGIC_GOAL_VELOCITY_SOURCE": "range",
-                 "ROADLOGIC_GOAL_VELOCITY_SCOPE": "constrained"},
+    "paper": {"ROADLOGIC_VELOCITY_PATCH": "0", "ROADLOGIC_GOAL_VELOCITY": "0", "ROADLOGIC_FINAL_SLACK": "0"},
+    "default": {},
 }
 
 
@@ -134,8 +137,9 @@ def simulate(folder, scenarios, config, sim_jobs, log, blueprint=None):
 
 
 def scenarios_for(folder, config, log):
-    """The scenario folder for a setting. The speedfix windows need the plans mapped again."""
-    if config == "now":
+    """The scenario folder for a setting. Planning maps the plans with the defaults, any other setting
+    needs them mapped again."""
+    if config == "default":
         return os.path.join(folder, "cr_scenarios"), {}
     target = os.path.join(folder, f"cr_scenarios_{config}")
     ok, seconds = run([PYTHON, os.path.join(HERE, "remap.py"), "--exp-out", folder,

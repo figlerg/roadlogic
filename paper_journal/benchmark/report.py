@@ -89,7 +89,7 @@ def cell(v):
 
 def paper_table():
     rows = ["| experiment | planning s, paper | planning s, now | planned / no plan / timeout, paper | same, now "
-            "| positive, paper | paper traces, current monitor | positive, now | positive, speedfix |",
+            "| positive, paper | paper traces, current monitor | positive, paper settings now | positive, defaults now |",
             "|---|---:|---:|---|---|---|---|---|---|"]
     for exp in PAPER_VANILLA + PAPER_VARIABILITY:
         paper_out = os.path.join(ROOT, "experiments_src", exp, "out")
@@ -105,14 +105,14 @@ def paper_table():
             exp, str(paper_planning_seconds(exp)), str(times.get("plan", "not run")),
             " / ".join(map(str, paper_status)), " / ".join(map(str, now_status)) if now_status else "not run",
             cell(paper_v), cell(control(exp)),
-            cell(verdicts(os.path.join(now_out, "sim_now", "summary_log.json"))),
-            cell(verdicts(os.path.join(now_out, "sim_speedfix", "summary_log.json"))),
+            cell(verdicts(os.path.join(now_out, "sim_paper", "summary_log.json"))),
+            cell(verdicts(os.path.join(now_out, "sim_default", "summary_log.json"))),
         ]) + " |")
     return rows
 
 
 def new_table():
-    rows = ["| example | what it shows | planning s | plans | positive, now | positive, speedfix |",
+    rows = ["| example | what it shows | planning s | plans | positive, paper settings | positive, defaults |",
             "|---|---|---:|---:|---|---|"]
     for name, what in NEW.items():
         out = os.path.join(OUT, name)
@@ -120,8 +120,8 @@ def new_table():
         rows.append("| " + " | ".join([
             f"`{name}`", what, str(times.get("plan", "not run")),
             str(len(glob.glob(os.path.join(out, "cr_scenarios", "*.xml")))) if times else "not run",
-            cell(verdicts(os.path.join(out, "sim_now", "summary_log.json"))),
-            cell(verdicts(os.path.join(out, "sim_speedfix", "summary_log.json"))),
+            cell(verdicts(os.path.join(out, "sim_paper", "summary_log.json"))),
+            cell(verdicts(os.path.join(out, "sim_default", "summary_log.json"))),
         ]) + " |")
     return rows
 

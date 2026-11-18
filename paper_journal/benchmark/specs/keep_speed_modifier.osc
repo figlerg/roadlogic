@@ -1,0 +1,19 @@
+# keep_speed() surface form, 8.9.6: "Maintain absolute speed of the actor for the current period."
+# The period is the invocation the modifier is written in, here A0 only.
+#
+# A0 lasts at least 3s, so the keep covers at least 4 steps. A1 then has to reach a different
+# speed. A keep that wrongly covered the whole scenario would make this unsatisfiable, and a keep
+# that was dropped would let the speed vary during A0.
+
+scenario cruise_then_accelerate:
+    car1: car
+
+    do serial:
+        A0: car1.drive(duration: [3s..5s]) with:
+            lane(2, at: start)
+            position(20m, at: start)
+            speed(5mps, at: start)
+            keep_speed()
+
+        A1: car1.drive() with:
+            speed(10mps, at: end)

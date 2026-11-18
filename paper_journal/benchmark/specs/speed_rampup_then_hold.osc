@@ -1,0 +1,18 @@
+# Realistic shape for a speed keep: the car is given a segment to reach the speed, and only the
+# second segment asks it to hold it. Every simulated car starts from a standstill, so a keep on
+# the first segment can never hold in simulation, no matter how good the motion planner is.
+#
+# This is the spec to use when measuring how well a simulation tracks a requested speed, see
+# tests/check_speed_fluctuation.py.
+
+scenario ramp_up_then_hold:
+    car1: car
+
+    do serial:
+        A0: car1.drive() with:
+            lane(2, at: start)
+            position(0m, at: start)
+            speed(6mps, at: end)
+
+        A1: car1.drive(duration: [3s..6s]) with:
+            speed(6mps, at: all)

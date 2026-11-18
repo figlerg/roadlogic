@@ -1,0 +1,22 @@
+# A choice between two continuations of different length, with durations at several levels and a keep
+# inside one branch. car1 starts in the middle lane and then either moves left in one segment, or moves
+# right and holds that lane for a second segment.
+#
+# The automaton branches after the first segment, so the monitor follows both alternatives at once,
+# and a trace is accepted when either of them reaches the end. The planner commits to one of them.
+
+scenario choose_a_side:
+    car1: car
+
+    do serial(duration: [4s..12s]):
+        start: car1.drive(duration: [1s..3s]) with:
+            lane(2, at: start)
+            position(0m, at: start)
+        choice: one_of:
+            left: car1.drive(duration: [2s..4s]) with:
+                lane(1, at: end)
+            right: serial(duration: [3s..6s]):
+                r1: car1.drive(duration: [1s..3s]) with:
+                    lane(3, at: end)
+                r2: car1.drive(duration: [2s..3s]) with:
+                    keep(car1.lane == 3)

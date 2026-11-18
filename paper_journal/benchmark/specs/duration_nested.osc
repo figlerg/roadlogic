@@ -1,0 +1,19 @@
+# Durations on nested compositions. The path is init -> (a,b) -> (c,d) -> fin, so "first" is
+# phase 1 and spans 0..T1, and "second" is phase 2 and spans T1..T2. So 2 <= T1 <= 3 and
+# 4 <= T2 - T1 <= 6. There is no duration on the outer serial.
+
+scenario two_stages:
+    car1: car
+    car2: car
+
+    do serial:
+        first: parallel(duration: [2s..3s]):
+            a: car1.drive() with:
+                lane(1, at: start)
+                position(0m, at: start)
+            b: car2.drive() with:
+                lane(same_as: car1, at: start)
+                position([10m..20m], ahead_of: car1, at: start)
+        second: parallel(duration: [4s..6s]):
+            c: car1.drive()
+            d: car2.drive()
