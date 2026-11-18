@@ -38,8 +38,14 @@ from plan_checks import goal_witnesses, states  # noqa: E402
 
 # The switches that change how a plan is executed. None of them changes the plans themselves.
 PAPER = {"ROADLOGIC_GOAL_VELOCITY": "0", "ROADLOGIC_VELOCITY_PATCH": "0", "ROADLOGIC_FINAL_SLACK": "0"}
-RECOMMENDED = {"ROADLOGIC_GOAL_VELOCITY": "1", "ROADLOGIC_VELOCITY_PATCH": "0"}
-PATCHED = {"ROADLOGIC_GOAL_VELOCITY": "1", "ROADLOGIC_VELOCITY_PATCH": "1"}
+# The defaults, since 2026-11-18: the speed fix of section 8.
+DEFAULT = {}
+# The defaults before that, which most cached runs of sections 1 to 7 were made with.
+RECOMMENDED = {"ROADLOGIC_GOAL_VELOCITY": "1", "ROADLOGIC_VELOCITY_PATCH": "0",
+               "ROADLOGIC_GOAL_VELOCITY_SOURCE": "departure", "ROADLOGIC_GOAL_VELOCITY_SCOPE": "all",
+               "ROADLOGIC_GOAL_VELOCITY_TOLERANCE": "1.0"}
+# The velocity patch as first committed, with the off-by-one window (section 8).
+PATCHED = dict(RECOMMENDED, ROADLOGIC_VELOCITY_PATCH="1")
 # The fix for the collision in section 8: speed windows from the plan's average speed over each
 # stretch, and only for the cars whose speed the specification constrains.
 FIX = dict(PATCHED, ROADLOGIC_GOAL_VELOCITY_SOURCE="segment", ROADLOGIC_GOAL_VELOCITY_SCOPE="constrained")
@@ -576,6 +582,82 @@ def plot_simulated(runs, actors, metric="CURRV", model=None, windows_from=None, 
         ax.spines[["top", "right"]].set_visible(False)
     axes[0][0].set_ylabel(ylabel)
     axes[0][-1].legend(fontsize=8.5, loc="upper left", bbox_to_anchor=(1.01, 1))
+    if title:
+        fig.suptitle(title, fontsize=11)
+    fig.tight_layout()
+    return fig
+
+
+def scenario_goals(name):
+    """{car: [(t_from, t_to, x_from, x_to, v_low, v_high)]}, the goal boxes a run handed to the
+    simulator: be at this stretch of road (along the road, in metres) during this time (in seconds),
+    and, when the goal has one, at a speed in this window. v_low and v_high are None without one."""
+    import xml.etree.ElementTree as ET
+    from commonroad_extensions.plan_execution.id_hash import decode
+
+    goals = {}
+    for problem in ET.parse(os.path.join(OUT, name, "scenario.xml")).getroot().iter("planningProblem"):
+        rows = []
+        for goal in problem.iter("goalState"):
+            time = goal.find("time")
+            rect = goal.find("position")
+            rect = rect.find("rectangle") if rect is not None else None
+            if rect is None:
+                continue  # the hidden last goal, time only
+            x, half = float(rect.find("center").find("x").text), float(rect.find("length").text) / 2
+            velocity = goal.find("velocity")
+            low, high = ((float(velocity.find("intervalStart").text), float(velocity.find("intervalEnd").text))
+                         if velocity is not None else (None, None))
+            rows.append((int(time.find("intervalStart").text) / 10, int(time.find("intervalEnd").text) / 10,
+                         x - half, x + half, low, high))
+        goals[decode(int(problem.get("id")))] = rows
+    return goals
+
+
+CAR_COLOURS = {"car1": "#1565c0", "ego": "#c25e00", "car2": "#6a1b9a"}
+
+
+def plot_goal_boxes(runs, actors, title=None):
+    """One column per run (runs: {label: run name}), position over time on top and speed below, one
+    line per car. The goals the run handed to the simulator are boxes in the car's colour: where and
+    when on top, the speed window below. A goal is met when the car's line passes through its box."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+
+    fig, axes = plt.subplots(2, len(runs), figsize=(3.8 * len(runs) + 0.6, 5.0), squeeze=False,
+                             sharex=True, sharey="row")
+    for col, (label, name) in enumerate(runs.items()):
+        goals, position, speed = scenario_goals(name), stored_trace(name, "LONGPOS"), stored_trace(name, "CURRV")
+        top, bottom = axes[0][col], axes[1][col]
+        windows = False
+        for actor in actors:
+            colour = CAR_COLOURS.get(actor, PLAN_COLOUR)
+            for trace, ax in ((position, top), (speed, bottom)):
+                if actor in trace:
+                    series = trace[actor].dropna()
+                    ax.plot(series.index, series.values, color=colour, lw=1.6, zorder=3,
+                            label=actor if ax is top else None)
+            for t0, t1, x0, x1, low, high in goals.get(actor, []):
+                # a box 1 m long would be a hairline at this scale, so it is drawn at least 3 m tall
+                mid, height = (x0 + x1) / 2, max(x1 - x0, 3.0)
+                top.add_patch(Rectangle((t0, mid - height / 2), t1 - t0, height, facecolor=colour, alpha=0.25,
+                                        edgecolor=colour, lw=1))
+                if low is not None:
+                    windows = True
+                    bottom.add_patch(Rectangle((t0, low), t1 - t0, high - low, facecolor=colour, alpha=0.25,
+                                               edgecolor=colour, lw=1))
+        if not windows:
+            bottom.text(0.5, 0.95, "no speed windows", transform=bottom.transAxes, ha="center", va="top",
+                        fontsize=8, color="#5a6570")
+        top.set_title(label, fontsize=10)
+        bottom.set_xlabel("simulated time [s]")
+        for ax in (top, bottom):
+            ax.grid(alpha=0.25)
+            ax.spines[["top", "right"]].set_visible(False)
+    axes[0][0].set_ylabel("position along the road [m]")
+    axes[1][0].set_ylabel("speed [m/s]")
+    if len(actors) > 1:
+        axes[0][-1].legend(fontsize=8, loc="upper left")
     if title:
         fig.suptitle(title, fontsize=11)
     fig.tight_layout()

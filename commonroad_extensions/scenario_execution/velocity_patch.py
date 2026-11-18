@@ -1,19 +1,20 @@
-"""Aim the motion planner at the speed the plan asked for, waypoint by waypoint.
+"""Keep a simulated car at the speed the plan asked for, waypoint by waypoint.
 
-The stock velocity planner in Frenetix was written for a planning problem with a single goal. It
-reads `goal.state_list[0]` and nothing else, so with our multi-goal problems it keeps aiming at the
-first waypoint for the whole run. Once the car is past it the distance goes negative, the remaining
-time runs out, and the desired velocity falls back to whatever the car is doing already. That is
-why a simulated car overshoots a planned speed by several mps.
+Each car gets its goals one at a time (macro_agent_simulation.MacroAgent). Frenetix's velocity planner
+aims at the speed that reaches the current goal on time, distance left over time left, and never reads
+the speed window a goal can carry. A simulated car starts from rest and runs late, so it speeds up to
+catch up, past the speed the specification asks for.
 
 This patch replaces `calculate_desired_velocity` with one that
 
   1. picks the goal state the car is currently heading for, by time step,
-  2. aims at the speed needed to cover the remaining distance in the remaining time,
-  3. clamps that into the velocity window the plan put on that waypoint, when there is one,
+  2. aims at the speed needed to cover the remaining distance in the remaining time, as Frenetix does,
+  3. clamps that into the velocity window of that goal, when it has one,
   4. falls back to the original method whenever it cannot do the above.
 
-The stock clipping against the current velocity is kept, so the target still moves smoothly.
+Without a window it behaves as Frenetix as shipped (identical traces). The windows are built in
+map_plan.py, only for cars whose speed the specification constrains. The stock clipping against the
+current velocity is kept, so the target still moves smoothly.
 
 Reversing it: set ROADLOGIC_VELOCITY_PATCH=0, or drop the apply_velocity_patch() call in
 stitched_execution.py. Nothing in Frenetix itself is edited.
@@ -23,14 +24,13 @@ import os
 
 from cr_scenario_handler.utils.velocity_planner import VelocityPlanner
 
-# Off by default: as first committed it made the paper's benchmark collide. The fix is the speed
-# windows in map_plan.py with SOURCE=range and SCOPE=constrained, see tests/demo.ipynb section 8.
-ENABLED = os.environ.get("ROADLOGIC_VELOCITY_PATCH", "0") != "0"
+# On by default, together with the speed windows of map_plan.py (SOURCE=range, SCOPE=constrained),
+# see tests/demo.ipynb section 8. 0 gives Frenetix as shipped, as in the HSCC paper.
+ENABLED = os.environ.get("ROADLOGIC_VELOCITY_PATCH", "1") != "0"
 
 # How the waypoint's speed window is used. "clamp" forces the target into it. "average" ignores it
-# and aims only at the speed needed to reach the waypoint on time. The window comes from the plan's
-# speed at the waypoint, which in dynamics.lp is the speed the car leaves that step with, not the one
-# it arrives with, so for a jerky plan it can point the wrong way. See tests/demo.ipynb, section 8.
+# and aims only at the speed needed to reach the waypoint on time. The window is built in map_plan.py,
+# see GOAL_VELOCITY_SOURCE there and tests/demo.ipynb, section 8.
 MODE = os.environ.get("ROADLOGIC_VELOCITY_PATCH_MODE", "clamp")
 
 _ATTRIBUTE = "_roadlogic_original_calculate_desired_velocity"

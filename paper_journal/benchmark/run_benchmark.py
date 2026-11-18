@@ -12,9 +12,9 @@ Three groups:
 
 Every simulated experiment is planned once and simulated under two settings:
 
-  now        the current defaults
-  speedfix   the Frenetix speed patch on, with speed windows spanning the planned speeds, only for
-             cars whose speed the specification constrains
+  now        the defaults before 2026-11-18: no speed patch (the name is kept for report.py)
+  speedfix   the current defaults: the Frenetix speed patch on, with speed windows spanning the
+             planned speeds, only for cars whose speed the specification constrains
 
 Output goes to paper_journal/benchmark/out/, which git ignores. report.py turns it into tables.
 
@@ -70,7 +70,9 @@ INCONSISTENT = {
 }
 NEW_N = 10
 CONFIGS = {
-    "now": {"ROADLOGIC_VELOCITY_PATCH": "0"},
+    # the defaults before the speed fix became the default (2026-11-18)
+    "now": {"ROADLOGIC_VELOCITY_PATCH": "0", "ROADLOGIC_GOAL_VELOCITY_SOURCE": "departure",
+            "ROADLOGIC_GOAL_VELOCITY_SCOPE": "all", "ROADLOGIC_GOAL_VELOCITY_TOLERANCE": "1.0"},
     "speedfix": {"ROADLOGIC_VELOCITY_PATCH": "1", "ROADLOGIC_GOAL_VELOCITY_SOURCE": "range",
                  "ROADLOGIC_GOAL_VELOCITY_SCOPE": "constrained"},
 }

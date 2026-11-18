@@ -76,21 +76,24 @@ def get_orientation_from_xy(xy: np.ndarray, coordinate_system: CoordinateSystem)
 # fall back to the older behaviour, where a goal state constrained position and time only, which
 # is how the HSCC paper's simulations were produced.
 CONSTRAIN_GOAL_VELOCITY = os.environ.get("ROADLOGIC_GOAL_VELOCITY", "1") != "0"
-GOAL_VELOCITY_TOLERANCE = float(os.environ.get("ROADLOGIC_GOAL_VELOCITY_TOLERANCE", "1.0"))
-# Which speed of the plan the window is built around. "departure" is the plan's speed at the
-# waypoint. In dynamics.lp a car's position at t is its position at t-1 plus its speed at t-1, so
-# that is the speed it leaves the waypoint with, not the one it arrives with, and for a jerky plan it
-# can be far from both. "segment" is the average speed over the stretch leading to the waypoint,
-# distance over time since the previous one, which is what the positions in the plan imply. "range"
-# spans the lowest to the highest speed the plan uses on that stretch, which also covers a stretch
-# where the plan accelerates and the speed at its end is what the specification asks for.
-GOAL_VELOCITY_SOURCE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SOURCE", "departure")
+# 0.5 is what the monitor accepts for a speed (EQUALITY_TOLERANCE in monitoring/Monitor.py). With 1.0 a
+# car asked to hold 6 m/s settled at 6.6 and failed the monitor (tests/demo.ipynb, section 8).
+GOAL_VELOCITY_TOLERANCE = float(os.environ.get("ROADLOGIC_GOAL_VELOCITY_TOLERANCE", "0.5"))
+# Which speed of the plan the window is built around. "range", the default, spans the lowest to the
+# highest speed the plan drives on the stretch leading to the waypoint, which also covers a stretch
+# where the plan accelerates and the speed at its end is what the specification asks for. "segment"
+# is the average speed over that stretch, distance over time since the previous waypoint. "departure"
+# is the plan's speed at the waypoint, the first version: in dynamics.lp a car's position at t is its
+# position at t-1 plus its speed at t-1, so that is the speed it leaves the waypoint with, not the one
+# it arrives with (an off-by-one error, kept only to reproduce old runs).
+GOAL_VELOCITY_SOURCE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SOURCE", "range")
 # Which cars get a speed window. "all" gives one to every car. "constrained" gives one only to cars
 # whose speed the specification constrains. Every simulated car starts from rest while the plan does
 # not, so a car runs behind the plan's schedule, and catching up means driving faster than planned.
 # A window forbids that. That is right for a car whose speed the specification fixes, and wrong for
-# one that has to complete an overtake on time. See tests/demo.ipynb, section 8.
-GOAL_VELOCITY_SCOPE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SCOPE", "all")
+# one that has to complete an overtake on time. See tests/demo.ipynb, section 8. "constrained" is the
+# default.
+GOAL_VELOCITY_SCOPE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SCOPE", "constrained")
 # Seconds every car keeps driving after the plan's end. Simulated cars start from rest and drift off
 # the plan, and a car used to leave the simulation as soon as it reached its last waypoint, or passed
 # a waypoint it had missed. Either cut the monitored trace for every car. With slack, each car gets a
