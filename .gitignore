@@ -248,3 +248,8 @@ demo_output/
 
 # output of paper_journal/benchmark, large and regenerable
 paper_journal/benchmark/out/
+
+# local notes and logs of the overnight run
+overnight_howto.txt
+overnight.log
+paper_journal/plots/compare/
