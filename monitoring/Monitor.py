@@ -807,8 +807,10 @@ class Monitor:
                 if verbose:
                     print(self.state)
 
-                flat_state = {self._flattened_str(k): self._flattened_value(v)
-                              for k, v in self.state.items()}
+                # a fixed column order: the locations come from a set, whose order changes from run
+                # to run with Python's string hashing. Initial first, final last, the rest by name.
+                ordered = sorted(self.state, key=lambda loc: (loc.final, not loc.initial, str(loc.id)))
+                flat_state = {self._flattened_str(k): self._flattened_value(self.state[k]) for k in ordered}
                 states_for_writer.append(flat_state)
 
 
@@ -839,8 +841,8 @@ class Monitor:
         """Verdicts as numbers, so every ring writes the same kind of CSV.
 
         The boolean ring gives True or False, where False means satisfied, because the algebra
-        orders False below True. aggregate_monitoring_results.py reads the last column as a float
-        and counts a run as a positive trace when it is 0, so False has to reach it as 0.
+        orders False below True. aggregate_monitoring_results.py reads the final location's column as
+        a float and counts a run as a positive trace when it is 0, so False has to reach it as 0.
         """
         if isinstance(value, bool):
             return int(value)

@@ -50,8 +50,10 @@ def aggregate_monitoring_results(parent_folder: str, blueprint_folder: str | Non
                 for row in reader:
                     last_row = row
                 if last_row is not None:
-                    fin = reader.fieldnames[-1]
-                    cost = float(last_row[fin])
+                    # the final location's column, found by its label. It used to be taken as the last
+                    # column, which held only when the monitor happened to write it last (2026-11-20).
+                    finals = [c for c in reader.fieldnames if "final=True" in c] or [reader.fieldnames[-1]]
+                    cost = min(float(last_row[c]) for c in finals)
         else:
             if not has_folder:
 
