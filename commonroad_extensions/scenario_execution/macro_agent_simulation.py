@@ -89,8 +89,9 @@ from commonroad_extensions.scenario_execution.stitched_execution import custom_v
 
 from shapely.geometry import Point
 
-# Seconds of slack after the plan's end, see FINAL_SLACK in plan_execution/map_plan.py.
-FINAL_SLACK = int(os.environ.get("ROADLOGIC_FINAL_SLACK", "2"))
+# How long cars keep driving after their last waypoint, see FINAL_SLACK in plan_execution/map_plan.py.
+FINAL_SLACK = os.environ.get("ROADLOGIC_FINAL_SLACK", "end")
+KEEP_DRIVING = FINAL_SLACK != "0"
 
 
 class MacroAgent(Agent):
@@ -351,12 +352,20 @@ class MacroAgent(Agent):
         # With final slack, a goal the agent drove past without reaching it, too early, too late or at
         # the wrong speed, is skipped rather than ending the agent. The monitor judges the trace.
         last_goal = len(self.original_planning_problem.goal.state_list) - 1
-        while (FINAL_SLACK > 0 and self.agent_state.status != AgentStatus.COLLISION
+        while (KEEP_DRIVING and self.agent_state.status != AgentStatus.COLLISION
                and self.current_goal_index < last_goal and self._passed_goal()):
             self._log_missed_goal(time_step)
             self.current_goal_index += 1
             self._last_inside_goal = None
             self._setup_planning_problem()
+
+        # Past its last waypoint and on the hidden last goal: the car only holds its speed now. With
+        # FINAL_SLACK "end" the simulation stops once every car is cruising or done, see
+        # MacroAgentSimulation.all_cruising. The flag travels with agent_state to the main process.
+        # A static obstacle never needs the simulation to go on for its sake.
+        on_hidden_goal = (self.current_goal_index == last_goal
+                          and not hasattr(self.original_planning_problem.goal.state_list[last_goal], "position"))
+        self.agent_state.cruising = FINAL_SLACK == "end" and (on_hidden_goal or self.is_static_object)
 
         # Check for collisions in previous timestep
         if self.agent_state.status == AgentStatus.COLLISION:
@@ -702,7 +711,7 @@ class MacroAgentSimulation(Simulation):
         running = super().step_sequential_simulation()
 
         # Ensure to forcefully stop the simulation if the global timeout triggers
-        return running and self.global_timestep <= self.expected_last_time_step
+        return running and self.global_timestep <= self.expected_last_time_step and not self.all_cruising()
     
     def _step_parallel_simulation(self):
         """
@@ -782,7 +791,20 @@ class MacroAgentSimulation(Simulation):
         self.replanning_counter += 1    
 
         # Ensure to forcefully stop the simulation if the global timeout triggers
-        return running and self.global_timestep <= self.expected_last_time_step
+        return running and self.global_timestep <= self.expected_last_time_step and not self.all_cruising()
+
+    def all_cruising(self):
+        """True when every car is past its last waypoint (cruising) or done, and one is cruising: then
+        nothing is left to simulate. Only with FINAL_SLACK "end"."""
+        if FINAL_SLACK != "end":
+            return False
+        states = [agent.agent_state for agent in self.agents]
+        cruising = [getattr(s, "cruising", False) for s in states]
+        done = [s.status > AgentStatus.RUNNING for s in states]
+        if any(cruising) and all(c or d for c, d in zip(cruising, done)):
+            self.msg_logger.critical(f"Every car is past its last waypoint at {self.global_timestep}, simulation ends")
+            return True
+        return False
 
     def check_collision(self):
         """

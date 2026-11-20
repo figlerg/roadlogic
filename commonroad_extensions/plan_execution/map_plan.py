@@ -94,14 +94,19 @@ GOAL_VELOCITY_SOURCE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SOURCE", "range")
 # one that has to complete an overtake on time. See tests/demo.ipynb, section 8. "constrained" is the
 # default.
 GOAL_VELOCITY_SCOPE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SCOPE", "constrained")
-# Seconds every car keeps driving after the plan's end. Simulated cars start from rest and drift off
+# How long a car keeps driving after its last waypoint. Simulated cars start from rest and drift off
 # the plan, and a car used to leave the simulation as soon as it reached its last waypoint, or passed
-# a waypoint it had missed. Either cut the monitored trace for every car. With slack, each car gets a
-# hidden last goal with a time and nothing else, the same time for all cars: after its last waypoint
-# a car holds its speed in its lane, until the plan's end plus the slack. A missed waypoint no longer
-# removes a car either, see macro_agent_simulation.py, which logs it in missed_waypoints.csv. 0 turns
-# all of this off, as in the HSCC paper.
-FINAL_SLACK = int(os.environ.get("ROADLOGIC_FINAL_SLACK", "2"))
+# a waypoint it had missed. Either cut the monitored trace for every car. Now each car gets a hidden
+# last goal with a time and nothing else, the same for all cars: after its last waypoint a car holds
+# its speed in its lane. A missed waypoint no longer removes a car either, see
+# macro_agent_simulation.py, which logs it in missed_waypoints.csv.
+#   "end"  the default: every car keeps driving until the simulation ends, which is when the last car
+#          has dealt with its last waypoint, at the latest FINAL_CAP seconds after the plan's end.
+#   <n>    every car keeps driving until n seconds after the plan's end (the 2026-11 behaviour, n=2).
+#   0      all of this off, as in the HSCC paper.
+FINAL_SLACK = os.environ.get("ROADLOGIC_FINAL_SLACK", "end")
+FINAL_CAP = int(os.environ.get("ROADLOGIC_FINAL_CAP", "10"))
+KEEP_DRIVING = FINAL_SLACK != "0"
 
 
 def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_path = None, config_sim=dummy_config_sim,
@@ -312,9 +317,10 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
             if previous is None or t > previous[0]:
                 previous = (t, float(lon_pos))
 
-        if FINAL_SLACK > 0 and goal_states:
-            # no position, so Frenetix holds the current speed and there is nothing to pass
-            end_of_plan = (max(time_steps) + FINAL_SLACK) * 10
+        if KEEP_DRIVING and goal_states:
+            # no position, so Frenetix holds the current speed and there is nothing to pass. With "end"
+            # the goal lies at the cap, and the simulation ends earlier, once every car is on it.
+            end_of_plan = (max(time_steps) + (FINAL_CAP if FINAL_SLACK == "end" else int(FINAL_SLACK))) * 10
             goal_states.append(CustomState(time_step=Interval(end_of_plan, end_of_plan + 10)))
 
         if initial_state is not None and goal_states:
