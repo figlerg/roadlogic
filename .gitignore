@@ -253,3 +253,4 @@ paper_journal/benchmark/out/
 overnight_howto.txt
 overnight.log
 paper_journal/plots/compare/
+paper_journal/benchmark/out_*/

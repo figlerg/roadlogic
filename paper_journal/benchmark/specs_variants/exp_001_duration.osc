@@ -1,0 +1,22 @@
+# exp_001 with a duration on ego's last phase, so the planner leaves time for the second lane change.
+# Without it the plan asks for a lane change within 1 s at 12 m/s, which Frenetix cannot drive.
+
+# 2 cars behind each other. one moves to other lane, then other moves to other lane
+
+
+scenario follow:
+    car1: car
+    ego: car
+
+    do parallel(duration:  [3s..20s]):
+
+        c0: car1.drive()
+
+        c1: serial:
+            c1_0: ego.drive() with:
+                position([10m..20m], behind:car1, at:start)
+                lane(same_as:car1, at:start)
+                lane(left_of:car1, at:end)
+            c1_1: ego.drive(duration: [2s..5s]) with:
+                lane(same_as:car1, at:end)
+                position([1m..30m], behind:car1, at:end)

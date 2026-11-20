@@ -56,15 +56,25 @@ def stage_rerun(folder, config):
             f.write("".join(json.dumps(r) + "\n" for r in rows))
 
 
-def draw(folder, split_deviated):
+def total_seconds(folder, pattern):
+    """The longest total time of one experiment in a staged source, for a common time axis."""
+    import glob
+    totals = [sum(json.loads(l)["seconds"] for l in open(f) if json.loads(l)["step"] != "compute similarity")
+              for f in glob.glob(os.path.join(folder, "times", pattern, "out", "times.jsonl"))]
+    return max(totals, default=0)
+
+
+def draw(folder, split_deviated, time_ymax):
     script = os.path.join(HERE, "vis_success_rates.py")
     logs = os.path.join(folder, "logs")
-    figures = [("fig5_vanilla_timing", "exp_00[0-9].json", "timing"),
+    figures = [("vanilla_combined", "exp_00[0-9].json", "combined"),
                ("fig8_variability_combined_outcome", "exp_*_b.json", "combined_outcome")]
     for name, pattern, mode in figures:
         pdf = os.path.join(folder, f"{name}.pdf")
+        pattern_dir = "exp_00?_b" if "_b" in pattern else "exp_00?"
         cmd = [sys.executable, script, "--pattern", os.path.join(logs, pattern), "--mode", mode,
-               "--times-root", os.path.join(folder, "times"), "--out", pdf]
+               "--times-root", os.path.join(folder, "times"), "--out", pdf, "--width", "5.5",
+               "--time-ymax", str(time_ymax[pattern_dir])]
         if split_deviated:
             cmd.append("--split-deviated")
         subprocess.run(cmd, check=True, cwd=ROOT, stdout=subprocess.DEVNULL)
@@ -79,8 +89,11 @@ def main():
         shutil.rmtree(folder, ignore_errors=True)
         os.makedirs(os.path.join(folder, "logs"))
         stage_paper(folder) if config is None else stage_rerun(folder, config)
-        draw(folder, split_deviated=config == "default")
-        print("wrote", folder)
+    # the same time axis in all three versions of a figure
+    time_ymax = {p: max(total_seconds(os.path.join(OUT, name), p) for name, _ in sources) for p in ("exp_00?", "exp_00?_b")}
+    for name, config in sources:
+        draw(os.path.join(OUT, name), split_deviated=config == "default", time_ymax=time_ymax)
+        print("wrote", os.path.join(OUT, name))
 
 
 if __name__ == "__main__":

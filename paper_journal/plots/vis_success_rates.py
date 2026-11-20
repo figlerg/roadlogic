@@ -61,6 +61,7 @@ names_default = {
 # ============================================================
 
 DEVIATED_HATCH = "////"
+TIME_YMAX = None  # set by --time-ymax
 
 
 def plot_success(ax, x, labels, percents, mode, deviated=None):
@@ -75,7 +76,7 @@ def plot_success(ax, x, labels, percents, mode, deviated=None):
                hatch=DEVIATED_HATCH, linewidth=0.6, label="positive, plan not followed")
         ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=2, frameon=True, fontsize=6.5)
     ax.set_ylabel(r"\% positive traces")
-    ax.set_ylim(0, max(percents) * 1.35 if percents else 100)
+    ax.set_ylim(0, 105)
     ax.grid(axis="y", linestyle="--", alpha=0.3)
 
     if mode == "success":
@@ -150,7 +151,7 @@ def plot_timing(ax, x, labels, df, mode, fig):
 
     total_times = df.sum(axis=1).astype(int)
     max_total = max(total_times) if len(total_times) else 0
-    ax.set_ylim(0, max_total * 1.35)
+    ax.set_ylim(0, (TIME_YMAX or max_total) * 1.35)
 
     for i, t in enumerate(total_times):
         hrs, rem = divmod(t, 3600)
@@ -223,7 +224,13 @@ def _load_names(names_arg):
               help="Draw positives that deviated from the plan apart, hatched. Off: together, as in HSCC.")
 @click.option("--times-root", default="experiments_src",
               help="Folder holding <experiment>/out/times.jsonl for the timing bars.")
-def main(pattern, names, out, mode, split_deviated, times_root):
+@click.option("--time-ymax", type=float, default=None,
+              help="Top of the time axis in seconds, to draw several figures on the same scale.")
+@click.option("--width", type=float, default=None,
+              help="Figure width in inches. Default: from the number of experiments, as in HSCC.")
+def main(pattern, names, out, mode, split_deviated, times_root, width, time_ymax):
+    global TIME_YMAX
+    TIME_YMAX = time_ymax
 
     name_map = names_default.copy()
     name_map.update(_load_names(names))
@@ -309,7 +316,7 @@ def main(pattern, names, out, mode, split_deviated, times_root):
             df = df[[c for c in ["plan", "execute", "instrument", "monitor"] if c in df.columns]]
 
     # --- figure layout ---
-    base_w = min(6.9, max(3.2, 0.18 * len(labels) + 2.2))
+    base_w = width or min(6.9, max(3.2, 0.18 * len(labels) + 2.2))
     COMBINED_H, SINGLE_H = 3.4, 2.1
 
     if mode in ("combined", "combined_outcome"):
