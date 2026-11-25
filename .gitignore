@@ -254,3 +254,5 @@ overnight_howto.txt
 overnight.log
 paper_journal/plots/compare/
 paper_journal/benchmark/out_*/
+initial_speed.log
+acceleration.log

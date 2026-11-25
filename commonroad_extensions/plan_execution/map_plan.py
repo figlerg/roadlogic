@@ -107,6 +107,10 @@ GOAL_VELOCITY_SCOPE = os.environ.get("ROADLOGIC_GOAL_VELOCITY_SCOPE", "constrain
 FINAL_SLACK = os.environ.get("ROADLOGIC_FINAL_SLACK", "end")
 FINAL_CAP = int(os.environ.get("ROADLOGIC_FINAL_CAP", "10"))
 KEEP_DRIVING = FINAL_SLACK != "0"
+# The speed every simulated car starts with. "0": from rest, as in the HSCC paper, so a car whose plan
+# starts moving runs behind it from the first second. "plan": the plan's speed at t=0, the speed it
+# drives the first second with (in dynamics.lp the speed at t moves the car from t to t+1).
+INITIAL_SPEED = os.environ.get("ROADLOGIC_INITIAL_SPEED", "0")
 
 
 def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_path = None, config_sim=dummy_config_sim,
@@ -268,7 +272,8 @@ def map_plan(scenario:Scenario, plan_model:MyModel, anchor_lane_idx:int, save_pa
             orientation = get_orientation_from_xy((x,y),coordinate_system)
 
             if t == 0:
-                initial_state = InitialState(time_step=0, position=np.asarray([x, y]), velocity=0.0, acceleration=0.0, yaw_rate=0.0, slip_angle=0.0, orientation=orientation)
+                start_speed = float(row["lon_vel"]) if INITIAL_SPEED == "plan" and "lon_vel" in row else 0.0
+                initial_state = InitialState(time_step=0, position=np.asarray([x, y]), velocity=start_speed, acceleration=0.0, yaw_rate=0.0, slip_angle=0.0, orientation=orientation)
             else:
                 time_unit = 10
                 time_interval = (t*time_unit, t*time_unit + time_unit)  # +-1 second = +-10 time steps
