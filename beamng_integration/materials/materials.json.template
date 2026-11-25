@@ -1,0 +1,124 @@
+{
+    "road_invisible": {
+        "name": "road_invisible",
+        "mapTo": "road_invisible",
+        "class": "Material",
+        "persistentId": "${road_invisible_persistentId}",
+        "Stages": [
+        {
+            "colorMap": "${level_folder}/invisible.dds",
+            "useAnisotropic": true
+        },
+        {},
+        {},
+        {}
+        ],
+        "alphaRef": 127,
+        "alphaTest": true,
+        "annotation": "STREET",
+        "castShadows": false,
+        "dynamicCubemap": true,
+        "materialTag0": "RoadAndPath",
+        "materialTag1": "beamng",
+        "materialTag2": "beamng",
+        "specularStrength0": "0"
+    },
+    "line_yellow": {
+        "name": "line_yellow",
+        "mapTo": "line_yellow",
+        "class": "Material",
+        "persistentId": "${line_yellow_persistentId}",
+        "Stages": [
+            {
+                "baseColorFactor": [
+                    1,
+                    0.580438972,
+                    0.160874993,
+                    1
+                ],
+                "baseColorMap": "${level_folder}/t_line_white_b.color.png",
+                "normalMap": "${level_folder}/t_line_white_nm.normal.png",
+                "opacityMap": "${level_folder}/t_line_white_o.data.png",
+                "roughnessFactor": 0.400000006
+            },
+            {
+                "baseColorFactor": null,
+                "roughnessFactor": null
+            },
+            {
+                "baseColorFactor": null,
+                "roughnessFactor": null
+            },
+            {
+                "baseColorFactor": null,
+                "roughnessFactor": null
+            }
+        ],
+        "alphaRef": 255,
+        "annotation": "SOLID_LINE",
+        "castShadows": false,
+        "materialTag0": "RoadAndPath",
+        "materialTag1": "beamng",
+        "specularStrength0": "0",
+        "translucent": true,
+        "translucentZWrite": true,
+        "version": 1.5
+    },
+    "line_dashed_long": {
+        "name": "line_dashed_long",
+        "mapTo": "line_dashed_long",
+        "class": "Material",
+        "persistentId": "${line_dashed_long_persistendId}",
+        "Stages": [
+            {
+                "baseColorMap": "${level_folder}/t_line_dashed_long_b.color.png",
+                "normalMap": "${level_folder}/t_line_dashed_long_nm.normal.png",
+                "opacityMap": "${level_folder}/t_line_dashed_long_o.data.png"
+            },
+            {},
+            {},
+            {}
+        ],
+        "alphaRef": 255,
+        "annotation": "DASHED_LINE",
+        "castShadows": false,
+        "materialTag0": "RoadAndPath",
+        "materialTag1": "beamng",
+        "specularStrength0": "0",
+        "translucent": true,
+        "translucentZWrite": true,
+        "version": 1.5
+    },
+    "line_dashed_short": {
+        "name": "line_dashed_short",
+        "mapTo": "line_dashed_short",
+        "class": "Material",
+        "persistentId": "${line_dashed_short_persistendId}",
+        "Stages": [
+            {
+                "baseColorMap": "${level_folder}/t_line_white_dashed_b.color.dds",
+                "normalMap": "${level_folder}/t_line_white_dashed_nm.normal.dds",
+                "opacityMap": "${level_folder}/t_line_white_dashed_o.data.dds",
+                "roughnessFactor": 0.419999987
+            },
+            {
+                "roughnessFactor": null
+            },
+            {
+                "roughnessFactor": null
+            },
+            {
+                "roughnessFactor": null
+            }
+        ],
+        "alphaRef": 255,
+        "annotation": "DASHED_LINE",
+        "castShadows": false,
+        "materialTag0": "RoadAndPath",
+        "materialTag1": "beamng",
+        "specularStrength0": "0",
+        "translucent": true,
+        "translucentZWrite": true,
+        "version": 1.5
+    }
+}
