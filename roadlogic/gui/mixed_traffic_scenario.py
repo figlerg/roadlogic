@@ -201,6 +201,7 @@ from commonroad.scenario.lanelet import Lanelet
 from commonroad.geometry.shape import Rectangle
 from commonroad.common.file_writer import XMLFileWriter
 
+import subprocess
 
 #### Bad practice
 from cli import cli as roadloagic_cli
@@ -254,7 +255,7 @@ def create_scenario_and_planning_problems(scenario_data: dict, base_commonroad_s
 
     return scenario, planning_problem_set
 
-async def execute_the_scenario(output_view: ui.refreshable, global_output_folder: str, scenario_editor_unique_id, base_commonroad_scenario: Scenario):
+async def execute_the_scenario_in_CR(output_view: ui.refreshable, global_output_folder: str, scenario_editor_unique_id, base_commonroad_scenario: Scenario):
     try:
         session_id = uuid.uuid4()
 
@@ -333,7 +334,64 @@ async def execute_the_scenario(output_view: ui.refreshable, global_output_folder
         ui.notify(f"Cannot complete the generation. Exception {exc}")
     finally:
         output_view.refresh()
+
+async def execute_the_scenario_in_BNG(output_view: ui.refreshable, global_output_folder: str, scenario_editor_unique_id, base_commonroad_scenario: Scenario):
+    try:
+        session_id = uuid.uuid4()
+
+        scenario_data: dict = await ui.run_javascript(f"document.getElementById('{scenario_editor_unique_id}').scenario_data")
+        scenario, planning_problems_set = create_scenario_and_planning_problems(scenario_data, base_commonroad_scenario)
+
+        # TODO Wrap this into a ScenarioEditingSession object
+        execution_folder = os.path.join(global_output_folder, str(session_id))
+        output_folder = os.path.join(execution_folder, "out")
+        scenarios_folder = os.path.join(output_folder, "bng_scenarios")
+        simulations_folder = os.path.join(output_folder, "bng_simulations")
         
+        # create all the folders. By definition they should not exist
+        os.makedirs(scenarios_folder, exist_ok=False)
+        os.makedirs(simulations_folder, exist_ok=False)
+        
+        # Execute scenario using MultiDrive
+        
+        # Generate Scenario
+        scenario_name = f"scenario"
+        scenario_file = os.path.join(scenarios_folder, f"manual-{scenario_name}.xml")
+        # Write the commonroad scenario to the file
+        XMLFileWriter(scenario, planning_problems_set).write_to_file(scenario_file)
+
+        # Scenario Execution using MultiDrive
+        #         SCENARIO_FILE=/home/gambia/felix/roadlogic/roadlogic/output/b53c6561-7994-495c-80ff-6d1752fbf2ce/out/cr_simulations/scenario/simulation_00001/scenario.xml;
+        # python cli.py 
+        #   --output-folder /home/gambia/felix/roadlogic/roadlogic/output/b53c6561-7994-495c-80ff-6d1752fbf2ce/out/cr_simulations/scenario/simulation_00001/
+        #  	--scenario-name 00002 cosimulate-with-beamng --vehicle-model car --scenario-file $(SCENARIO_FILE)
+
+        arguments = list()
+        multi_drive_python = "/home/gambia/TUM-AVS/MultiDrive/.venv/bin/python"
+        mutli_drive_cli = "/home/gambia/TUM-AVS/MultiDrive/cli.py"
+
+        scenario_output_folder = os.path.join(f"{simulations_folder}", f"{scenario_name}")
+        arguments.extend([f"{multi_drive_python}", f"{mutli_drive_cli}"])
+
+        arguments.extend(["--output-folder", f"{scenario_output_folder}"])
+        # TODO Bad
+        arguments.extend(["--scenario-name", "10001"])
+        
+        # Command to execute
+        arguments.extend(["cosimulate-with-beamng"])
+
+        # Inputs to the command
+        #   --scenario-file $(SCENARIO_FILE)
+        arguments.extend(["--scenario-file", f"{scenario_file}"])
+        arguments.extend(["--vehicle-model","car"])
+        # Invoke the script, trigger exception on failure
+        subprocess.run(arguments, capture_output=True, check=True)
+
+    except Exception as exc:
+        ui.notify(f"Cannot complete the generation. Exception {exc}")
+    finally:
+        output_view.refresh()
+
 async def generate_the_scenario(output_view: ui.refreshable, global_output_folder: str, scenario_editor_unique_id, base_commonroad_scenario: Scenario):
     # Read the scenario data as dictionary
     try:
@@ -542,7 +600,8 @@ def scenario_editor(global_output_folder: str, map_file: str, container: ui.elem
         # Create all the nicegui controls (buttons, labels, etc.)
         with ui.button_group():
             generate_button = ui.button("Generate", on_click=lambda : generate_the_scenario(output_view, global_output_folder, scenario_editor_unique_id, scenario))
-            execute_button = ui.button("Execute", on_click=lambda : execute_the_scenario(output_view, global_output_folder, scenario_editor_unique_id, scenario))
+            execute_with_commonroad_button = ui.button("Execute in CR", on_click=lambda : execute_the_scenario_in_CR(output_view, global_output_folder, scenario_editor_unique_id, scenario))
+            execute_with_beamng_button = ui.button("Execute in BNG", on_click=lambda : execute_the_scenario_in_BNG(output_view, global_output_folder, scenario_editor_unique_id, scenario))
             add_vehicle_button = ui.button("Add Vehicle")
             with ui.button_group():
                 add_waypoint_button = ui.button("Add Waypoint")

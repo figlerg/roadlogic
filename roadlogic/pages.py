@@ -392,7 +392,7 @@ def create(global_output_folder: str, default_map_file: str) -> None:
             # Visualize the output grid based on the content of the file
             output_grid(session_id)
 
-    @ui.page('/test')
+    @ui.page('/editor')
     def show_scenario_editor():
         """
         Generate the page that allows to manually generate scenarios (currently, using an hardcoded map)

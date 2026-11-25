@@ -57,7 +57,11 @@ def execute_scenario(ctx, scenario_file: str, simulation_id: int, tranche_size_t
             },
             "simulation": {
                 "used_planner_interface": "CustomFrenetPlannerInterface", # We must force our planner interface, which forces the reference path instead of recomputing it!
-                "multiprocessing": True, #  False force sequential execution
+                
+                # TODO At some point, the Web GUI started to fail because we cannot Pickle SQLite Connection, which is completely uncalled for... this should fix it for the moment
+                "multiprocessing": False, #  False force sequential execution
+                
+                # "multiprocessing": True, #  False force sequential execution
                 # Originally this option was to transform existing obstacles in AVs, but 
                 # Setting this to False creates tons of issues including overriding scenario plots.
                 "use_multiagent": True 
