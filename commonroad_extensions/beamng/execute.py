@@ -34,20 +34,34 @@ def heading_quat(heading):
     return (0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2))
 
 
+# TODO Extend agents with model and color, so we can replicate them in CommonRoad when we generate the visualization?
 def build_scenario(bng, layout, agents):
+    # This build and make the scenario in BeamNG
+    # TODO For complex scenarios, we need to ensure the map is rebuilt
     from beamngpy import Scenario, Vehicle
     from commonroad_extensions.beamng.road import add_to_scenario
+    
+    # Note: this class is never returned
     scenario = Scenario(layout["level"], "roadlogic")
+
+    # Create the roads
     add_to_scenario(scenario, layout)
+    
     vehicles = {}
     for k, (name, a) in enumerate(agents.items()):          # colours as in the plots: C0, C1, ...
         vehicles[name] = Vehicle(name, model=MODEL, color=COLOURS[k % len(COLOURS)])
         s = a["spawn"]
         scenario.add_vehicle(vehicles[name], pos=(s["x"], s["y"], layout["z"] + SPAWN_Z), rot_quat=heading_quat(s["heading"]))
+    
+    
     scenario.make(bng)
+
+    # TODO We need to setup the frame per second to ensure a step is 0.1
     bng.settings.set_deterministic(PHYSICS_HZ)
     bng.scenario.load(scenario)
     bng.scenario.start()
+
+    # TODO Not necessary
     bng.env.set_tod(0.0)                       # noon, for the video
     bng.control.pause()
     return vehicles
@@ -56,12 +70,18 @@ def build_scenario(bng, layout, agents):
 def observe(vehicle, ground_z):
     """(centre x, centre y, heading, speed) of a car: the bounding box centre, as CommonRoad's position.
     Fails if the car is below the ground (no ground where the level is assumed to have it)."""
+    
     vehicle.sensors.poll()
+
     st = vehicle.state
+    # Note this is important, we do not use st['pos']
     box = vehicle.get_bbox()
     centre = np.mean([np.asarray(v) for v in box.values()], axis=0)
+    
+    # TODO Not necessary?
     if st["pos"][2] < ground_z - 2.0:
         raise RuntimeError(f"{vehicle.vid} fell through the ground (z = {st['pos'][2]:.1f})")
+    
     d, v = st["dir"], st["vel"]
     return float(centre[0]), float(centre[1]), math.atan2(d[1], d[0]), float(math.hypot(v[0], v[1]))
 
@@ -70,23 +90,42 @@ def run(bng, layout, plan, dt=0.1, recorder=None):
     """Drive the plan and return {agent: [(time step, x, y, heading, speed), ...]}. A video.Recorder
     takes a frame per step."""
     agents = plan["agents"]
+
+    # Make the scenario in BeamNG and return the vehicles in it
+    # TODO Add Timer and Damage sensors
     vehicles = build_scenario(bng, layout, agents)
+    
+    # Initialization of the AIs.
     bng.control.step(PHYSICS_HZ // 2)         # let the cars settle on their wheels
     for name, a in agents.items():
+        # Car that does not move are parked
         if a["static"]:
+            # TODO Is this necessary?
             vehicles[name].set_shift_mode("arcade")
+            # TODO Is this necessary?            
             vehicles[name].control(parkingbrake=1)
         else:
+            # The vehicles move by following the script, and the script is defined by the plan.
+            #   By doing so we ensure that the vehicle is at the expected position at the target time (if possible)
+            #   TODO: Check whether teleportation or something else it at play
+            #   TODO: Add a debug flag to show the spheres where the vehicle should go, and change color when they are not "active" anymore
             vehicles[name].ai.set_script([{"x": p["x"], "y": p["y"], "z": layout["z"], "t": p["t"]} for p in a["script"]])
+
+    # Prepare to sample at constant rate (dt)
     end = max([p["t"] for a in agents.values() for p in a["script"]] + [plan["plan_end"]])
+    # dt is the sampling rate. TODO We need to use the timer sensor to ensure samples are indeed collected at reasonable times
     steps = int(round(end / dt))
     trace = {name: [] for name in agents}
     for k in range(steps + 1):
         for name, veh in vehicles.items():
+            # TODO observe misses the damage sensor/collision
             trace[name].append((k,) + observe(veh, layout["z"]))
         if recorder:
             recorder.frame(k, [rows[-1][1:3] for rows in trace.values()], layout["z"])
+        
+        # Step forward the simulation
         bng.control.step(int(round(PHYSICS_HZ * dt)))
+    
     return trace
 
 
@@ -127,38 +166,76 @@ def write_executed(cr_scenario_file, agents, trace, out_file):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    # TODO Why do we need a plan if we have a scenario?
     ap.add_argument("--plan", required=True, help="a stored plan (serialized_models/NNNN.pkl)")
+    # TODO Why do we have a scenario if we have a plan to build the scenario from?
     ap.add_argument("--scenario", required=True, help="its CommonRoad scenario (cr_scenarios/scenario_NNNN.xml)")
     ap.add_argument("--out", required=True)
+    # TODO Why do we have a video recording?
     ap.add_argument("--video", help="also record an mp4 here (needs ROADLOGIC_BEAMNG_GFX=vk or dx11)")
+    
     args = ap.parse_args()
+    # TODO What's this?!
     warnings.simplefilter("ignore")
+    # TODO Why is this necessary?
     sys.path.insert(0, ROOT)
+
     from beamngpy import BeamNGpy
     from commonroad.common.file_reader import CommonRoadFileReader
+    # OUR CODE:
     from commonroad_extensions.beamng.road import road_layout
     from commonroad_extensions.beamng.server import BeamNGServer
     from commonroad_extensions.beamng.video import Recorder
     from commonroad_extensions.plan_execution.map_plan import map_plan_beamng
+
+    # Read the default ROAD. TODO This shall be changed
+    # TODO: Why reading this road when we have an input scenario?
     road, _ = CommonRoadFileReader(os.path.join(ROOT, "cr_scenarios", "threelanes.xml")).open()
+
+    # Read the ASP plan
     with open(args.plan, "rb") as f:
         plan = map_plan_beamng(road, pickle.load(f), anchor_lane_idx=1)
+
+    # This is dictionary of roads, including dashed, lanes, etc.
     layout = road_layout(road)
+
+    # Hardcoded name as in CommonRoad. This is here for retro-compatibility but shall be removed later
     sim = os.path.join(args.out, "simulation_00001")
+
     os.makedirs(sim, exist_ok=True)
+
+    ##################################################################################################
+    # Execute the simulation
+    ##################################################################################################
+
+    # TODO This shall be replaced by our BeamNGWrapper
     with BeamNGServer(log_path=os.path.join(args.out, "beamng.log")) as server:
         bng = BeamNGpy(server.host, server.port)
         bng.open(launch=False)
         try:
+            # TODO: This is to record the frames during the execution. Can be probably deferred to another process
             recorder = Recorder(bng, os.path.splitext(args.video)[0] + "_frames") if args.video else None
+
+            # Run the simulation and return the trace
+            # TODO Still I am not sure about the plan
             trace = run(bng, layout, plan, recorder=recorder)
+
             if recorder:
                 print("video:", recorder.finish(args.video), "frames ->", args.video)
         finally:
             bng.disconnect()
+
+    ##################################################################################################
+    # Store the data
+    ##################################################################################################
+
+    # TODO Why do we store data in json, if we are also storying the data in the executed_scenario.xml? 
     with open(os.path.join(sim, "beamng_trace.json"), "w") as f:
         json.dump({"agents": plan["agents"], "trace": trace}, f)
+    
+    # At this point we use the input scenario to copy over the trace data thus obtaining the executed_scenario.xml
     write_executed(args.scenario, plan["agents"], trace, os.path.join(sim, "executed_scenario.xml"))
+
     print("wrote", os.path.join(sim, "executed_scenario.xml"))
 
 

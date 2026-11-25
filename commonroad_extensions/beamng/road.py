@@ -11,6 +11,9 @@ import json
 
 import numpy as np
 
+#
+# TODO This must be fixed to use tech_ground and our ensure materials
+#
 # Levels and the road materials that exist in them (BeamNG.tech 0.38.5). gridmap_v2 is flat at 56.23 m for
 # x in [-400, 500], y in [-100, 300], with buildings in the background. Its terrain only exists with a
 # renderer. smallgrid is a bare grid at z = 0 and crashes without a renderer.
@@ -59,6 +62,8 @@ def road_layout(scenario, level=LEVEL, before=50.0, after=300.0):
         roads.append({"name": name, "material": cfg["line"], "nodes": _nodes(_extend(bound, before, after), LINE_WIDTH, z)})
     for l in lanelets:
         if l.adj_left is not None:
+            # TODO Not sure what is doing here with the dash
+            # Is it really creating a road for each dash instead of using the dashed line ?! 
             for k, dash in enumerate(_dashes(_extend(l.left_vertices, before, after))):
                 roads.append({"name": f"dash_{l.lanelet_id}_{k}", "material": cfg["line"],
                               "nodes": _nodes(dash, LINE_WIDTH, z)})
