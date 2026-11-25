@@ -18,7 +18,7 @@ import os
 import tempfile
 
 
-from commonroad_extensions.scenario_execution.commands import execute_scenario
+from commonroad_extensions.scenario_execution.commands import execute_scenario_in_commonroad, execute_scenario_in_beamng
 from commonroad_extensions.scenario_generation.commands import generate_scenario, generate_baseline_scenarios, generate_from_simulation
 from commonroad_extensions.simulation_analysis.commands import compute_metrics
 from commonroad_extensions.simulation_visualization.commands import plot_simulation, animate_simulation
@@ -74,7 +74,7 @@ cli.add_command(generate_baseline_scenarios)
 
 cli.add_command(generate_from_simulation)
 
-cli.add_command(execute_scenario)
+cli.add_command(execute_scenario_in_commonroad)
 
 cli.add_command(compute_metrics)
 

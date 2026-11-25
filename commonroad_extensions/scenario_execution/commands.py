@@ -10,6 +10,8 @@ from commonroad_extensions.scenario_execution.stitched_execution import Frenetix
 from commonroad_extensions.common.utils import override_configuration, make_nested_dict
 from commonroad_extensions.common.utils import create_planning_problems_from_dynamic_obstacles
 
+
+# This implementation is tightly coupled with Frenetix. TODO: Refactor to make it more generic, define a common interface to execute the scenarios.
 @click.command()
 @click.pass_context
 @click.option("--scenario-file", required=True, type=click.Path(exists=True, file_okay=True), help="The XML file containing the CommonRoad scenario to execute")
@@ -20,7 +22,7 @@ from commonroad_extensions.common.utils import create_planning_problems_from_dyn
 # @click.option("--prediction-mode", required=False, default="walenet", type=click.Choice(["walenet", "none"],case_sensitive=False))
 @click.option("--convert", "list_of_dynamic_obstacles_to_convert", required=False, type=int, multiple=True, help="The list of ids of dynamic obstacles to convert to planning problems. -1 will convert them all")
 @click.option("--disable-perception-of", "list_of_disable_perception_ids", required=False, type=int, multiple=True, help="The list of ids of ego vehicles without a perception module.  -1 will disable perception for all")
-def execute_scenario(ctx, scenario_file: str, simulation_id: int, tranche_size_time_step: Optional[int], max_duration: Optional[int], #prediction_mode:str,
+def execute_scenario_in_commonroad(ctx, scenario_file: str, simulation_id: int, tranche_size_time_step: Optional[int], max_duration: Optional[int], #prediction_mode:str,
                      list_of_dynamic_obstacles_to_convert: Optional[List[int]], list_of_disable_perception_ids: Optional[List[int]]):
     # Extract common options
     output_folder = ctx.obj["output_folder"]
@@ -148,7 +150,17 @@ def execute_scenario(ctx, scenario_file: str, simulation_id: int, tranche_size_t
     scenario_executor.execute(scenario, planning_problem_set, simulation_id, adjust_starting_time_steps=True, max_duration=max_duration)
 
     
-
+@click.command()
+@click.pass_context
+@click.option("--scenario-file", required=True, type=click.Path(exists=True, file_okay=True), help="The XML file containing the CommonRoad scenario to execute")
+@click.option("--simulation-id", required=False, type=int, help="The (Unique) ID Assigned to the simulated scenario")
+@click.option("--max-duration", required=False, type=int, help="The max duration of the execution in time steps")
+def execute_scenario_in_beamng(ctx, 
+                               scenario_file: str, simulation_id: int, 
+                               max_duration: Optional[int]):
+    # TODO configuration of BeamNG
+    
+    pass
    
 
     
