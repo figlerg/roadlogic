@@ -1,13 +1,17 @@
-"""Simulate planned scenarios of a benchmark experiment in BeamNG.tech and judge them with the monitor.
+"""Simulate planned scenarios of benchmark experiments in BeamNG.tech and judge them with the monitor.
 
-    python paper_journal/beamng/run_beamng.py <experiment out folder> [scenario numbers] [--video]
-    python paper_journal/beamng/run_beamng.py paper_journal/benchmark/out/exp_004 0002 --video
+    python paper_journal/beamng/run_beamng.py <experiment out folder> [more folders] [options]
+    python paper_journal/beamng/run_beamng.py paper_journal/benchmark/out/exp_004 --scenarios 0002 --video
+    python paper_journal/beamng/run_beamng.py paper_journal/benchmark/out/* --per-exp 1 --results stress.jsonl
 
-Reads the plans and CommonRoad scenarios that run_benchmark.py stored in the experiment folder
-(serialized_models/, cr_scenarios/, in/spec.osc), all scenarios if no numbers are given. Writes
-<experiment>/sim_beamng/: per scenario the trace (executed_scenario.xml, beamng_trace.json, LANE, LONGPOS,
-CURRV), the verdict, and with --video an mp4, plus summary_log.json for all of them, the same layout as
-sim_default/ (the CommonRoad simulation). One BeamNG process per scenario, about a minute each.
+Reads the plans and CommonRoad scenarios that run_benchmark.py stored in each experiment folder
+(serialized_models/, cr_scenarios/, in/spec.osc). Writes <experiment>/sim_beamng/: per scenario the trace
+(executed_scenario.xml, beamng_trace.json, LANE, LONGPOS, CURRV), the verdict, with --video an mp4, plus
+summary_log.json, the same layout as sim_default/ (the CommonRoad simulation). A scenario that fails in
+BeamNG is logged in sim_beamng/failed.jsonl and the run goes on.
+
+Each scenario runs in a fresh BeamNG process (execute.Session), so every run is reproducible. --results appends one JSON line per experiment:
+the BeamNG verdicts next to the CommonRoad ones (sim_default) for the same scenarios.
 
 Needs BeamNG.tech 0.38.5 on Windows (found under C:\\Users\\<you>\\BeamNG, or ROADLOGIC_BEAMNG_HOME) and
 beamngpy 1.35.1 (pip install --no-deps beamngpy==1.35.1 msgpack). Run from the repository root with the venv
@@ -17,10 +21,15 @@ import argparse
 import glob
 import json
 import os
+import shutil
 import subprocess
 import sys
+import time
+import traceback
+import warnings
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, ROOT)
 
 
 def env():
@@ -30,14 +39,12 @@ def env():
     return e
 
 
-def simulate(exp, n, out, video):
-    cmd = [sys.executable, "-m", "commonroad_extensions.beamng.execute",
-           "--plan", os.path.join(exp, "serialized_models", f"{n}.pkl"),
-           "--scenario", os.path.join(exp, "cr_scenarios", f"scenario_{n}.xml"),
-           "--out", os.path.join(out, f"scenario_{n}")]
-    if video:
-        cmd += ["--video", os.path.join(out, f"scenario_{n}", f"scenario_{n}.mp4")]
-    return subprocess.run(cmd, cwd=ROOT, env=env()).returncode == 0
+def stored(exp):
+    return sorted(os.path.basename(p)[:-4] for p in glob.glob(os.path.join(exp, "serialized_models", "*.pkl")))
+
+
+def executed(out, n):
+    return os.path.join(out, f"scenario_{n}", "simulation_00001", "executed_scenario.xml")
 
 
 def judge(exp, out, scenarios):
@@ -51,31 +58,79 @@ def judge(exp, out, scenarios):
         os.symlink(os.path.abspath(os.path.join(exp, "cr_scenarios", f"scenario_{n}.xml")),
                    os.path.join(chosen, f"scenario_{n}.xml"))
     common = [f"SCENARIOS_FOLDER={chosen}", f"OUTPUT_FOLDER={out}"]
-    subprocess.run(["make", "-s", "compute-selected-metrics-for-all-scenarios", "selected_metrics=LANE LONGPOS CURRV"]
-                   + common, cwd=ROOT, env=env())
-    if os.path.exists(os.path.join(out, "summary_log.json")):
-        os.remove(os.path.join(out, "summary_log.json"))
+    quiet = dict(cwd=ROOT, env=env(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["make", "-s", "-k", "compute-selected-metrics-for-all-scenarios",
+                    "selected_metrics=LANE LONGPOS CURRV"] + common, **quiet)
+    summary = os.path.join(out, "summary_log.json")
+    if os.path.exists(summary):
+        os.remove(summary)
     subprocess.run(["make", "-s", "-k", "generate-summary", f"OSC_FILE={os.path.join(exp, 'in', 'spec.osc')}"] + common,
-                   cwd=ROOT, env=env())
-    return json.load(open(os.path.join(out, "summary_log.json")))
+                   **quiet)
+    return json.load(open(summary)) if os.path.exists(summary) else None
+
+
+def verdicts(summary, scenarios):
+    """POSITIVE / negative / none per scenario number, from a summary_log.json."""
+    if summary is None:
+        return {n: None for n in scenarios}
+    pos, neg = set(summary["positive traces"]), set(summary["negative traces"])
+    return {n: "POSITIVE" if f"scenario_{n}" in pos else "negative" if f"scenario_{n}" in neg else None for n in scenarios}
+
+
+def run_experiment(session, exp, scenarios, video, skip_done):
+    out = os.path.join(exp, "sim_beamng")
+    os.makedirs(out, exist_ok=True)
+    done, seconds = [], {}
+    for n in scenarios:
+        if skip_done and os.path.exists(executed(out, n)):
+            done.append(n)
+            continue
+        shutil.rmtree(os.path.join(out, f"scenario_{n}"), ignore_errors=True)    # no stale results, no overwrite prompt
+        t = time.time()
+        try:
+            mp4 = os.path.join(out, f"scenario_{n}", f"scenario_{n}.mp4") if video else None
+            session.simulate(os.path.join(exp, "serialized_models", f"{n}.pkl"),
+                             os.path.join(exp, "cr_scenarios", f"scenario_{n}.xml"), os.path.join(out, f"scenario_{n}"), mp4)
+            done.append(n)
+        except Exception as e:
+            with open(os.path.join(out, "failed.jsonl"), "a") as f:
+                f.write(json.dumps({"scenario": n, "error": repr(e)[-500:], "trace": traceback.format_exc()[-2000:]}) + "\n")
+            print(f"  scenario {n} FAILED: {repr(e)[:200]}", flush=True)
+        seconds[n] = round(time.time() - t, 1)
+    summary = judge(exp, out, done) if done else None
+    default = os.path.join(exp, "sim_default", "summary_log.json")
+    return {"experiment": os.path.basename(exp), "scenarios": scenarios, "simulated": done,
+            "failed": [n for n in scenarios if n not in done], "seconds": seconds,
+            "beamng": verdicts(summary, scenarios),
+            "commonroad": verdicts(json.load(open(default)) if os.path.exists(default) else None, scenarios)}
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("experiment")
-    ap.add_argument("scenarios", nargs="*", help="e.g. 0002 0005, default all")
+    ap.add_argument("experiments", nargs="+")
+    ap.add_argument("--scenarios", nargs="*", help="scenario numbers, e.g. 0002 0005 (default all)")
+    ap.add_argument("--per-exp", type=int, help="only the first N scenarios of each experiment")
     ap.add_argument("--video", action="store_true")
+    ap.add_argument("--skip-done", action="store_true", help="keep scenarios that already have a BeamNG trace")
+    ap.add_argument("--results", help="append one JSON line per experiment here")
     a = ap.parse_args()
-    exp = a.experiment.rstrip("/")
-    scenarios = a.scenarios or sorted(os.path.basename(p)[:-4] for p in glob.glob(os.path.join(exp, "serialized_models", "*.pkl")))
-    out = os.path.join(exp, "sim_beamng")
-    done = [n for n in scenarios if simulate(exp, n, out, a.video)]
-    if not done:
-        sys.exit("no scenario simulated")
-    summary = judge(exp, out, done)
-    print(f"{summary['num_positive_traces']}/{len(done)} positive:", " ".join(summary["positive traces"]),
-          "| negative:", " ".join(summary["negative traces"]) or "-")
-    print("output:", out)
+    warnings.simplefilter("ignore")
+    from commonroad_extensions.beamng.execute import Session
+    experiments = [e.rstrip("/") for e in a.experiments if stored(e.rstrip("/"))]
+    with Session(os.path.join(ROOT, "demo_output", "beamng_logs")) as session:
+        for exp in experiments:
+            scenarios = a.scenarios or stored(exp)
+            scenarios = scenarios[:a.per_exp] if a.per_exp else scenarios
+            t = time.time()
+            row = run_experiment(session, exp, scenarios, a.video, a.skip_done)
+            b, c = row["beamng"], row["commonroad"]
+            agree = sum(b[n] == c[n] for n in scenarios if b[n] and c[n])
+            print(f"{row['experiment']}: BeamNG {list(b.values()).count('POSITIVE')}/{len(scenarios)} positive, "
+                  f"CommonRoad {list(c.values()).count('POSITIVE')}/{len(scenarios)}, same verdict {agree}, "
+                  f"failed {len(row['failed'])}, {time.time() - t:.0f} s", flush=True)
+            if a.results:
+                with open(a.results, "a") as f:
+                    f.write(json.dumps(row) + "\n")
 
 
 if __name__ == "__main__":
