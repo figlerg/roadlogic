@@ -16,6 +16,18 @@ import numpy as np
 BEHIND, RIGHT, UP, AHEAD = 15.0, 7.0, 6.5, 14.0
 
 
+# The level's own scenery (gridmap_v2's test ramps, loops and buildings) seemed to float in the video: the camera
+# sensor draws the meshes but not the distant terrain they stand on. Hidden in videos only, it is far from our road
+# and hiding changes nothing but what is drawn. Our scenario is a prefab named roadlogic_*, kept.
+HIDE_SCENERY = """local n = 0
+local hide = {TSStatic = 1, ProceduralMesh = 1, GroundCover = 1, River = 1, Prefab = 1}
+for _, name in ipairs(scenetree.getAllObjects()) do
+  local o = scenetree.findObject(name)
+  if o and hide[o:getClassName()] and not string.find(name, 'roadlogic') then o:setHidden(true); n = n + 1 end
+end
+return n"""
+
+
 class Recorder:
     def __init__(self, bng, frames_dir, size=(1280, 720), fov=55, substeps=2):
         """substeps frames per recorded step (0.1 s): 2 gives a 20 fps video."""
@@ -27,8 +39,9 @@ class Recorder:
         self.saved = 0
 
     def _open(self, pos, direction):
-        """Opened at the first frame, after the level is loaded."""
+        """Opened at the first frame, after the level is loaded. Hides the level's scenery first."""
         from beamngpy.sensors import Camera
+        self.bng.control.queue_lua_command(HIDE_SCENERY, response=True)
         self.camera = Camera("roadlogic_video", self.bng, pos=tuple(pos), dir=tuple(direction), up=(0, 0, 1),
                              resolution=self.size, field_of_view_y=self.fov, near_far_planes=(0.1, 600.0),
                              is_render_annotations=False, is_render_depth=False, is_static=True,
