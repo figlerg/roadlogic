@@ -28,19 +28,50 @@ WHEELBASE = 2.9
 K_POS, K_SPEED, K_INT = 0.8, 0.6, 0.05
 SPAWN_Z = 0.5
 MODEL = "vehicle.lincoln.mkz"
+COLOURS = ["31,119,180", "255,127,14", "44,160,44", "214,39,40"]   # as in the plots and the BeamNG videos
 # the server's view (spectator) follows the first car along the road: behind it, to the right of the road and
 # above, aimed down the road, as the BeamNG videos. Only what the server window shows, no effect on physics.
 BEHIND, RIGHT, UP, AHEAD = 15.0, 7.0, 6.5, 14.0
 
 
-def follow(spectator, x, road_y):
-    cam = (x - BEHIND, road_y - RIGHT, UP)
+VIDEO_SIZE, VIDEO_FOV = (960, 540), 55      # every frame crosses the network, 1280 x 720 at 20 fps was too much for Wi-Fi
+
+
+def chase(x, road_y):
+    """The chase view behind a car at x along the road, as a CARLA transform."""
+    cam = (x - BEHIND, road_y + RIGHT, UP)          # left of the road: CARLA puts trees and lamps on its right side
     look = (x + AHEAD, road_y + 0.5, 0.0)
     dx, dy, dz = look[0] - cam[0], look[1] - cam[1], look[2] - cam[2]
     yaw = math.degrees(math.atan2(dy, dx))
     pitch = math.degrees(math.atan2(dz, math.hypot(dx, dy)))
-    spectator.set_transform(carla.Transform(carla.Location(x=cam[0], y=-cam[1], z=cam[2]),
-                                            carla.Rotation(yaw=-yaw, pitch=pitch)))
+    return carla.Transform(carla.Location(x=cam[0], y=-cam[1], z=cam[2]), carla.Rotation(yaw=-yaw, pitch=pitch))
+
+
+def video_camera(world, transform):
+    """An RGB camera that delivers one image per tick into a queue (synchronous mode)."""
+    import queue
+    bp = world.get_blueprint_library().find("sensor.camera.rgb")
+    bp.set_attribute("image_size_x", str(VIDEO_SIZE[0]))
+    bp.set_attribute("image_size_y", str(VIDEO_SIZE[1]))
+    bp.set_attribute("fov", str(VIDEO_FOV))
+    camera = world.spawn_actor(bp, transform)
+    images = queue.Queue()
+    camera.listen(images.put)
+    return camera, images
+
+
+def save_frame(images, frame, path):
+    """The camera image of a simulation frame, saved as PNG. A frame that does not arrive within 10 s is skipped
+    (it happened once, and lost the whole run), the video just misses it."""
+    import queue
+    while True:
+        try:
+            image = images.get(timeout=10)
+        except queue.Empty:
+            return False
+        if image.frame >= frame:
+            image.save_to_disk(path)
+            return True
 
 
 def to_carla(x, y, heading, z=SPAWN_Z):
@@ -108,8 +139,10 @@ def main(job_file, trace_file):
     blueprint = world.get_blueprint_library().find(MODEL)
     actors, followers = {}, {}
     try:
-        for name, a in job["agents"].items():
+        for k, (name, a) in enumerate(job["agents"].items()):
             s = a["spawn"]
+            if blueprint.has_attribute("color"):
+                blueprint.set_attribute("color", COLOURS[k % len(COLOURS)])
             actors[name] = world.spawn_actor(blueprint, to_carla(s["x"], s["y"], s["heading"]))
             if a["static"]:
                 actors[name].apply_control(carla.VehicleControl(hand_brake=True))
@@ -123,16 +156,26 @@ def main(job_file, trace_file):
         trace = {name: [] for name in actors}
         spectator, focus = world.get_spectator(), "ego" if "ego" in actors else next(iter(actors))
         road_y = job.get("road_y", 3.0)
+        video_dir = job.get("video_dir")
+        camera, images = video_camera(world, chase(pose(actors[focus])[0], road_y)) if video_dir else (None, None)
         for k in range(int(round(end / TICK)) + 1):
             if k % per_row == 0:
                 for name, actor in actors.items():
                     trace[name].append([k // per_row, *pose(actor)])
-            follow(spectator, pose(actors[focus])[0], road_y)
+            view = chase(pose(actors[focus])[0], road_y)
+            spectator.set_transform(view)                 # the server window follows the car
+            if camera:
+                camera.set_transform(view)
             for name, f in followers.items():
                 actors[name].apply_control(f.control(k * TICK))
-            world.tick()
+            frame = world.tick()
+            if camera:
+                save_frame(images, frame, f"{video_dir}\\frame_{k:05d}.png")
         json.dump({"trace": trace}, open(trace_file, "w"))
     finally:
+        if video_dir and camera:
+            camera.stop()
+            camera.destroy()
         for actor in actors.values():
             actor.destroy()
         settings.synchronous_mode, settings.fixed_delta_seconds = False, None

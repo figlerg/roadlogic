@@ -52,8 +52,9 @@ def drive(job, work):
     return json.load(open(trace_file))["trace"]
 
 
-def simulate(plan_pkl, cr_scenario, out, host=None, port=None):
-    """One stored plan in CARLA. Writes <out>/simulation_00001/{executed_scenario.xml, carla_trace.json}."""
+def simulate(plan_pkl, cr_scenario, out, host=None, port=None, video=None):
+    """One stored plan in CARLA. Writes <out>/simulation_00001/{executed_scenario.xml, carla_trace.json}, and an
+    mp4 from a chase camera to `video` if given (frames saved on the Windows side, joined here with ffmpeg)."""
     from commonroad.common.file_reader import CommonRoadFileReader
     from commonroad_extensions.beamng.execute import write_executed
     from commonroad_extensions.carla.opendrive import road_xodr
@@ -65,7 +66,18 @@ def simulate(plan_pkl, cr_scenario, out, host=None, port=None):
            "port": int(port or os.environ.get("ROADLOGIC_CARLA_PORT", "2000")),
            "xodr": road_xodr(road), "agents": plan["agents"],
            "road_y": float(sum(l.center_vertices[0][1] for l in road.lanelet_network.lanelets) / len(road.lanelet_network.lanelets)), "plan_end": plan["plan_end"], "dt": plan["dt"]}
-    trace = drive(job, os.path.join(windows_user_dir(), "roadlogic_carla"))
+    work = os.path.join(windows_user_dir(), "roadlogic_carla")
+    frames = os.path.join(work, "frames")
+    if video:
+        os.makedirs(frames, exist_ok=True)
+        for f in glob.glob(os.path.join(frames, "frame_*.png")):
+            os.remove(f)
+        job["video_dir"] = win(frames)
+    trace = drive(job, work)
+    if video:
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "20", "-pattern_type", "glob",
+                        "-i", os.path.join(frames, "frame_*.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", video],
+                       check=True)
     sim = os.path.join(out, "simulation_00001")
     os.makedirs(sim, exist_ok=True)
     from commonroad_extensions.beamng.execute import collisions, off_road
@@ -92,8 +104,8 @@ class Session:
 
     def simulate(self, plan_pkl, cr_scenario, out, video=None):
         if video:
-            raise NotImplementedError("no CARLA video yet")
-        return simulate(plan_pkl, cr_scenario, out)
+            os.makedirs(os.path.dirname(video), exist_ok=True)
+        return simulate(plan_pkl, cr_scenario, out, video=video)
 
 
 def main():
