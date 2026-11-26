@@ -73,6 +73,32 @@ def centre_offset(vehicle):
     return float(d @ fwd), float(d @ left)
 
 
+def centre_x(vehicle, offset):
+    """x of the centre of a car's bounding box, for the video camera (one round trip)."""
+    vehicle.sensors.poll()
+    fwd, left = _frame(vehicle.state)
+    return float(vehicle.state["pos"][0] + offset[0] * fwd[0] + offset[1] * left[0])
+
+
+def off_road(layout, trace):
+    """Per car the first time [s] its centre is off the asphalt (BeamNG road), None if never."""
+    asphalt = [r for r in layout["roads"] if r["name"] == "asphalt"][0]
+    line = np.array([n[:2] for n in asphalt["nodes"]])
+    half = asphalt["nodes"][0][3] / 2
+    out = {}
+    for name, rows in trace.items():
+        first = None
+        for k, x, y, *_ in rows:
+            p = np.array([x, y])
+            seg = [np.linalg.norm(p - (a + np.clip((p - a) @ (b - a) / ((b - a) @ (b - a)), 0, 1) * (b - a)))
+                   for a, b in zip(line[:-1], line[1:]) if (b - a) @ (b - a) > 0]
+            if min(seg) > half:
+                first = round(k / 10, 1)
+                break
+        out[name] = first
+    return out
+
+
 def observe(vehicle, offset, ground_z):
     """(centre x, centre y, heading, speed) of a car: the bounding box centre, as CommonRoad's position.
     Fails if the car is below the ground (no ground where the level is assumed to have it)."""
@@ -104,12 +130,19 @@ def run(bng, layout, plan, dt=0.1, recorder=None, name="roadlogic", max_wall=900
     end = max([p["t"] for a in agents.values() for p in a["script"]] + [plan["plan_end"]])
     steps = int(round(end / dt))
     trace = {name: [] for name in agents}
+    focus = "ego" if "ego" in agents else next(iter(agents))       # the car the video follows
+    followed = vehicles[focus]
+    road_y = [r for r in layout["roads"] if r["name"] == "asphalt"][0]["nodes"][0][1]
     for k in range(steps + 1):
         for name, veh in vehicles.items():
             trace[name].append((k,) + observe(veh, offsets[name], layout["z"]))
-        if recorder:
-            recorder.frame(k, [rows[-1][1:3] for rows in trace.values()], layout["z"])
-        bng.control.step(int(round(PHYSICS_HZ * dt)))
+        if recorder:                          # extra frames between the recorded steps, for a smooth video
+            for sub in range(recorder.substeps):
+                x = trace[focus][-1][1] if not sub else centre_x(followed, offsets[focus])   # the same point as the trace
+                recorder.frame(x, road_y, layout["z"])
+                bng.control.step(int(round(PHYSICS_HZ * dt / recorder.substeps)))
+        else:
+            bng.control.step(int(round(PHYSICS_HZ * dt)))
         if time.time() - start > max_wall:
             raise TimeoutError(f"{name}: over {max_wall} s of wall time at step {k} of {steps}")
     return trace
@@ -212,7 +245,7 @@ class Session:
         sim = os.path.join(out, "simulation_00001")
         os.makedirs(sim, exist_ok=True)
         with open(os.path.join(sim, "beamng_trace.json"), "w") as f:
-            json.dump({"agents": plan["agents"], "trace": trace}, f)
+            json.dump({"agents": plan["agents"], "trace": trace, "off_road": off_road(self.layout, trace)}, f)
         write_executed(cr_scenario, plan["agents"], trace, os.path.join(sim, "executed_scenario.xml"))
         return os.path.join(sim, "executed_scenario.xml")
 

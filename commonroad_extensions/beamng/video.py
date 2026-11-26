@@ -11,12 +11,15 @@ import time
 import numpy as np
 
 # camera offset from the point between the cars: behind (-x), to the right (-y), up
-OFFSET, LOOK_AHEAD = np.array([-16.0, -14.0, 11.0]), 6.0
+# chase camera: behind the followed car, to the right of the road and above it, aimed down the road. It
+# follows the car along the road only, so it does not sway with lane changes.
+BEHIND, RIGHT, UP, AHEAD = 15.0, 7.0, 6.5, 14.0
 
 
 class Recorder:
-    def __init__(self, bng, frames_dir, size=(1280, 720), fov=50):
-        self.bng, self.frames_dir, self.size, self.fov = bng, frames_dir, size, fov
+    def __init__(self, bng, frames_dir, size=(1280, 720), fov=55, substeps=2):
+        """substeps frames per recorded step (0.1 s): 2 gives a 20 fps video."""
+        self.bng, self.frames_dir, self.size, self.fov, self.substeps = bng, frames_dir, size, fov, substeps
         os.makedirs(frames_dir, exist_ok=True)
         for f in os.listdir(frames_dir):
             os.remove(os.path.join(frames_dir, f))
@@ -31,11 +34,10 @@ class Recorder:
                              is_render_annotations=False, is_render_depth=False, is_static=True,
                              is_dir_world_space=True, requested_update_time=-1.0)
 
-    def frame(self, k, positions, ground_z=0.0):
-        """One frame at step k, positions: [(x, y), ...] of the cars on ground at height ground_z."""
-        mid = np.array([np.mean([p[0] for p in positions]), np.mean([p[1] for p in positions]), ground_z])
-        pos = mid + OFFSET
-        direction = mid + np.array([LOOK_AHEAD, 0.0, 0.5]) - pos
+    def frame(self, x, road_y, ground_z=0.0):
+        """The next frame, following a car at position x along a road whose centre line is at road_y."""
+        pos = np.array([x - BEHIND, road_y - RIGHT, ground_z + UP])
+        direction = np.array([x + AHEAD, road_y + 0.5, ground_z]) - pos
         direction = direction / np.linalg.norm(direction)
         if self.camera is None:
             self._open(pos, direction)
@@ -48,11 +50,12 @@ class Recorder:
             time.sleep(0.02)
         image = self.camera.collect_ad_hoc_poll_request(request).get("colour")
         if image is not None:
-            image.convert("RGB").save(os.path.join(self.frames_dir, f"frame_{k:05d}.jpg"), quality=90)
+            image.convert("RGB").save(os.path.join(self.frames_dir, f"frame_{self.saved:05d}.jpg"), quality=92)
             self.saved += 1
 
-    def finish(self, mp4, fps=10):
-        """Join the frames into an mp4 at real-time speed (one frame per 0.1 s of simulation)."""
+    def finish(self, mp4):
+        """Join the frames into an mp4 at real-time speed."""
+        fps = 10 * self.substeps
         if self.camera is not None:
             self.camera.remove()
         if not self.saved:

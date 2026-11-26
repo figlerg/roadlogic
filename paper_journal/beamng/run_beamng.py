@@ -77,6 +77,16 @@ def verdicts(summary, scenarios):
     return {n: "POSITIVE" if f"scenario_{n}" in pos else "negative" if f"scenario_{n}" in neg else None for n in scenarios}
 
 
+def off_road(out, scenarios):
+    """Per scenario the cars that left the asphalt and when [s], from the BeamNG traces."""
+    rows = {}
+    for n in scenarios:
+        f = os.path.join(out, f"scenario_{n}", "simulation_00001", "beamng_trace.json")
+        cars = json.load(open(f)).get("off_road", {}) if os.path.exists(f) else {}
+        rows[n] = {car: t for car, t in cars.items() if t is not None}
+    return rows
+
+
 def run_experiment(session, exp, scenarios, video, skip_done):
     out = os.path.join(exp, "sim_beamng")
     os.makedirs(out, exist_ok=True)
@@ -100,7 +110,7 @@ def run_experiment(session, exp, scenarios, video, skip_done):
     summary = judge(exp, out, done) if done else None
     default = os.path.join(exp, "sim_default", "summary_log.json")
     return {"experiment": os.path.basename(exp), "scenarios": scenarios, "simulated": done,
-            "failed": [n for n in scenarios if n not in done], "seconds": seconds,
+            "failed": [n for n in scenarios if n not in done], "seconds": seconds, "off_road": off_road(out, done),
             "beamng": verdicts(summary, scenarios),
             "commonroad": verdicts(json.load(open(default)) if os.path.exists(default) else None, scenarios)}
 
@@ -127,7 +137,8 @@ def main():
             agree = sum(b[n] == c[n] for n in scenarios if b[n] and c[n])
             print(f"{row['experiment']}: BeamNG {list(b.values()).count('POSITIVE')}/{len(scenarios)} positive, "
                   f"CommonRoad {list(c.values()).count('POSITIVE')}/{len(scenarios)}, same verdict {agree}, "
-                  f"failed {len(row['failed'])}, {time.time() - t:.0f} s", flush=True)
+                  f"failed {len(row['failed'])}, off road {sum(bool(v) for v in row['off_road'].values())}, "
+                  f"{time.time() - t:.0f} s", flush=True)
             if a.results:
                 with open(a.results, "a") as f:
                     f.write(json.dumps(row) + "\n")

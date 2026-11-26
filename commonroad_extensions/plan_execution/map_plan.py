@@ -1022,13 +1022,21 @@ def _densify(times, xy, speeds, dt):
     return t, np.column_stack([np.interp(t, times, xy[:, 0]), np.interp(t, times, xy[:, 1])]), np.interp(t, times, speeds)
 
 
-def _continue_straight(t, xy, speeds, dt, seconds):
-    """The script continued for `seconds` along the last direction at the last speed: the car keeps
-    driving after its plan ends, as with ROADLOGIC_FINAL_SLACK=end in the CommonRoad simulation."""
+def _lane_direction(point, lane_centerlines):
+    """The direction of the lane centre line nearest to a point, at the closest vertex."""
+    best = min(lane_centerlines.values(), key=lambda c: np.min(np.linalg.norm(c - point, axis=1)))
+    i = int(np.argmin(np.linalg.norm(best - point, axis=1)))
+    d = best[min(i + 1, len(best) - 1)] - best[max(min(i, len(best) - 2), 0)]
+    return d / np.linalg.norm(d)
+
+
+def _continue_along_lane(t, xy, speeds, dt, seconds, lane_centerlines):
+    """The script continued for `seconds` along the car's last lane at its last speed: the car keeps driving
+    after its plan ends, as with ROADLOGIC_FINAL_SLACK=end in the CommonRoad simulation. Along the lane, not
+    along the last plan segment: after a lane change that segment is diagonal and led off the road."""
     if seconds <= 0 or len(xy) < 2:
         return t, xy, speeds
-    d = xy[-1] - xy[-2]
-    d = d / np.linalg.norm(d) if np.linalg.norm(d) > 1e-9 else np.array([1.0, 0.0])
+    d = _lane_direction(xy[-1], lane_centerlines)
     extra = np.arange(1, int(round(seconds / dt)) + 1) * dt
     return (np.r_[t, t[-1] + extra], np.vstack([xy, xy[-1] + np.outer(extra * speeds[-1], d)]),
             np.r_[speeds, np.full(len(extra), speeds[-1])])
@@ -1037,7 +1045,7 @@ def _continue_straight(t, xy, speeds, dt, seconds):
 def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: int, save_path=None,
                     dt=0.1, keep_driving=10.0, config_sim=dummy_config_sim):
     """The BeamNG mode of map_plan: per car its id (as in the CommonRoad scenario), its spawn pose and a
-    timed script with a point every dt seconds, continued straight for keep_driving seconds after the
+    timed script with a point every dt seconds, continued along its lane for keep_driving seconds after the
     plan. A car whose planned speed stays 0 is static (no script). Written as JSON to save_path if given."""
     frames = plan_frames(plan_model)
     centerlines = {lane.lanelet_id: lane.center_vertices for lane in scenario.lanelet_network.lanelets}  # as in map_plan
@@ -1051,7 +1059,7 @@ def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: in
         static = not speeds.any()
         t, pts, v = _densify(times, xy, speeds, dt)
         if not static:
-            t, pts, v = _continue_straight(t, pts, v, dt, keep_driving)
+            t, pts, v = _continue_along_lane(t, pts, v, dt, keep_driving, centerlines)
         agents[agent] = {
             "id": encode(agent), "static": bool(static),
             "spawn": {"x": float(xy[0, 0]), "y": float(xy[0, 1]), "heading": float(poses[0][1]), "speed": float(speeds[0])},
