@@ -77,18 +77,19 @@ def verdicts(summary, scenarios):
     return {n: "POSITIVE" if f"scenario_{n}" in pos else "negative" if f"scenario_{n}" in neg else None for n in scenarios}
 
 
-def off_road(out, scenarios):
-    """Per scenario the cars that left the asphalt and when [s], from the BeamNG traces."""
+def from_traces(out, scenarios, backend, key):
+    """Per scenario an entry of the simulator's trace file: "off_road" (cars that left the asphalt, when)
+    or "collisions" (pairs of cars that touched, when)."""
     rows = {}
     for n in scenarios:
-        f = os.path.join(out, f"scenario_{n}", "simulation_00001", "beamng_trace.json")
-        cars = json.load(open(f)).get("off_road", {}) if os.path.exists(f) else {}
-        rows[n] = {car: t for car, t in cars.items() if t is not None}
+        f = os.path.join(out, f"scenario_{n}", "simulation_00001", f"{backend}_trace.json")
+        found = json.load(open(f)).get(key, {}) if os.path.exists(f) else {}
+        rows[n] = {k: t for k, t in found.items() if t is not None}
     return rows
 
 
-def run_experiment(session, exp, scenarios, video, skip_done):
-    out = os.path.join(exp, "sim_beamng")
+def run_experiment(session, exp, scenarios, video, skip_done, backend="beamng"):
+    out = os.path.join(exp, f"sim_{backend}")
     os.makedirs(out, exist_ok=True)
     done, seconds = [], {}
     for n in scenarios:
@@ -110,8 +111,9 @@ def run_experiment(session, exp, scenarios, video, skip_done):
     summary = judge(exp, out, done) if done else None
     default = os.path.join(exp, "sim_default", "summary_log.json")
     return {"experiment": os.path.basename(exp), "scenarios": scenarios, "simulated": done,
-            "failed": [n for n in scenarios if n not in done], "seconds": seconds, "off_road": off_road(out, done),
-            "beamng": verdicts(summary, scenarios),
+            "failed": [n for n in scenarios if n not in done], "seconds": seconds, "off_road": from_traces(out, done, backend, "off_road"),
+            "collisions": from_traces(out, done, backend, "collisions"),
+            "backend": backend, "beamng": verdicts(summary, scenarios),
             "commonroad": verdicts(json.load(open(default)) if os.path.exists(default) else None, scenarios)}
 
 
@@ -123,21 +125,30 @@ def main():
     ap.add_argument("--video", action="store_true")
     ap.add_argument("--skip-done", action="store_true", help="keep scenarios that already have a BeamNG trace")
     ap.add_argument("--results", help="append one JSON line per experiment here")
+    ap.add_argument("--backend", choices=["beamng", "carla"], default="beamng",
+                    help="carla: the server at ROADLOGIC_CARLA_HOST, results in sim_carla/")
     a = ap.parse_args()
     warnings.simplefilter("ignore")
-    from commonroad_extensions.beamng.execute import Session
+    if a.backend == "carla":
+        from commonroad_extensions.carla.execute import Session
+    else:
+        from commonroad_extensions.beamng.execute import Session
     experiments = [e.rstrip("/") for e in a.experiments if stored(e.rstrip("/"))]
+    for e in a.experiments:
+        if not stored(e.rstrip("/")):
+            print(f"skipped {e}: no stored plans (serialized_models/)", flush=True)
     with Session(os.path.join(ROOT, "demo_output", "beamng_logs")) as session:
         for exp in experiments:
             scenarios = a.scenarios or stored(exp)
             scenarios = scenarios[:a.per_exp] if a.per_exp else scenarios
             t = time.time()
-            row = run_experiment(session, exp, scenarios, a.video, a.skip_done)
+            row = run_experiment(session, exp, scenarios, a.video, a.skip_done, a.backend)
             b, c = row["beamng"], row["commonroad"]
             agree = sum(b[n] == c[n] for n in scenarios if b[n] and c[n])
-            print(f"{row['experiment']}: BeamNG {list(b.values()).count('POSITIVE')}/{len(scenarios)} positive, "
+            print(f"{row['experiment']}: {a.backend} {list(b.values()).count('POSITIVE')}/{len(scenarios)} positive, "
                   f"CommonRoad {list(c.values()).count('POSITIVE')}/{len(scenarios)}, same verdict {agree}, "
                   f"failed {len(row['failed'])}, off road {sum(bool(v) for v in row['off_road'].values())}, "
+                  f"collisions {sum(bool(v) for v in row['collisions'].values())}, "
                   f"{time.time() - t:.0f} s", flush=True)
             if a.results:
                 with open(a.results, "a") as f:

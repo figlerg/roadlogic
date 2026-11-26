@@ -99,6 +99,42 @@ def off_road(layout, trace):
     return out
 
 
+CAR_LENGTH, CAR_WIDTH = 4.9, 1.9             # the simulated cars (BeamNG etk800, CARLA lincoln mkz) are about
+                                              # this big. The CommonRoad shape 4.508 x 1.61 missed a car pushing another
+
+
+def _corners(x, y, h):
+    c, s = math.cos(h), math.sin(h)
+    return np.array([[x + c * dx - s * dy, y + s * dx + c * dy]
+                     for dx, dy in ((CAR_LENGTH / 2, CAR_WIDTH / 2), (CAR_LENGTH / 2, -CAR_WIDTH / 2),
+                                    (-CAR_LENGTH / 2, -CAR_WIDTH / 2), (-CAR_LENGTH / 2, CAR_WIDTH / 2))])
+
+
+def _overlap(a, b):
+    """Two convex polygons intersect (separating axis test)."""
+    for poly in (a, b):
+        for i in range(len(poly)):
+            edge = poly[(i + 1) % len(poly)] - poly[i]
+            axis = np.array([-edge[1], edge[0]])
+            pa, pb = a @ axis, b @ axis
+            if pa.max() < pb.min() or pb.max() < pa.min():
+                return False
+    return True
+
+
+def collisions(trace):
+    """The first time [s] each pair of cars overlaps (car outlines of CAR_LENGTH x CAR_WIDTH), as
+    {"car_a/car_b": t}. Only pairs that touch at some point."""
+    names, out = list(trace), {}
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            for ra, rb in zip(trace[a], trace[b]):
+                if abs(ra[1] - rb[1]) < CAR_LENGTH + 1 and _overlap(_corners(*ra[1:4]), _corners(*rb[1:4])):
+                    out[f"{a}/{b}"] = round(ra[0] / 10, 1)
+                    break
+    return out
+
+
 def observe(vehicle, offset, ground_z):
     """(centre x, centre y, heading, speed) of a car: the bounding box centre, as CommonRoad's position.
     Fails if the car is below the ground (no ground where the level is assumed to have it)."""
@@ -245,7 +281,8 @@ class Session:
         sim = os.path.join(out, "simulation_00001")
         os.makedirs(sim, exist_ok=True)
         with open(os.path.join(sim, "beamng_trace.json"), "w") as f:
-            json.dump({"agents": plan["agents"], "trace": trace, "off_road": off_road(self.layout, trace)}, f)
+            json.dump({"agents": plan["agents"], "trace": trace, "off_road": off_road(self.layout, trace),
+                       "collisions": collisions(trace)}, f)
         write_executed(cr_scenario, plan["agents"], trace, os.path.join(sim, "executed_scenario.xml"))
         return os.path.join(sim, "executed_scenario.xml")
 
