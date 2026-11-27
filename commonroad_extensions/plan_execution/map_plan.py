@@ -993,3 +993,73 @@ def plot_similarity_matrix(plans, output_directory):
             similarity_plot_file = os.path.join(similarity_output_folder, f"similarity_{t}_{agent}.png")
             plt.savefig(similarity_plot_file)
             plt.close()
+
+# ---- BeamNG mode ------------------------------------------------------------------------------------
+# The plan as one timed script per car for BeamNG's AI (vehicle.ai.set_script: a list of {x, y, z, t},
+# where the car should be at which time). Positions come from plan_pose, which computes them as map_plan
+# computes its waypoints, so both simulators place a car at the same coordinates.
+# The road is commonroad_extensions/beamng/road.py on a flat level at z = 0.
+
+def plan_frames(plan_model: MyModel):
+    """The plan's states per time step, as in map_plan: {t: DataFrame indexed by agent}."""
+    rows = [{"agent": p[0][0].name, "lon_pos": p[0][1][0], "lat_pos": p[0][1][1],
+             "lon_vel": p[0][2][0], "lat_vel": p[0][2][1], "t": p[1]} for p in plan_model.holds]
+    df = pd.DataFrame(rows)
+    return {t: g.drop(columns="t").set_index("agent") for t, g in df.groupby("t")}
+
+
+def plan_pose(row, coordinate_system, lane_centerlines):
+    """A plan state's (x, y) and orientation, computed as map_plan computes its waypoints: the plan's lane
+    number is the lanelet id, and the longitudinal position is shifted by padding_distance_left."""
+    xy_lon = coordinate_system.convert_to_cartesian_coords(row["lon_pos"] + padding_distance_left, 0)
+    (x, y), _ = project_to_polyline(xy_lon, lane_centerlines[row["lat_pos"]])
+    return (x, y), float(get_orientation_from_xy((x, y), coordinate_system))
+
+
+def _densify(times, xy, speeds, dt):
+    """Linear interpolation of a car's plan points to a point every dt seconds."""
+    t = np.round(np.arange(times[0], times[-1] + dt / 2, dt), 6)
+    return t, np.column_stack([np.interp(t, times, xy[:, 0]), np.interp(t, times, xy[:, 1])]), np.interp(t, times, speeds)
+
+
+def _continue_straight(t, xy, speeds, dt, seconds):
+    """The script continued for `seconds` along the last direction at the last speed: the car keeps
+    driving after its plan ends, as with ROADLOGIC_FINAL_SLACK=end in the CommonRoad simulation."""
+    if seconds <= 0 or len(xy) < 2:
+        return t, xy, speeds
+    d = xy[-1] - xy[-2]
+    d = d / np.linalg.norm(d) if np.linalg.norm(d) > 1e-9 else np.array([1.0, 0.0])
+    extra = np.arange(1, int(round(seconds / dt)) + 1) * dt
+    return (np.r_[t, t[-1] + extra], np.vstack([xy, xy[-1] + np.outer(extra * speeds[-1], d)]),
+            np.r_[speeds, np.full(len(extra), speeds[-1])])
+
+
+def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: int, save_path=None,
+                    dt=0.1, keep_driving=10.0, config_sim=dummy_config_sim):
+    """The BeamNG mode of map_plan: per car its id (as in the CommonRoad scenario), its spawn pose and a
+    timed script with a point every dt seconds, continued straight for keep_driving seconds after the
+    plan. A car whose planned speed stays 0 is static (no script). Written as JSON to save_path if given."""
+    frames = plan_frames(plan_model)
+    centerlines = {lane.lanelet_id: lane.center_vertices for lane in scenario.lanelet_network.lanelets}  # as in map_plan
+    cs = CoordinateSystem(reference=centerlines[anchor_lane_idx], config_sim=config_sim)
+    times = np.array(sorted(frames), float)
+    agents = {}
+    for agent in frames[0].index:
+        poses = [plan_pose(frames[t].loc[agent], cs, centerlines) for t in sorted(frames)]
+        xy = np.array([p[0] for p in poses], float)
+        speeds = np.array([float(frames[t].loc[agent, "lon_vel"]) for t in sorted(frames)])
+        static = not speeds.any()
+        t, pts, v = _densify(times, xy, speeds, dt)
+        if not static:
+            t, pts, v = _continue_straight(t, pts, v, dt, keep_driving)
+        agents[agent] = {
+            "id": encode(agent), "static": bool(static),
+            "spawn": {"x": float(xy[0, 0]), "y": float(xy[0, 1]), "heading": float(poses[0][1]), "speed": float(speeds[0])},
+            "script": [] if static else [{"x": float(p[0]), "y": float(p[1]), "z": 0.0, "t": float(round(s, 3)), "v": float(vi)}
+                                          for s, p, vi in zip(t, pts, v)]}
+    out = {"dt": dt, "plan_end": float(times[-1]), "agents": agents}
+    if save_path:
+        import json
+        with open(save_path, "w") as f:
+            json.dump(out, f, indent=1)
+    return out
