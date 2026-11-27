@@ -6,10 +6,19 @@ SHELL := /bin/bash
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Check which venv exist
 THE_PYTHON := $(shell if [ -f "venv/bin/python" ]; then echo venv/bin/python; else echo .venv/bin/python; fi )
+
+# TODO This shall be updated to install local modules instead of sourcing them?
 # Define all the additional modules to import
 ADDITIONAL_PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/monitoring/syma-arv:$(ROOT_DIR):$(ROOT_DIR)/monitoring/syma
+
 # Ensure that python has always the required path
+ifdef PYTHONPATH
+$(info PYTHONPATH is defined)
 PYTHON := export PYTHONPATH=$${PYTHONPATH}:$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
+else
+$(info PYTHONPATH is not defined)
+PYTHON := export PYTHONPATH=$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
+endif
 
 # Host the options for the various commands
 # Use default options for execution... Hopefully, they do not break anything
@@ -26,8 +35,7 @@ debug :
 PYTHON_CLI_WITH_OPTS=$(PYTHON) cli.py $(CLI_OPTS)
 
 # Main variable controlling which simualtion to use beamng or commonroad
-SIMULATOR ?= beamng
-# SIMULATOR ?= commonroad
+SIMULATOR ?= commonroad
 
 EXECUTE_SCENARIO_COMMAND = execute-scenario-$(SIMULATOR)
 EXECUTION_OPTS ?= 
@@ -38,9 +46,17 @@ OUTPUT_FOLDER := $(shell realpath $(OUTPUT_FOLDER))
 SCENARIOS_FOLDER ?= scenarios
 SCENARIOS_FOLDER := $(shell realpath $(SCENARIOS_FOLDER))
 
+# TODO This should fail if not provided, but only for targets da requires it!
 OSC_FILE ?= osc_files/my_overtake_2.osc
 # OSC_FILE ?= osc_files/my_overtake.osc
 OSC_FILE := $(shell realpath $(OSC_FILE))
+# TODO This can be used to fail a built if some variable is not define. By declaring the dep on the task needing it
+# check-env:
+# ifndef ENV
+# 	$(error ENV is undefined)
+# endif
+
+
 OSC_N ?= 10
 CR_SCENARIO_FILE ?= cr_scenarios/threelanes.xml
 CR_SCENARIO_FILE := $(shell realpath $(CR_SCENARIO_FILE))

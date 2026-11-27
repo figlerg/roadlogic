@@ -4,7 +4,8 @@
 time_step() {
   local label="$1"; shift
   local start end dur start_iso end_iso status rc log_json
-  log_json="$EXP/out/times.jsonl"
+  # TODO Where are EXP and SIMULATOR Defined?
+  log_json="$EXP/out/$SIMULATOR/times.jsonl"
   mkdir -p "$(dirname "$log_json")"
 
   start=$(date +%s); start_iso=$(date -Iseconds)
@@ -22,9 +23,15 @@ time_step() {
 }
 
 
-# --- Utility: reset an experiment's out folder ---
+# --- Utility: reset an experiment's out folder. But only for the currently selected simulator ---
 exp_reset_out() {
-local dir="$1/out"
+  # TODO time_step relies on EXP and SIMULATOR why do we read inputs here?
+  if [[ $# -ne 2 ]]; then
+        echo "Error: Expected 2 arguments, got $#" >&2
+        return 1
+  fi
+
+local dir="$1/out/$2"
 if command -v gio >/dev/null 2>&1; then
 gio trash "$dir" 2>/dev/null || true
 else
@@ -36,41 +43,45 @@ mkdir -p "$dir"
 
 # --- VANILLA PIPELINE -------------------------------------------------------
 run_vanilla_experiment() {
-  EXP="$1"; N="$2"; STEP_LENGTH="$3"
-  shift 3
+  EXP="$1"; N="$2"; STEP_LENGTH="$3" SIMULATOR="$4"
+  shift 4
   EXTRA_ARGS=("$@")
 
-  exp_reset_out "$EXP"
-
+  # This wipe out everything, so it is not possible to resume previous runs...
+  exp_reset_out "$EXP" "$SIMULATOR"
 
   time_step "generate-osc-scenarios" \
   make generate-osc-scenarios \
+    SIMULATOR="$SIMULATOR" \
     OSC_N="$N" \
     OSC_FILE="$EXP/in/spec.osc" \
-    OUTPUT_FOLDER="$EXP/out/cr_simulations" \
-    SCENARIOS_FOLDER="$EXP/out" \
+    OUTPUT_FOLDER="$EXP/out/$SIMULATOR/cr_simulations" \
+    SCENARIOS_FOLDER="$EXP/out/$SIMULATOR" \
     STEP_LENGTH="$STEP_LENGTH" \
     RULE_INJECTION="$EXP/in/rule_injection.lp" \
     "${EXTRA_ARGS[@]}"
 
   time_step "execute-all-scenarios" \
   make execute-all-scenarios \
-    SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
-    OUTPUT_FOLDER="$EXP/out/cr_simulations"
+    SIMULATOR="$SIMULATOR" \
+    SCENARIOS_FOLDER="$EXP/out/$SIMULATOR/cr_scenarios" \
+    OUTPUT_FOLDER="$EXP/out/$SIMULATOR/cr_simulations"
 
   time_step "compute-metrics" \
   make -j 8 \
-    SCENARIOS_FOLDER=$EXP/out/cr_scenarios \
-    OUTPUT_FOLDER=$EXP/out/cr_simulations \
+    SIMULATOR="$SIMULATOR" \
+    SCENARIOS_FOLDER=$EXP/out/$SIMULATOR/cr_scenarios \
+    OUTPUT_FOLDER=$EXP/out/$SIMULATOR/cr_simulations \
     compute-selected-metrics-for-all-scenarios
 
   time_step "generate-summary" \
   make generate-summary \
-    SCENARIOS_FOLDER="$EXP/out/cr_scenarios" \
-    OUTPUT_FOLDER="$EXP/out/cr_simulations" \
+    SIMULATOR="$SIMULATOR" \
+    SCENARIOS_FOLDER="$EXP/out/$SIMULATOR/cr_scenarios" \
+    OUTPUT_FOLDER="$EXP/out/$SIMULATOR/cr_simulations" \
     OSC_FILE="$EXP/in/spec.osc"
 
-# This is broken because it does not use the make file, so the python is not correctly set!
+  # TODO This is broken because it does not use the make file, so the python is not correctly set!
   # time_step "compute similarity" \
   # python commonroad_extensions/simulation_analysis/similarity.py \
     # --plans-folder $EXP/out/serialized_models \
@@ -78,7 +89,11 @@ run_vanilla_experiment() {
 }
 
 # --- PARTITIONING PIPELINE --------------------------------------------------
+# TODO Not yet updated
 run_variability_experiment() {
+  echo "NOT YET UPDATED!"
+  exit 1 
+
   EXP="$1"
   N="$2"
 
@@ -93,7 +108,7 @@ run_variability_experiment() {
 
   EXTRA_ARGS=("$@")   # e.g. --init-interval 10 20
 
-  exp_reset_out "$EXP"
+  exp_reset_out "$EXP" "$SIMULATOR"
   
   time_step "create_variability_instances" \
   python create_scenarios/create_variability_instances.py \
@@ -143,8 +158,11 @@ run_variability_experiment() {
 # CR_SCENARIO default: cr_scenarios/threelanes.xml
 # RULE_INJECTION optional: path to rule_injection.lp (omit to disable)
 run_heuristic_experiment() {
+echo "NOT YET UPDATED!"
+exit 1 
+
 EXP="$1"; N="$2"; HEURISTIC="${3:-BASIC}"; CR_SCENARIO="${4:-cr_scenarios/threelanes.xml}"; RULE_INJECTION="${5:-}"
-exp_reset_out "$EXP"
+exp_reset_out "$EXP" "$SIMULATOR"
 
 
 # Build the dynamic_feedback command with optional rule injection
