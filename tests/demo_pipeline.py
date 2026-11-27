@@ -263,6 +263,18 @@ def show_images(items, width=430):
     display(HTML("<table><tr>" + "".join(cells) + "</tr></table>"))
 
 
+def show_videos(items, width=430):
+    """Show mp4 videos side by side, embedded so the notebook keeps them. items: (title, path)."""
+    import base64
+    from IPython.display import HTML, display
+    cells = []
+    for title, path in items:
+        data = base64.b64encode(open(path, "rb").read()).decode()
+        cells.append(f"<td style='vertical-align:top;text-align:left'><b>{title}</b><br>"
+                     f"<video controls loop muted playsinline width='{width}' src='data:video/mp4;base64,{data}'></video></td>")
+    display(HTML("<table><tr>" + "".join(cells) + "</tr></table>"))
+
+
 def draw_monitor_automaton(spec, title=None, draw_shortcuts=True):
     """The monitor's automaton for a spec, drawn as a timed automaton with every guard written out.
 
