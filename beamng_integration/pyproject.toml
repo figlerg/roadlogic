@@ -9,8 +9,15 @@ description = "A set of modules to ease working with BeamNG.tech"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "beamngpy>=1.31",
+    "pytest==9.2.0",
+    "shapely>2.0.0"
 ]
+
+[project.optional-dependencies]
+v40 = ["beamngpy==1.37"]
+v39 = ["beamngpy==1.36"]
+v38 = ["beamngpy==1.35.1"]
+v37 = ["beamngpy==1.34.1"]
 
 [tool.setuptools]
 packages = ["beamng_integration"]
