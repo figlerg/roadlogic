@@ -34,9 +34,12 @@ def heading_quat(heading):
     return (0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2))
 
 
+# TODO Extend agents with model and color, so we can replicate them in CommonRoad when we generate the visualization?
 def build_scenario(bng, layout, agents, name="roadlogic"):
     """A new scenario. Each scenario loaded into a running BeamNG needs its own name: with a name it has
     already loaded, BeamNG keeps the old objects and rejects the new ones."""
+    # This build and make the scenario in BeamNG
+    # TODO For complex scenarios, we need to ensure the map is rebuilt
     from beamngpy import Scenario, Vehicle
     from commonroad_extensions.beamng.road import add_to_scenario
     scenario = Scenario(layout["level"], name)
@@ -47,9 +50,14 @@ def build_scenario(bng, layout, agents, name="roadlogic"):
         s = a["spawn"]
         scenario.add_vehicle(vehicles[name], pos=(s["x"], s["y"], layout["z"] + SPAWN_Z), rot_quat=heading_quat(s["heading"]))
     scenario.make(bng)
+
+    # TODO We need to setup the frame per second to ensure a step is 0.1
+    #  CLAUDE REPLY: done. Deterministic mode at PHYSICS_HZ = 60, and run() steps 6 physics steps per 0.1 s
     bng.settings.set_deterministic(PHYSICS_HZ)
     bng.scenario.load(scenario)
     bng.scenario.start()
+    # TODO Not necessary
+    #  CLAUDE REPLY: only matters for videos (light), costs nothing
     bng.env.set_tod(0.0)                       # noon, for the video
     bng.control.pause()
     return vehicles
@@ -140,6 +148,11 @@ def observe(vehicle, offset, ground_z):
     Fails if the car is below the ground (no ground where the level is assumed to have it)."""
     vehicle.sensors.poll()
     st = vehicle.state
+    # Note this is important, we do not use st['pos']
+    #  CLAUDE REPLY: st['pos'] is BeamNG's reference node, not the centre CommonRoad uses. We add the offset to the
+    #  bounding box centre, measured once per car in centre_offset() (get_bbox every step doubled the time per step)
+    # TODO Not necessary?
+    #  REPLY FELIX: I had some issues with cars falling forever because they spawned below ground
     if st["pos"][2] < ground_z - 2.0:
         raise RuntimeError(f"{vehicle.vid} fell through the ground (z = {st['pos'][2]:.1f})")
     fwd, left = _frame(st)
@@ -154,16 +167,37 @@ def run(bng, layout, plan, dt=0.1, recorder=None, name="roadlogic", max_wall=900
     import time
     start = time.time()
     agents = plan["agents"]
+
+    # Make the scenario in BeamNG and return the vehicles in it
+    # TODO Add Timer and Damage sensors
+    #  CLAUDE REPLY: agreed, the damage sensor is the next step (now collisions() checks car outlines in the trace,
+    #  which also flags near misses). No timer needed: deterministic mode, we step the simulation ourselves
     vehicles = build_scenario(bng, layout, agents, name)
+
+    # Initialization of the AIs.
     bng.control.step(PHYSICS_HZ // 2)         # let the cars settle on their wheels
     offsets = {name: centre_offset(veh) for name, veh in vehicles.items()}
     for name, a in agents.items():
+        # Car that does not move are parked
         if a["static"]:
+            # TODO Is this necessary?
+            #  CLAUDE REPLY: arcade mode so the parking brake is applied without a gear change. Not tested without
             vehicles[name].set_shift_mode("arcade")
+            # TODO Is this necessary?
+            #  CLAUDE REPLY: my assumption, not tested: without a brake a parked car could roll when another one touches it
             vehicles[name].control(parkingbrake=1)
         else:
+            # The vehicles move by following the script, and the script is defined by the plan.
+            #   By doing so we ensure that the vehicle is at the expected position at the target time (if possible)
+            #   TODO: Check whether teleportation or something else it at play
+            #    CLAUDE REPLY: no teleport, BeamNG's AI drives the car (throttle, brake, steering) in physics
+            #   TODO: Add a debug flag to show the spheres where the vehicle should go, and change color when they are not "active" anymore
             vehicles[name].ai.set_script([{"x": p["x"], "y": p["y"], "z": layout["z"], "t": p["t"]} for p in a["script"]])
+
+    # Prepare to sample at constant rate (dt)
     end = max([p["t"] for a in agents.values() for p in a["script"]] + [plan["plan_end"]])
+    # dt is the sampling rate. TODO We need to use the timer sensor to ensure samples are indeed collected at reasonable times
+    #  CLAUDE REPLY: in deterministic mode simulated time only moves when we step, a sample is exactly every dt
     steps = int(round(end / dt))
     trace = {name: [] for name in agents}
     focus = "ego" if "ego" in agents else next(iter(agents))       # the car the video follows
@@ -171,6 +205,8 @@ def run(bng, layout, plan, dt=0.1, recorder=None, name="roadlogic", max_wall=900
     road_y = [r for r in layout["roads"] if r["name"] == "asphalt"][0]["nodes"][0][1]
     for k in range(steps + 1):
         for name, veh in vehicles.items():
+            # TODO observe misses the damage sensor/collision
+            #  CLAUDE REPLY: see above, collisions come from the trace for now (collisions())
             trace[name].append((k,) + observe(veh, offsets[name], layout["z"]))
         if recorder:                          # extra frames between the recorded steps, for a smooth video
             for sub in range(recorder.substeps):
@@ -178,6 +214,7 @@ def run(bng, layout, plan, dt=0.1, recorder=None, name="roadlogic", max_wall=900
                 recorder.frame(x, road_y, layout["z"])
                 bng.control.step(int(round(PHYSICS_HZ * dt / recorder.substeps)))
         else:
+            # Step forward the simulation
             bng.control.step(int(round(PHYSICS_HZ * dt)))
         if time.time() - start > max_wall:
             raise TimeoutError(f"{name}: over {max_wall} s of wall time at step {k} of {steps}")
@@ -289,12 +326,24 @@ class Session:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    # TODO Why do we need a plan if we have a scenario?
+    # TODO Why do we have a scenario if we have a plan to build the scenario from?
+    #  CLAUDE REPLY: the plan gives the timed positions BeamNG's AI follows (map_plan_beamng). The scenario file is only
+    #  the template for executed_scenario.xml (road, ids), so metrics and monitor read the same format as for
+    #  the CommonRoad simulation. Could be generated from the plan, kept for the shared format
     ap.add_argument("--plan", required=True, help="a stored plan (serialized_models/NNNN.pkl)")
     ap.add_argument("--scenario", required=True, help="its CommonRoad scenario (cr_scenarios/scenario_NNNN.xml)")
     ap.add_argument("--out", required=True)
+    # TODO Why do we have a video recording?
+    #  CLAUDE REPLY: optional, for looking at single runs (found falling cars, cars leaving the road). Off in batch
+    #  runs, the trace is the same with and without
     ap.add_argument("--video", help="also record an mp4 here")
     args = ap.parse_args()
+    # TODO What's this?!
+    #  CLAUDE REPLY: hides CommonRoad's and map_plan's warnings (padding distance, three lanes) on every run
     warnings.simplefilter("ignore")
+    # TODO Why is this necessary?
+    #  CLAUDE REPLY: lets the module run as a script from anywhere, not only with the repository installed (pip -e)
     sys.path.insert(0, ROOT)
     with Session(args.out) as session:
         print("wrote", session.simulate(args.plan, args.scenario, args.out, args.video))
