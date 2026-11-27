@@ -465,6 +465,7 @@ def compute_pairwise_similarity(plan_model_a: MyModel, plan_model_b: MyModel) ->
 
     return float(len(intersection_of_cells)) / float (len(union_of_cells))
 
+
 def start_end_times(plan_model: MyModel) -> Tuple[float, float]:
     # Transform the planning in a list of DynamicObstacles with trajectories
     predicates = plan_model.holds  # get only holds predicates
@@ -488,6 +489,7 @@ def start_end_times(plan_model: MyModel) -> Tuple[float, float]:
     end_time = float(df["t"].max())
     
     return start_time, end_time
+
 
 def compute_progressive_similarity_matrix(plan_models: List[MyModel]) -> Tuple[Dict[int, List[List[float]]], Dict[int, Dict[int, List[List[float]]]]]:
     """
@@ -513,6 +515,7 @@ def compute_progressive_similarity_matrix(plan_models: List[MyModel]) -> Tuple[D
         per_agent_progressive_similarity_matrix[t] = compute_per_agent_similarity_matrix(plan_models, t)
 
     return progressive_similarity_matrix, per_agent_progressive_similarity_matrix
+
 
 def compute_per_agent_similarity_matrix(plan_models: List[MyModel], up_to_time: float) -> List[List[float]]:
     # Compute this once for all
@@ -1009,6 +1012,11 @@ def plan_frames(plan_model: MyModel):
 
 
 def plan_pose(row, coordinate_system, lane_centerlines):
+    # assert np.isscalar(lon_pos) and np.isscalar(lat_pos), f"Non-scalar positions: lon={type(lon_pos)}, lat={type(lat_pos)}"
+    # xy_lon = coordinate_system.convert_to_cartesian_coords(lon_pos + padding_distance_left,0)
+    # key = lat_pos
+    # (x, y), _ = project_to_polyline(xy_lon, lane_centerlines[key])  # +2 because we convert -1,0.1 to 1,2,3. (lanes are numbered from left to right)
+
     """A plan state's (x, y) and orientation, computed as map_plan computes its waypoints: the plan's lane
     number is the lanelet id, and the longitudinal position is shifted by padding_distance_left."""
     xy_lon = coordinate_system.convert_to_cartesian_coords(row["lon_pos"] + padding_distance_left, 0)
@@ -1034,11 +1042,16 @@ def _continue_straight(t, xy, speeds, dt, seconds):
             np.r_[speeds, np.full(len(extra), speeds[-1])])
 
 
-def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: int, save_path=None,
-                    dt=0.1, keep_driving=10.0, config_sim=dummy_config_sim):
+def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: int, 
+                    save_path=None,
+                    dt=0.1, keep_driving=10.0, config_sim=dummy_config_sim) -> dict:
     """The BeamNG mode of map_plan: per car its id (as in the CommonRoad scenario), its spawn pose and a
     timed script with a point every dt seconds, continued straight for keep_driving seconds after the
     plan. A car whose planned speed stays 0 is static (no script). Written as JSON to save_path if given."""
+
+
+    # TODO: This must be revised!
+
     frames = plan_frames(plan_model)
     centerlines = {lane.lanelet_id: lane.center_vertices for lane in scenario.lanelet_network.lanelets}  # as in map_plan
     cs = CoordinateSystem(reference=centerlines[anchor_lane_idx], config_sim=config_sim)
@@ -1049,17 +1062,34 @@ def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: in
         xy = np.array([p[0] for p in poses], float)
         speeds = np.array([float(frames[t].loc[agent, "lon_vel"]) for t in sorted(frames)])
         static = not speeds.any()
+        # TODO: Note this one. It interpolate
         t, pts, v = _densify(times, xy, speeds, dt)
         if not static:
             t, pts, v = _continue_straight(t, pts, v, dt, keep_driving)
         agents[agent] = {
-            "id": encode(agent), "static": bool(static),
+            "id": encode(agent), 
+            "static": bool(static),
+            "original_x": [p[0] for p in xy.tolist()],
+            "original_y": [p[1] for p in xy.tolist()],
             "spawn": {"x": float(xy[0, 0]), "y": float(xy[0, 1]), "heading": float(poses[0][1]), "speed": float(speeds[0])},
             "script": [] if static else [{"x": float(p[0]), "y": float(p[1]), "z": 0.0, "t": float(round(s, 3)), "v": float(vi)}
                                           for s, p, vi in zip(t, pts, v)]}
     out = {"dt": dt, "plan_end": float(times[-1]), "agents": agents}
-    if save_path:
-        import json
-        with open(save_path, "w") as f:
-            json.dump(out, f, indent=1)
+    # Why this?
+    # if save_path:
+    #     import json
+    #     with open(save_path, "w") as f:
+    #         json.dump(out, f, indent=1)
+
+    def debug_plot():
+        import matplotlib.pyplot as plt
+        colors = ["green", "red"]
+        for agent_id, agent in enumerate(agents.values()):
+            xs = [p["x"] for p in agent["script"]]
+            ys = [p["y"] for p in agent["script"]]
+            plt.plot(xs, ys, color=colors[agent_id])
+            plt.plot(agent["original_x"], agent["original_y"], "o", color=colors["agent_id"])
+        plt.gca().set_aspect("equal")
+        plt.savefig("temp-figure.png")
+
     return out

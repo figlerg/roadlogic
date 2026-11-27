@@ -65,8 +65,9 @@ which python
 
 # pip install
 pip install -U pip wheel setuptools
-pip install -e ./Frenetix-Motion-Planner   # local submodule
-pip install -e .                           # roadlogic itself
+pip install -e ./Frenetix-Motion-Planner    # local submodule
+pip install -e ./beamng_integration         # BeamNG.tech simulator integration
+pip install -e .                            # roadlogic itself
 ```
 
 ---

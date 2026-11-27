@@ -76,6 +76,8 @@ cli.add_command(generate_from_simulation)
 
 cli.add_command(execute_scenario_in_commonroad)
 
+cli.add_command(execute_scenario_in_beamng)
+
 cli.add_command(compute_metrics)
 
 cli.add_command(plot_simulation)

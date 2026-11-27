@@ -38,7 +38,7 @@ from beamngpy import set_up_simple_logging
 #### OUR IMPORTS
 from beamngpy import Road, MeshRoad
 
-from data_structures import BeamNGConfigs
+from .data_structures import BeamNGConfigs
 
 # def safe_add_nodes(road: Road|MeshRoad, roadnodes):
 #     """

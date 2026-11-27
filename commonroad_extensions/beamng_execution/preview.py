@@ -19,7 +19,7 @@ CR_SCENARIO = os.path.join(ROOT, "cr_scenarios", "threelanes.xml")
 def export(plan_pkl, out):
     """Generation: road.json and plan_beamng.json from a stored plan."""
     from commonroad.common.file_reader import CommonRoadFileReader
-    from commonroad_extensions.beamng.road import road_layout, save_layout
+    from commonroad_extensions.beamng_execution.road import road_layout, save_layout
     from commonroad_extensions.plan_execution.map_plan import map_plan_beamng
     os.makedirs(out, exist_ok=True)
     scenario, _ = CommonRoadFileReader(CR_SCENARIO).open()

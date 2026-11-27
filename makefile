@@ -25,13 +25,19 @@ debug :
 
 PYTHON_CLI_WITH_OPTS=$(PYTHON) cli.py $(CLI_OPTS)
 
+# Main variable controlling which simualtion to use beamng or commonroad
+#SIMULATOR ?= beamng
+SIMULATOR ?= commonroad
 
-OUTPUT_FOLDER ?= experiments
+EXECUTE_SCENARIO_COMMAND = execute-scenario-$(SIMULATOR)
+EXECUTION_OPTS ?= 
+
+OUTPUT_FOLDER ?= experiments-$(SIMULATOR)
 OUTPUT_FOLDER := $(shell realpath $(OUTPUT_FOLDER))
 
 SCENARIOS_FOLDER ?= scenarios
-EXECUTION_OPTS ?= 
 SCENARIOS_FOLDER := $(shell realpath $(SCENARIOS_FOLDER))
+
 OSC_FILE ?= osc_files/my_overtake_2.osc
 # OSC_FILE ?= osc_files/my_overtake.osc
 OSC_FILE := $(shell realpath $(OSC_FILE))
@@ -129,7 +135,7 @@ CONSTANTS_OVERRIDE ?=
 STEP_LENGTH ?=
 RULE_INJECTION ?=
 
-# NOTE I put the missing packages directly insider the create plan stuff
+# NOTE I put the missing packages directly inside the create plan stuff
 $(OSC_SCENARIOS)&: $(OSC_FILE)
 	$(PYTHON) create_scenarios/create_plan_scenarios.py \
 		--osc-file $(OSC_FILE) \
@@ -160,9 +166,16 @@ $(OUTPUT_FOLDER)/$1/simulation_00001/executed_scenario.xml :
 	@rm -rf $(OUTPUT_FOLDER)/$1/simulation_00001
 	@rm -f $(OUTPUT_FOLDER)/$1/simulation_00001.log
 	@mkdir -p $(OUTPUT_FOLDER)/$1
-	$(eval SCENARIO_FILE=$(shell find $(SCENARIOS_FOLDER) -iname "*.xml" | grep $1.xml))
-	$(PYTHON_CLI_WITH_OPTS) --output-folder $(OUTPUT_FOLDER)/$1 execute-scenario $(EXEC_OPTS) --scenario-file $(SCENARIO_FILE) --simulation-id 00001 \
-		2>&1 | tee $(OUTPUT_FOLDER)/$1/simulation_00001.log
+	
+	$(eval SCENARIO_ID=$(shell echo $1 | sed 's|.*_||'))
+ 	$(eval SCENARIO_FILE=$(shell find $(SCENARIOS_FOLDER) -iname "*.xml" | grep $1.xml))
+ 	$(eval PLAN_FILE=$(shell find $(SCENARIOS_FOLDER)/.. -iname "*.pkl" | grep $(SCENARIO_ID).pkl))
+
+	$(PYTHON_CLI_WITH_OPTS) --output-folder $(OUTPUT_FOLDER)/$1 $(EXECUTE_SCENARIO_COMMAND) $(EXEC_OPTS) \
+ 		--scenario-file $(SCENARIO_FILE) \
+ 		--plan-file $(PLAN_FILE) \
+ 		--simulation-id 00001 \
+ 		2>&1 | tee $(OUTPUT_FOLDER)/$1/simulation_00001.log
 endef
 
 

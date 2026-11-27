@@ -17,11 +17,13 @@ import numpy as np
 # Levels and the road materials that exist in them (BeamNG.tech 0.38.5). gridmap_v2 is flat at 56.23 m for
 # x in [-400, 500], y in [-100, 300], with buildings in the background. Its terrain only exists with a
 # renderer. smallgrid is a bare grid at z = 0 and crashes without a renderer.
+# TODO This must be changed!
 LEVELS = {
-    "gridmap_v2": {"z": 56.2347, "asphalt": "m_road_asphalt_rough_01", "line": "m_gm_line"},
-    "smallgrid": {"z": 0.0, "asphalt": "a_asphalt_01_a", "line": "misc_markings_01"},
+    "tech_ground" : {"z": 0.0, "asphalt": "road_asphalt_2lane", "line": "BlankWhite"},
+    # "gridmap_v2": {"z": 56.2347, "asphalt": "m_road_asphalt_rough_01", "line": "m_gm_line"},
+    # "smallgrid": {"z": 0.0, "asphalt": "a_asphalt_01_a", "line": "misc_markings_01"},
 }
-LEVEL = "gridmap_v2"
+LEVEL = "tech_ground"
 LINE_WIDTH = 0.15
 DASH, GAP = 3.0, 6.0          # dashed lane lines, metres
 

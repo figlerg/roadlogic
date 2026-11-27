@@ -39,7 +39,7 @@ def build_scenario(bng, layout, agents):
     # This build and make the scenario in BeamNG
     # TODO For complex scenarios, we need to ensure the map is rebuilt
     from beamngpy import Scenario, Vehicle
-    from commonroad_extensions.beamng.road import add_to_scenario
+    from commonroad_extensions.beamng_execution.road import add_to_scenario
     
     # Note: this class is never returned
     scenario = Scenario(layout["level"], "roadlogic")
@@ -183,9 +183,9 @@ def main():
     from beamngpy import BeamNGpy
     from commonroad.common.file_reader import CommonRoadFileReader
     # OUR CODE:
-    from commonroad_extensions.beamng.road import road_layout
-    from commonroad_extensions.beamng.server import BeamNGServer
-    from commonroad_extensions.beamng.video import Recorder
+    from commonroad_extensions.beamng_execution.road import road_layout
+    from commonroad_extensions.beamng_execution.server import BeamNGServer
+    from commonroad_extensions.beamng_execution.video import Recorder
     from commonroad_extensions.plan_execution.map_plan import map_plan_beamng
 
     # Read the default ROAD. TODO This shall be changed

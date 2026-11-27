@@ -70,10 +70,11 @@ run_vanilla_experiment() {
     OUTPUT_FOLDER="$EXP/out/cr_simulations" \
     OSC_FILE="$EXP/in/spec.osc"
 
-  time_step "compute similarity" \
-  python commonroad_extensions/simulation_analysis/similarity.py \
-    --plans-folder $EXP/out/serialized_models \
-    --output-folder $EXP/out/similarity
+# This is broken because it does not use the make file, so the python is not correctly set!
+  # time_step "compute similarity" \
+  # python commonroad_extensions/simulation_analysis/similarity.py \
+    # --plans-folder $EXP/out/serialized_models \
+    # --output-folder $EXP/out/similarity
 }
 
 # --- PARTITIONING PIPELINE --------------------------------------------------

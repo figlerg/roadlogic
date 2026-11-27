@@ -7,23 +7,35 @@ from commonroad.common.file_reader import XMLFileReader
 from commonroad.scenario.obstacle import DynamicObstacle
 
 from commonroad_extensions.scenario_execution.stitched_execution import FrenetixScenarioExecution
+from commonroad_extensions.beamng_execution.beamng_execution import BeamNGScenarioExecution
 from commonroad_extensions.common.utils import override_configuration, make_nested_dict
 from commonroad_extensions.common.utils import create_planning_problems_from_dynamic_obstacles
 
+#
+# Given a scenario-file in CommonRoad format and a simulation-id, the execution commands must produce
+#   a file called executed_scenario.xml in CommonRoad format, in the given output-folder 
+# The executed_scenario.xml file contains the trace of execution of the vehicles in the simulation.
+#   TODO: Collided vehicles should stop!
+#
+# Additional options can be passed to customize the simulation, provided that the apply to the execute command used.
+#
 
 # This implementation is tightly coupled with Frenetix. TODO: Refactor to make it more generic, define a common interface to execute the scenarios.
-@click.command()
+@click.command(name="execute-scenario-commonroad")
 @click.pass_context
 @click.option("--scenario-file", required=True, type=click.Path(exists=True, file_okay=True), help="The XML file containing the CommonRoad scenario to execute")
+@click.option("--plan-file", required=True, type=click.Path(exists=True, file_okay=True), help="The file containing the serialized high-level plan")
 @click.option("--simulation-id", required=False, type=int, help="The (Unique) ID Assigned to the simulated scenario")
-@click.option("--tranche-size", "tranche_size_time_step", required=False, type=int, help="The size of each tranche of simulation in simulation steps.")
 @click.option("--max-duration", required=False, type=int, help="The max duration of the execution in time steps")
+# CommonRoad/Frenetix Specific options
 # Disable entirely prediction mode!
 # @click.option("--prediction-mode", required=False, default="walenet", type=click.Choice(["walenet", "none"],case_sensitive=False))
+@click.option("--tranche-size", "tranche_size_time_step", required=False, type=int, help="The size of each tranche of simulation in simulation steps.")
 @click.option("--convert", "list_of_dynamic_obstacles_to_convert", required=False, type=int, multiple=True, help="The list of ids of dynamic obstacles to convert to planning problems. -1 will convert them all")
 @click.option("--disable-perception-of", "list_of_disable_perception_ids", required=False, type=int, multiple=True, help="The list of ids of ego vehicles without a perception module.  -1 will disable perception for all")
-def execute_scenario_in_commonroad(ctx, scenario_file: str, simulation_id: int, tranche_size_time_step: Optional[int], max_duration: Optional[int], #prediction_mode:str,
+def execute_scenario_in_commonroad(ctx, scenario_file: str, plan_file:str, simulation_id: int, max_duration: Optional[int], tranche_size_time_step: Optional[int], #prediction_mode:str,
                      list_of_dynamic_obstacles_to_convert: Optional[List[int]], list_of_disable_perception_ids: Optional[List[int]]):
+    
     # Extract common options
     output_folder = ctx.obj["output_folder"]
     verbose = ctx.obj["verbose"]
@@ -118,7 +130,7 @@ def execute_scenario_in_commonroad(ctx, scenario_file: str, simulation_id: int, 
     if convert_all:
         list_of_dynamic_obstacles_to_convert = [do.obstacle_id for do in scenario.obstacles if isinstance(do, DynamicObstacle)]
 
-    # This feature is usueful when we need to repeat a scenario made entirely by "obstacles" (e.g., HighD dataset, JARI)
+    # This feature is useful when we need to repeat a scenario made entirely by "obstacles" (e.g., HighD dataset, JARI)
     list_of_dynamic_obstacles_to_convert = list(list_of_dynamic_obstacles_to_convert)
     new_planning_problems = create_planning_problems_from_dynamic_obstacles(list_of_dynamic_obstacles_to_convert, scenario, planning_problem_set)
     dynamic_obstacle_ids = [do.obstacle_id for do in scenario.dynamic_obstacles]
@@ -150,17 +162,69 @@ def execute_scenario_in_commonroad(ctx, scenario_file: str, simulation_id: int, 
     scenario_executor.execute(scenario, planning_problem_set, simulation_id, adjust_starting_time_steps=True, max_duration=max_duration)
 
     
-@click.command()
+@click.command(name="execute-scenario-beamng")
 @click.pass_context
 @click.option("--scenario-file", required=True, type=click.Path(exists=True, file_okay=True), help="The XML file containing the CommonRoad scenario to execute")
+@click.option("--plan-file", required=True, type=click.Path(exists=True, file_okay=True), help="The file containing the serialized high-level plan")
 @click.option("--simulation-id", required=False, type=int, help="The (Unique) ID Assigned to the simulated scenario")
-@click.option("--max-duration", required=False, type=int, help="The max duration of the execution in time steps")
+@click.option("--max-duration", required=False, type=float, default=20.0, help="The max duration of the execution in seconds")
+# BeamNG specific options
+@click.option('--no-gpu', 'no_graphics', default=False, help="Run the simulation using only the CPU")
+@click.option("--headless", default=False, help="Run the simulation headless mode")
 def execute_scenario_in_beamng(ctx, 
-                               scenario_file: str, simulation_id: int, 
-                               max_duration: Optional[int]):
-    # TODO configuration of BeamNG
+                               scenario_file: str, plan_file: str,
+                               simulation_id: int, 
+                               max_duration: Optional[int],
+                               no_graphics: bool, headless: bool):
+
+    # Extract common options
+    output_folder = ctx.obj["output_folder"]
+    verbose = ctx.obj["verbose"]
+
+    if simulation_id is None:
+        from datetime import datetime
+        td = datetime.now() # today()
+        # int(now.timestamp())
+        simulation_id = int(td.timestamp())
+
+    from logging import  ERROR, DEBUG
+    from beamng_integration.utils import set_up_simple_logging
+    set_up_simple_logging(level = ERROR if not verbose else DEBUG)
+
+    from beamng_integration.data_structures import BeamNGConfigs
+    from pathlib import Path, PurePosixPath, PureWindowsPath
+
+    # NOTE: This is hardcoded for the moment and works only with WSL.
+    beamng_home_path = PureWindowsPath(os.environ.get("BEAMNG_TECH_HOME") or "C:\\BeamNG\\BeamNG.tech.v0.39.4.0")
+    beamng_user_path = PureWindowsPath(os.environ.get("BEAMNG_TECH_USER") or "C:\\BeamNG\\BeamNG.tech.v0.39.4.0_user")
+    beamng_port = int(os.environ.get("BEAMNG_TECH_PORT") or 25252)
+    beamng_host = os.environ.get("BEAMNG_TECH_HOST") or "172.27.32.1"
+
+    # Configure the options for BeamNG simulation
+    beamng_configs = BeamNGConfigs(beamng_home_path=beamng_home_path, 
+                                   beamng_user_path=beamng_user_path,
+                                   beamng_host=beamng_host, beamng_port=beamng_port,
+                                   fps=30, step_seconds=30,
+                                   headless=headless, no_graphics=no_graphics)
     
-    pass
+    scenario, planning_problem_set = XMLFileReader(scenario_file).open(lanelet_assignment=True)
+    
+    # Read the ASP plan from file
+    from commonroad_extensions.plan_execution.map_plan import map_plan_beamng
+    import pickle
+    with open(plan_file, "rb") as f:
+        plan_model = pickle.load(f)
+    
+    # TODO: This does more than just reading the plan!
+    #   Pay attention to what it does!
+    # TODO anchor_lane_idx is what defines the coordinate system: @Felix check this is correct
+    # TODO Consider define a class instead?
+    # TODO This also gives name to the agents!
+    plan_dict = map_plan_beamng(scenario, plan_model, anchor_lane_idx=1)
+
+    # Note: In this implementation, we use directly the high-level plan computed by roadlogic to drive BeamNG vehicles
+    scenario_executor = BeamNGScenarioExecution(output_folder, beamng_configs)
+    scenario_executor.execute(scenario, plan_dict, simulation_id, max_duration_s=max_duration)
    
 
     
