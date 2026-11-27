@@ -44,7 +44,6 @@ def run_the_simulation(bng, layout, agents, max_duration_s: float, dt=0.1):
     takes a frame per step."""
     from commonroad_extensions.beamng_execution.execute import build_scenario, observe, PHYSICS_HZ
     # Make the scenario in BeamNG and return the vehicles in it
-    # TODO Add Timer and Damage sensors
     vehicles = build_scenario(bng, layout, agents)
     
     # Initialization of the AIs.

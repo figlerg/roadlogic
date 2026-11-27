@@ -41,12 +41,17 @@ def build_scenario(bng, layout, agents, name="roadlogic"):
     # This build and make the scenario in BeamNG
     # TODO For complex scenarios, we need to ensure the map is rebuilt
     from beamngpy import Scenario, Vehicle
+    from beamngpy.sensors import Damage, Timer
     from commonroad_extensions.beamng_execution.road import add_to_scenario
     scenario = Scenario(layout["level"], name)
+    
     add_to_scenario(scenario, layout)
-    vehicles = {}
-    for k, (name, a) in enumerate(agents.items()):          # colours as in the plots: C0, C1, ...
-        vehicles[name] = Vehicle(f"rl_{name}", model=MODEL, color=COLOURS[k % len(COLOURS)])   # the level may have an object called "obstacle"
+
+    vehicles: dict[str, Vehicle] = {}
+    for k, (name, a) in enumerate(agents.items()):
+        vehicles[name] = Vehicle(f"rl_{name}", model=MODEL, color=COLOURS[k % len(COLOURS)])
+        vehicles[name].sensors.attach("damage", Damage())
+        vehicles[name].sensors.attach("timer", Timer())
         s = a["spawn"]
         scenario.add_vehicle(vehicles[name], pos=(s["x"], s["y"], layout["z"] + SPAWN_Z), rot_quat=heading_quat(s["heading"]))
     scenario.make(bng)
@@ -242,7 +247,8 @@ def write_executed(cr_scenario_file, agents, trace, out_file):
     from commonroad.scenario.state import CustomState, InitialState
     from commonroad_extensions.common.utils import store_executed_scenario_to_output_folder
     scenario, _ = CommonRoadFileReader(cr_scenario_file).open()
-    shape = Rectangle(4.508, 1.61)            # as the CommonRoad backend writes its cars
+    # TODO This information shall be included in the agents structure and sampled directly from BeamNG.tech
+    shape = Rectangle(CAR_LENGTH, CAR_WIDTH)
     end = on_road_steps(scenario, trace)
     for name, rows in trace.items():
         rows = rows[:end]
@@ -317,6 +323,7 @@ class Session:
             raise
         sim = os.path.join(out, "simulation_00001")
         os.makedirs(sim, exist_ok=True)
+        # TODO We are not using this one. Collisions must be checked using our monitors afterwards
         with open(os.path.join(sim, "beamng_trace.json"), "w") as f:
             json.dump({"agents": plan["agents"], "trace": trace, "off_road": off_road(self.layout, trace),
                        "collisions": collisions(trace)}, f)

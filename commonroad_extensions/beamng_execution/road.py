@@ -20,8 +20,22 @@ import numpy as np
 # x in [-400, 500], y in [-100, 300], with buildings in the background. Its terrain only exists with a
 # renderer. smallgrid is a bare grid at z = 0 and crashes without a renderer.
 # TODO This must be changed!
+# DEFAULT_MESH_MATERIAL_NAME = "ind_concrete"
+# DEFAULT_ROAD_MATERIAL_NAME = "road_asphalt_2lane"
+
+# solid_yellow_material = "line_yellow"
+# solid_white_material = "BlankWhite" 
+# dashed_white_material = "line_dashed_long" 
+# dotted_white_material = "line_dashed_short"
+# transparent_material = "road_invisible"
+
 LEVELS = {
-    "tech_ground" : {"z": 0.0, "asphalt": "road_asphalt_2lane", "line": "BlankWhite"},
+    "tech_ground" : {"z": 0.0,
+                     "asphalt": "road_asphalt_2lane", 
+                     "left_line": "line_yellow",
+                     "right_line": "BlankWhite",
+                     "middle_line": "line_dashed_short" # "line_dashed_long"
+                     },
     # "gridmap_v2": {"z": 56.2347, "asphalt": "m_road_asphalt_rough_01", "line": "m_gm_line"},
     # "smallgrid": {"z": 0.0, "asphalt": "a_asphalt_01_a", "line": "misc_markings_01"},
 }
@@ -49,8 +63,40 @@ def _dashes(polyline):
     at = lambda d: np.array([np.interp(d, s, p[:, 0]), np.interp(d, s, p[:, 1])])
     return [np.array([at(d), at(d + DASH)]) for d in np.arange(0, s[-1] - DASH, DASH + GAP)]
 
-
 def road_layout(scenario, level=LEVEL, before=50.0, after=300.0):
+    """
+    Assumes this is only have a single piece of road, possibly with multiple lanes
+    Right most lane is demarked with a solid white line
+    Left most lane is demarked with a solid yellow line
+    All the rest are dashed white lines
+    """
+    cfg = LEVELS[level]
+    z = cfg["z"]
+    lanelets = scenario.lanelet_network.lanelets
+    left = [l for l in lanelets if l.adj_left is None][0]
+    right = [l for l in lanelets if l.adj_right is None][0]
+    centre = (left.left_vertices + right.right_vertices) / 2
+    width = float(np.linalg.norm(left.left_vertices[0] - right.right_vertices[0]))
+    
+    roads = [{"name": "asphalt", "material": cfg["asphalt"], "nodes": _nodes(_extend(centre, before, after), width + 1.0, z)}]    
+    edges = [(f"edge_{left.lanelet_id}", left.left_vertices), (f"edge_{right.lanelet_id}", right.right_vertices)]
+    
+    # Left edge
+    name, bound = edges[0]
+    roads.append({"name": name, "material": cfg["left_line"], "nodes": _nodes(_extend(bound, before, after), LINE_WIDTH, z)})
+    
+    # Right edge
+    name, bound = edges[1]
+    roads.append({"name": name, "material": cfg["right_line"], "nodes": _nodes(_extend(bound, before, after), LINE_WIDTH, z)})
+
+    # Middle lines
+    for l in lanelets:
+        if l.adj_left is not None:
+            roads.append({"name": f"dash_{l.lanelet_id}", "material": cfg["middle_line"], "nodes": _nodes(_extend(l.left_vertices, before, after), LINE_WIDTH, z)})
+
+    return {"level": level, "z": z, "lane_width": width / len(lanelets), "roads": roads}
+
+def road_layout_old(scenario, level=LEVEL, before=50.0, after=300.0):
     """The decal roads of a CommonRoad scenario's lanelet network. Assumes the lanelets are side by side
     (one lanelet per lane, as in threelanes.xml)."""
     cfg = LEVELS[level]
@@ -62,8 +108,10 @@ def road_layout(scenario, level=LEVEL, before=50.0, after=300.0):
     width = float(np.linalg.norm(left.left_vertices[0] - right.right_vertices[0]))
     roads = [{"name": "asphalt", "material": cfg["asphalt"], "nodes": _nodes(_extend(centre, before, after), width + 1.0, z)}]
     edges = [(f"edge_{left.lanelet_id}", left.left_vertices), (f"edge_{right.lanelet_id}", right.right_vertices)]
+    
     for name, bound in edges:
         roads.append({"name": name, "material": cfg["line"], "nodes": _nodes(_extend(bound, before, after), LINE_WIDTH, z)})
+    
     for l in lanelets:
         if l.adj_left is not None:
             # TODO Not sure what is doing here with the dash
