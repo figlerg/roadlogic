@@ -3,11 +3,19 @@ metrics, monitor and summary run on it unchanged.
 
     python -m commonroad_extensions.carla.execute --plan <plan.pkl> --scenario <scenario_N.xml> --out <folder>
 
-The CARLA server runs elsewhere (ROADLOGIC_CARLA_HOST, port ROADLOGIC_CARLA_PORT, default 2000). The CARLA
-client exists only for Windows Python, so the driving happens in carla_drive.py under ROADLOGIC_CARLA_PYTHON
-(default C:\\Users\\<you>\\dev\\carla-venv), and this side exchanges JSON files with it in WORK, a folder on the
-Windows drive. The plan is mapped as for BeamNG (map_plan_beamng: a timed script per car), the road is the
-CommonRoad road as OpenDRIVE (opendrive.py).
+The CARLA server runs on this machine or another one (ROADLOGIC_CARLA_HOST, default 127.0.0.1, port
+ROADLOGIC_CARLA_PORT, default 2000). The driving happens in carla_drive.py, which needs only the CARLA client and
+numpy, and talks to this side through two JSON files. Two ways to run it (ROADLOGIC_CARLA_MODE):
+
+    local    this Python has the CARLA client (`import carla` works): carla_drive.py runs with it, in a
+             temporary folder. Linux with a client wheel built from the CARLA sources, or native Windows.
+    windows  WSL, with the client only in a Windows Python (C:\\Users\\<you>\\dev\\carla-venv, or
+             ROADLOGIC_CARLA_PYTHON): carla_drive.py runs there through PowerShell, the files go to a
+             folder on the Windows drive.
+    auto     (default) local if `import carla` works here, windows otherwise.
+
+The plan is mapped as for BeamNG (map_plan_beamng: a timed script per car), the road is the CommonRoad road
+as OpenDRIVE (opendrive.py).
 """
 import argparse
 import glob
@@ -17,6 +25,7 @@ import pickle
 import shutil
 import subprocess
 import sys
+import tempfile
 import warnings
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,18 +44,45 @@ def win(path):
     return subprocess.run(["wslpath", "-w", path], capture_output=True, text=True, check=True).stdout.strip()
 
 
+def local():
+    """True when carla_drive.py runs with this Python (ROADLOGIC_CARLA_MODE, see the module docstring)."""
+    mode = os.environ.get("ROADLOGIC_CARLA_MODE", "auto")
+    if mode not in ("auto", "local", "windows"):
+        raise ValueError(f"ROADLOGIC_CARLA_MODE={mode}, expected auto, local or windows")
+    if mode == "auto":
+        import importlib.util
+        return importlib.util.find_spec("carla") is not None
+    return mode == "local"
+
+
+def work_dir():
+    """The folder for the job, the trace and the video frames, where carla_drive.py can reach it."""
+    if local():
+        return os.path.join(tempfile.gettempdir(), "roadlogic_carla")
+    return os.path.join(windows_user_dir(), "roadlogic_carla")
+
+
+def driver_path(path):
+    """A path in the work folder as carla_drive.py sees it."""
+    return path if local() else win(path)
+
+
 def drive(job, work):
-    """Run carla_drive.py on the Windows side and return its trace."""
+    """Run carla_drive.py, here or on the Windows side, and return its trace."""
     os.makedirs(work, exist_ok=True)
     shutil.copy(os.path.join(HERE, "carla_drive.py"), work)
     job_file, trace_file = os.path.join(work, "job.json"), os.path.join(work, "trace.json")
     json.dump(job, open(job_file, "w"))
     if os.path.exists(trace_file):
         os.remove(trace_file)
-    python = os.environ.get("ROADLOGIC_CARLA_PYTHON", win(os.path.join(windows_user_dir(), "carla-venv", "Scripts", "python.exe")))
-    done = subprocess.run([POWERSHELL, "-NoProfile", "-Command",
-                           f"& '{python}' '{win(os.path.join(work, 'carla_drive.py'))}' '{win(job_file)}' '{win(trace_file)}'"],
-                          cwd="/mnt/c", capture_output=True, text=True)
+    if local():
+        done = subprocess.run([sys.executable, os.path.join(work, "carla_drive.py"), job_file, trace_file],
+                              capture_output=True, text=True)
+    else:
+        python = os.environ.get("ROADLOGIC_CARLA_PYTHON", win(os.path.join(windows_user_dir(), "carla-venv", "Scripts", "python.exe")))
+        done = subprocess.run([POWERSHELL, "-NoProfile", "-Command",
+                               f"& '{python}' '{win(os.path.join(work, 'carla_drive.py'))}' '{win(job_file)}' '{win(trace_file)}'"],
+                              cwd="/mnt/c", capture_output=True, text=True)
     if done.returncode != 0 or not os.path.exists(trace_file):
         raise RuntimeError(f"carla_drive.py failed: {done.stdout[-1500:]} {done.stderr[-1500:]}")
     return json.load(open(trace_file))["trace"]
@@ -66,13 +102,13 @@ def simulate(plan_pkl, cr_scenario, out, host=None, port=None, video=None):
            "port": int(port or os.environ.get("ROADLOGIC_CARLA_PORT", "2000")),
            "xodr": road_xodr(road), "agents": plan["agents"],
            "road_y": float(sum(l.center_vertices[0][1] for l in road.lanelet_network.lanelets) / len(road.lanelet_network.lanelets)), "plan_end": plan["plan_end"], "dt": plan["dt"]}
-    work = os.path.join(windows_user_dir(), "roadlogic_carla")
+    work = work_dir()
     frames = os.path.join(work, "frames")
     if video:
         os.makedirs(frames, exist_ok=True)
         for f in glob.glob(os.path.join(frames, "frame_*.png")):
             os.remove(f)
-        job["video_dir"] = win(frames)
+        job["video_dir"] = driver_path(frames)
     trace = drive(job, work)
     if video:
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "20", "-pattern_type", "glob",

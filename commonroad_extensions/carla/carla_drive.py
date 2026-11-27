@@ -1,6 +1,6 @@
-"""Drive one plan in CARLA and record it. Runs under the Python that has the CARLA client (on Windows:
-C:\\Users\\<you>\\dev\\carla-venv), needs only carla and numpy, and talks to the rest of the pipeline through
-two JSON files:
+"""Drive one plan in CARLA and record it. Runs under the Python that has the CARLA client (the pipeline's own,
+or a Windows Python when the pipeline runs in WSL, see execute.py), needs only carla and numpy, and talks to the
+rest of the pipeline through two JSON files:
 
     python carla_drive.py <job.json> <trace.json>
 
@@ -16,6 +16,7 @@ the script's position. A static car keeps its hand brake on. CARLA's world is le
 """
 import json
 import math
+import os
 import sys
 
 import carla
@@ -163,14 +164,17 @@ def main(job_file, trace_file):
                 for name, actor in actors.items():
                     trace[name].append([k // per_row, *pose(actor)])
             view = chase(pose(actors[focus])[0], road_y)
-            spectator.set_transform(view)                 # the server window follows the car
+            # the server window and the video camera follow the car. set_transform is fire and forget, over Wi-Fi it
+            # sometimes arrived after the tick and the video jumped back and forth. apply_batch_sync waits for it.
+            moves = [carla.command.ApplyTransform(spectator.id, view)]
             if camera:
-                camera.set_transform(view)
+                moves.append(carla.command.ApplyTransform(camera.id, view))
+            client.apply_batch_sync(moves, False)
             for name, f in followers.items():
                 actors[name].apply_control(f.control(k * TICK))
             frame = world.tick()
             if camera:
-                save_frame(images, frame, f"{video_dir}\\frame_{k:05d}.png")
+                save_frame(images, frame, os.path.join(video_dir, f"frame_{k:05d}.png"))
         json.dump({"trace": trace}, open(trace_file, "w"))
     finally:
         if video_dir and camera:

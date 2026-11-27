@@ -11,7 +11,7 @@ import datetime, html, os, re, subprocess, sys
 import mistune, nbformat
 
 NB, PROGRESS, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
-REPO = "https://github.com/figlerg/roadlogic/blob/feature/keep/"
+REPO = "https://github.com/figlerg/roadlogic/blob/feature/beamng/"
 NB_DIR = os.path.relpath(os.path.dirname(os.path.abspath(NB)))
 
 
@@ -136,7 +136,7 @@ pre.stream {{ background: var(--surface); border: 1px solid var(--line); }}
 .frame table {{ border-collapse: collapse; font: 13px/1.4 var(--mono); font-variant-numeric: tabular-nums; }}
 .frame th, .frame td {{ border: 1px solid var(--line); padding: 4px 8px; text-align: left; }}
 .frame thead th {{ background: var(--code-bg); }}
-.media img {{ max-width: 100%; height: auto; border-radius: 4px; border: 1px solid var(--line); background: #fff; }}
+.media img, .media video {{ max-width: 100%; height: auto; border-radius: 4px; border: 1px solid var(--line); background: #fff; }}
 .media table {{ border-collapse: collapse; width: 100%; }}
 .media td {{ padding: 0 8px 8px 0; vertical-align: top; color: var(--fg); }}
 .media td b {{ font: 600 13px/1.4 var(--body); }}
