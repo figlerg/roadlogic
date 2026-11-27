@@ -1,3 +1,9 @@
+#########################################
+#
+# TODO This shall be uploaded to match the new pipeline with SIMULATOR!
+#
+#########################################
+
 bash experiments_src/exp_001_b/run.sh 
 bash experiments_src/exp_002_b/run.sh 
 bash experiments_src/exp_003_b/run.sh 

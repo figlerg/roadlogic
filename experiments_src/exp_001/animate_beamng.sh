@@ -1,4 +1,10 @@
-EXP="experiments_src/exp_001"
+#!/usr/bin/env bash
+set -euo pipefail
+
+THIS_FOLDER_NAME=$(basename "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )")
+THIS_FOLDER_PARENT_NAME=$(basename $(dirname "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"))
+
+EXP="$THIS_FOLDER_PARENT_NAME/$THIS_FOLDER_NAME"
 SIMULATOR="beamng"
 
 make \

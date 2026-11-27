@@ -1,3 +1,9 @@
+#########################################
+#
+# TODO This shall be uploaded to match the new pipeline with SIMULATOR!
+#
+#########################################
+
 #!/usr/bin/env bash
 set -euo pipefail
 source "$(dirname "$0")/common.sh"

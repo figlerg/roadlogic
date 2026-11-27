@@ -13,10 +13,8 @@ ADDITIONAL_PYTHONPATH := $(ROOT_DIR):$(ROOT_DIR)/monitoring/syma-arv:$(ROOT_DIR)
 
 # Ensure that python has always the required path
 ifdef PYTHONPATH
-$(info PYTHONPATH is defined)
 PYTHON := export PYTHONPATH=$${PYTHONPATH}:$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
 else
-$(info PYTHONPATH is not defined)
 PYTHON := export PYTHONPATH=$(ADDITIONAL_PYTHONPATH) ; $(THE_PYTHON)
 endif
 
@@ -46,10 +44,8 @@ OUTPUT_FOLDER := $(shell realpath $(OUTPUT_FOLDER))
 SCENARIOS_FOLDER ?= scenarios
 SCENARIOS_FOLDER := $(shell realpath $(SCENARIOS_FOLDER))
 
-# TODO This should fail if not provided, but only for targets da requires it!
 OSC_FILE ?= osc_files/my_overtake_2.osc
 # OSC_FILE ?= osc_files/my_overtake.osc
-OSC_FILE := $(shell realpath $(OSC_FILE))
 # TODO This can be used to fail a built if some variable is not define. By declaring the dep on the task needing it
 # check-env:
 # ifndef ENV
@@ -61,7 +57,8 @@ OSC_N ?= 10
 CR_SCENARIO_FILE ?= cr_scenarios/threelanes.xml
 CR_SCENARIO_FILE := $(shell realpath $(CR_SCENARIO_FILE))
 
-OSC_SCENARIOS := $(shell for I in $$(seq 1 $(OSC_N)); do printf "$(SCENARIOS_FOLDER)/osc2/cr_scenarios/scenario_%04d.xml\n" $$I; done | tr "\n" " ")
+# OSC_SCENARIOS := $(shell for I in $$(seq 1 $(OSC_N)); do printf "$(SCENARIOS_FOLDER)/osc2/cr_scenarios/scenario_%04d.xml\n" $$I; done | tr "\n" " ")
+OSC_SCENARIOS := $(shell for I in $$(seq 1 $(OSC_N)); do printf "$(SCENARIOS_FOLDER)/cr_scenarios/scenario_%04d.xml\n" $$I; done | tr "\n" " ")
 
 # Default utilities
 SED=/usr/bin/sed
@@ -83,9 +80,10 @@ endif
 scenario_id_list := $(shell find $(SCENARIOS_FOLDER) -iname "*.xml" -exec basename {} \; | sed -e "s|.xml||g")
 
 print-scenarios:
-# @echo Scenarios found:
-# @echo $(scenario_id_list)
-	@echo "$(OSC_SCENARIOS)" | tr " " "\n"
+	# @echo Scenarios found:
+	# @echo $(scenario_id_list)
+# 	@echo "$(OSC_SCENARIOS)" | tr " " "\n"
+	$(OUTPUT_FOLDER)/summary_log.json
 
 
 # invoke cli.py compute-metrics --help to get the full list
@@ -118,32 +116,15 @@ list-scenario-ids:
 	@echo "Scenario:"
 	@echo $(scenario_id_list) | tr " " "\n"
 
-# had to change for number padding
-# OSC_SCENARIOS := $(shell for I in $$(seq $(OSC_N)); do echo $(SCENARIOS_FOLDER)/osc2/cr_scenarios/scenario_$$I.xml; done | tr "\n" " ") 
+generate-osc-scenarios: $(SCENARIOS_FOLDER)/.osc-generated
 
-
-
-### THE BELOW DIDNT WORK: it just never triggered the xml generation
-
-# generate-scenarios: .osc-generated
-
-# clean-osc-scenarios:
-# 	@rm -f .osc-generated
-
-# #$(OSC_SCENARIOS) 
-# .osc-generated: $(OSC_FILE)
-# 	@rm -fvr $(SCENARIOS_FOLDER)/osc2
-# 	$(PYTHON) create_scenarios/create_plan_scenarios.py --osc-file $(OSC_FILE) --n $(OSC_N) --output-folder $(SCENARIOS_FOLDER)/osc2 --cr-scenario $(CR_SCENARIO_FILE)
-# 	touch .osc-generated
-
-
-generate-osc-scenarios: .osc-generated
-
-.osc-generated: $(OSC_SCENARIOS)
-	touch .osc-generated
+$(SCENARIOS_FOLDER)/.osc-generated: $(OSC_SCENARIOS)
+	@echo "OSC File: $(OSC_FILE)"
+	@echo "Scenarios: $(OSC_SCENARIOS)"
+	touch $(SCENARIOS_FOLDER)/.osc-generated
 
 clean-osc-scenarios:
-	@rm -f .osc-generated
+	@rm -f $(SCENARIOS_FOLDER)/.osc-generated
 	@rm -rf $(SCENARIOS_FOLDER)/osc2
 
 # empty by default
@@ -152,7 +133,12 @@ STEP_LENGTH ?=
 RULE_INJECTION ?=
 
 # NOTE I put the missing packages directly inside the create plan stuff
-$(OSC_SCENARIOS)&: $(OSC_FILE)
+# $(OSC_SCENARIOS)&: $(OSC_FILE) => This dep might force a recompile..
+# create_scenarios/create_plan_scenarios.py creates files
+# 	experiments_src/exp_001/out/commonroad/cr_scenarios/scenario_0006.xml
+# and NOT 
+# 	experiments_src/exp_001/out/commonroad/osc2/cr_scenarios/scenario_0001.xml
+$(OSC_SCENARIOS)&:
 	$(PYTHON) create_scenarios/create_plan_scenarios.py \
 		--osc-file $(OSC_FILE) \
 		--n $(OSC_N) \
@@ -247,7 +233,7 @@ compute-all-metrics-for-scenario-$1: $(OUTPUT_FOLDER)/$1/$2.csv
 endef
 
 compute-selected-metrics-for-all-scenarios:
-	@echo "Done"
+	@echo "compute-selected-metrics-for-all-scenarios - Done"
 	
 define make-group-targets-for-selected-metric-computation
 
@@ -277,19 +263,13 @@ $(foreach metric_name,$(selected_metrics),$(foreach scenario_id,$(scenario_id_li
 define make-scenario-analysis 
 
 
-# $(OUTPUT_FOLDER)/$1/monitoring_results.csv: $(OUTPUT_FOLDER)/$1/LANE.csv $(OUTPUT_FOLDER)/$1/LONGPOS.csv
-# 		$(PYTHON) monitoring/gen_monitoring_results.py \
-# 			--output-folder $(OUTPUT_FOLDER)/$1/ \
-# 			--osc-file $(OSC_FILE) \
-
-# new version where I load the pickled plan as well for the invariant monitor
 $(OUTPUT_FOLDER)/$1/monitoring_results.csv: \
   $(OUTPUT_FOLDER)/$1/LANE.csv \
   $(OUTPUT_FOLDER)/$1/LONGPOS.csv
 	$(PYTHON) monitoring/gen_monitoring_results.py \
 		--output-folder $(OUTPUT_FOLDER)/$1/ \
 		--osc-file $(OSC_FILE) \
-		--check-plan $(OUTPUT_FOLDER)/../serialized_models/$(patsubst scenario_%,%,$1).pkl
+		--check-plan $(OUTPUT_FOLDER)/serialized_models/$(patsubst scenario_%,%,$1).pkl
 
 endef
 
@@ -298,16 +278,16 @@ $(foreach scenario_id,$(scenario_id_list),$(eval $(call make-scenario-analysis,$
 
 generate-summary:$(OUTPUT_FOLDER)/summary_log.json
 
-# generate-summary:$(OUTPUT_FOLDER)/summary_log.json
-
+# TODO What's this Folder?
 BLUEPRINT_FOLDER ?=
 
 # $(OUTPUT_FOLDER)/summary_log.json: $(addprefix $(OUTPUT_FOLDER)/, $(addsuffix /monitoring_results.csv, $(scenario_id_list)))
 # 	rm -f $(OUTPUT_FOLDER)/summary_log.json
 # 	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER) $
 $(OUTPUT_FOLDER)/summary_log.json: $(addprefix $(OUTPUT_FOLDER)/, $(addsuffix /monitoring_results.csv, $(scenario_id_list)))
-	rm -f $(OUTPUT_FOLDER)/summary_log.json
+	@rm -f $(OUTPUT_FOLDER)/summary_log.json
 	$(PYTHON) monitoring/aggregate_monitoring_results.py $(OUTPUT_FOLDER) $(BLUEPRINT_FOLDER)
+	@echo "Create summary file $(OUTPUT_FOLDER)/summary_log.json"
 
 
 

@@ -1,3 +1,9 @@
+#########################################
+#
+# TODO This shall be uploaded to match the new pipeline with SIMULATOR!
+#
+#########################################
+
 # vanilla pics
 python experiments_src/vis_success_rates.py \
   --pattern "experiments_src/logs/exp_00[0-9].json" \

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Common helper: logs timing info as JSON in $EXP/out/times.jsonl
 
+#########################################
+#
+# TODO This shall be uploaded to match the new pipeline with SIMULATOR!
+#
+#########################################
+
 time_step() {
   local label="$1"; shift
   local start end dur start_iso end_iso status rc log_json
@@ -43,15 +49,18 @@ mkdir -p "$dir"
 
 # --- VANILLA PIPELINE -------------------------------------------------------
 run_vanilla_experiment() {
-  EXP="$1"; N="$2"; STEP_LENGTH="$3" SIMULATOR="$4"
-  shift 4
+  EXP="$1"; N="$2"; STEP_LENGTH="$3" SIMULATOR="$4" WIPE_OUT="$5"
+  shift 5
   EXTRA_ARGS=("$@")
 
   # This wipe out everything, so it is not possible to resume previous runs...
-  exp_reset_out "$EXP" "$SIMULATOR"
+  if [[ $WIPE_OUT -eq 1 ]]; then
+    echo "Clean Results for $EXP $SIMULATOR"
+    exp_reset_out "$EXP" "$SIMULATOR"
+  fi
 
   time_step "generate-osc-scenarios" \
-  make generate-osc-scenarios \
+  make -w generate-osc-scenarios \
     SIMULATOR="$SIMULATOR" \
     OSC_N="$N" \
     OSC_FILE="$EXP/in/spec.osc" \
@@ -62,23 +71,23 @@ run_vanilla_experiment() {
     "${EXTRA_ARGS[@]}"
 
   time_step "execute-all-scenarios" \
-  make execute-all-scenarios \
+  make -w execute-all-scenarios \
     SIMULATOR="$SIMULATOR" \
     SCENARIOS_FOLDER="$EXP/out/$SIMULATOR/cr_scenarios" \
     OUTPUT_FOLDER="$EXP/out/$SIMULATOR/cr_simulations"
 
   time_step "compute-metrics" \
-  make -j 8 \
+  make -w -j 8 \
     SIMULATOR="$SIMULATOR" \
     SCENARIOS_FOLDER=$EXP/out/$SIMULATOR/cr_scenarios \
     OUTPUT_FOLDER=$EXP/out/$SIMULATOR/cr_simulations \
     compute-selected-metrics-for-all-scenarios
 
   time_step "generate-summary" \
-  make generate-summary \
+  make -w generate-summary \
     SIMULATOR="$SIMULATOR" \
     SCENARIOS_FOLDER="$EXP/out/$SIMULATOR/cr_scenarios" \
-    OUTPUT_FOLDER="$EXP/out/$SIMULATOR/cr_simulations" \
+    OUTPUT_FOLDER="$EXP/out/$SIMULATOR" \
     OSC_FILE="$EXP/in/spec.osc"
 
   # TODO This is broken because it does not use the make file, so the python is not correctly set!

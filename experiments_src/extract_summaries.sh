@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+#########################################
+#
+# TODO This shall be uploaded to match the new pipeline with SIMULATOR!
+#
+#########################################
+
 LOGDIR="experiments_src/logs"
 mkdir -p "$LOGDIR"
 
