@@ -1062,10 +1062,14 @@ def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: in
         xy = np.array([p[0] for p in poses], float)
         speeds = np.array([float(frames[t].loc[agent, "lon_vel"]) for t in sorted(frames)])
         static = not speeds.any()
-        # TODO: Note this one. It interpolate
+        
+        ####
+        # TODO: Note this one. It interpolates
         t, pts, v = _densify(times, xy, speeds, dt)
         if not static:
             t, pts, v = _continue_straight(t, pts, v, dt, keep_driving)
+        #### 
+        
         agents[agent] = {
             "id": encode(agent), 
             "static": bool(static),
@@ -1087,8 +1091,8 @@ def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: in
         for agent_id, agent in enumerate(agents.values()):
             xs = [p["x"] for p in agent["script"]]
             ys = [p["y"] for p in agent["script"]]
-            plt.plot(xs, ys, color=colors[agent_id])
-            plt.plot(agent["original_x"], agent["original_y"], "o", color=colors["agent_id"])
+            plt.plot(xs, ys, ".-", color=colors[agent_id])
+            plt.plot(agent["original_x"], agent["original_y"], "o", color=colors[agent_id])
         plt.gca().set_aspect("equal")
         plt.savefig("temp-figure.png")
 
