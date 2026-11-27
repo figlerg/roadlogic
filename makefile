@@ -26,8 +26,8 @@ debug :
 PYTHON_CLI_WITH_OPTS=$(PYTHON) cli.py $(CLI_OPTS)
 
 # Main variable controlling which simualtion to use beamng or commonroad
-#SIMULATOR ?= beamng
-SIMULATOR ?= commonroad
+SIMULATOR ?= beamng
+# SIMULATOR ?= commonroad
 
 EXECUTE_SCENARIO_COMMAND = execute-scenario-$(SIMULATOR)
 EXECUTION_OPTS ?= 

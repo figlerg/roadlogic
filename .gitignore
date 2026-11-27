@@ -258,3 +258,7 @@ initial_speed.log
 acceleration.log
 exports/
 external/
+beamng_overnight.log
+overnight_both.log
+overnight_beamng_chain.log
+overnight_carla_chain.log

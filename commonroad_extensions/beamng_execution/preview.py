@@ -1,7 +1,7 @@
 """Export the BeamNG road and the BeamNG mapping of one plan as JSON, and draw both from the files.
 
-    python -m commonroad_extensions.beamng.preview <plan.pkl> <out folder>
-    python -m commonroad_extensions.beamng.preview paper_journal/benchmark/out/exp_004/serialized_models/0002.pkl demo_output/beamng
+    python -m commonroad_extensions.beamng_extension.preview <plan.pkl> <out folder>
+    python -m commonroad_extensions.beamng_extension.preview paper_journal/benchmark/out/exp_004/serialized_models/0002.pkl demo_output/beamng
 
 Writes road.json, plan_beamng.json and preview.png into the out folder. The figure shows the decal roads
 and each car's script, a dot per second labelled with its time, and the spawn pose.

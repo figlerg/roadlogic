@@ -74,7 +74,10 @@ def run_the_simulation(bng, layout, agents, max_duration_s: float, dt=0.1):
         for name, veh in vehicles.items():
             
             # TODO observe misses the damage sensor/collision
-            trace[name].append((k,) + observe(veh, layout["z"]))
+            # TODO NEEDS SOME OFFSET VALUE No idea from where this come from!
+            offset = [0.0, 0.0]
+            ground_z = layout["z"]
+            trace[name].append((k,) + observe(veh, offset, ground_z))
 
         # TODO: Upon collisions agents should stop
         

@@ -1030,23 +1030,80 @@ def _densify(times, xy, speeds, dt):
     return t, np.column_stack([np.interp(t, times, xy[:, 0]), np.interp(t, times, xy[:, 1])]), np.interp(t, times, speeds)
 
 
-def _continue_straight(t, xy, speeds, dt, seconds):
-    """The script continued for `seconds` along the last direction at the last speed: the car keeps
-    driving after its plan ends, as with ROADLOGIC_FINAL_SLACK=end in the CommonRoad simulation."""
-    if seconds <= 0 or len(xy) < 2:
-        return t, xy, speeds
-    d = xy[-1] - xy[-2]
-    d = d / np.linalg.norm(d) if np.linalg.norm(d) > 1e-9 else np.array([1.0, 0.0])
-    extra = np.arange(1, int(round(seconds / dt)) + 1) * dt
-    return (np.r_[t, t[-1] + extra], np.vstack([xy, xy[-1] + np.outer(extra * speeds[-1], d)]),
-            np.r_[speeds, np.full(len(extra), speeds[-1])])
+def _lane_direction(point, lane_centerlines):
+    """The direction of the lane centre line nearest to a point, at the closest vertex."""
+    best = min(lane_centerlines.values(), key=lambda c: np.min(np.linalg.norm(c - point, axis=1)))
+    i = int(np.argmin(np.linalg.norm(best - point, axis=1)))
+    d = best[min(i + 1, len(best) - 1)] - best[max(min(i, len(best) - 2), 0)]
+    return d / np.linalg.norm(d)
+
+
+CONTINUE_DECEL = 4.0        # [m/s^2] a car slowing behind a slower one after the plan
+CONTINUE_MIN_GAP = 6.0      # [m] centre to centre between cars in one lane after the plan (car about 4.9 m)
+
+
+def _nearest_lane(point, lane_centerlines):
+    return min(lane_centerlines, key=lambda k: np.min(np.linalg.norm(lane_centerlines[k] - point, axis=1)))
+
+
+def _continue_all(dense, dt, seconds, lane_centerlines):
+    """Every moving car's script continued for `seconds` after the plan along its last lane, as with
+    ROADLOGIC_FINAL_SLACK=end in the CommonRoad simulation. Along the lane, not along the last plan segment:
+    after a lane change that segment is diagonal and led off the road. Cars in one lane keep their order: a
+    car behind a slower one (or a static one) slows down at CONTINUE_DECEL, and never gets closer than
+    CONTINUE_MIN_GAP, or than its gap at the end of the plan if that is smaller. Without this the cars kept
+    their last speeds and a faster car drove into the one ahead (speed_relative).
+    dense: {agent: (t, xy, speeds, static)}, returns the same with the continuation appended."""
+    n = int(round(seconds / dt))
+    if n <= 0:
+        return dense
+    lane, d, pos, vel = {}, {}, {}, {}
+    for a, (t, xy, v, static) in dense.items():
+        lane[a] = _nearest_lane(xy[-1], lane_centerlines)
+        d[a] = _lane_direction(xy[-1], lane_centerlines)
+        pos[a], vel[a] = float(xy[-1] @ d[a]), (0.0 if static else float(v[-1]))
+    own = dict(vel)
+    gap0 = {}
+    for a in dense:                                            # the car ahead in the same lane, at the plan's end
+        ahead = [b for b in dense if b != a and lane[b] == lane[a] and pos[b] > pos[a]]
+        leader = min(ahead, key=lambda b: pos[b]) if ahead else None
+        gap0[a] = (leader, min(CONTINUE_MIN_GAP, pos[leader] - pos[a]) if leader else None)
+    order = sorted(dense, key=lambda a: -pos[a])               # leaders first
+    path = {a: [] for a in dense}
+    for _ in range(n):
+        new = {}
+        for a in order:
+            if dense[a][3]:
+                new[a] = pos[a]
+                continue
+            v = min(own[a], vel[a] + CONTINUE_DECEL * dt)          # back up to its own speed after slowing
+            leader, gap = gap0[a]
+            if leader is not None and vel[leader] < v:            # slow towards the leader's speed
+                v = max(vel[leader], vel[a] - CONTINUE_DECEL * dt)
+            s_next = pos[a] + v * dt
+            if leader is not None and s_next > new[leader] - gap:  # never closer than the gap
+                s_next = max(new[leader] - gap, pos[a])
+                v = (s_next - pos[a]) / dt
+            new[a], vel[a] = s_next, v
+            path[a].append((s_next, v))
+        pos.update(new)
+    out = {}
+    for a, (t, xy, v, static) in dense.items():
+        if static or not path[a]:
+            out[a] = (t, xy, v, static)
+            continue
+        s_end = float(xy[-1] @ d[a])
+        extra_t = t[-1] + np.arange(1, n + 1) * dt
+        extra_xy = np.array([xy[-1] + (s - s_end) * d[a] for s, _ in path[a]])
+        out[a] = (np.r_[t, extra_t], np.vstack([xy, extra_xy]), np.r_[v, [u for _, u in path[a]]], static)
+    return out
 
 
 def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: int, 
                     save_path=None,
                     dt=0.1, keep_driving=10.0, config_sim=dummy_config_sim) -> dict:
     """The BeamNG mode of map_plan: per car its id (as in the CommonRoad scenario), its spawn pose and a
-    timed script with a point every dt seconds, continued straight for keep_driving seconds after the
+    timed script with a point every dt seconds, continued along its lane for keep_driving seconds after the
     plan. A car whose planned speed stays 0 is static (no script). Written as JSON to save_path if given."""
 
 
@@ -1056,20 +1113,16 @@ def map_plan_beamng(scenario: Scenario, plan_model: MyModel, anchor_lane_idx: in
     centerlines = {lane.lanelet_id: lane.center_vertices for lane in scenario.lanelet_network.lanelets}  # as in map_plan
     cs = CoordinateSystem(reference=centerlines[anchor_lane_idx], config_sim=config_sim)
     times = np.array(sorted(frames), float)
-    agents = {}
+    agents, dense, start = {}, {}, {}
     for agent in frames[0].index:
         poses = [plan_pose(frames[t].loc[agent], cs, centerlines) for t in sorted(frames)]
         xy = np.array([p[0] for p in poses], float)
         speeds = np.array([float(frames[t].loc[agent, "lon_vel"]) for t in sorted(frames)])
-        static = not speeds.any()
-        
-        ####
-        # TODO: Note this one. It interpolates
-        t, pts, v = _densify(times, xy, speeds, dt)
-        if not static:
-            t, pts, v = _continue_straight(t, pts, v, dt, keep_driving)
-        #### 
-        
+        dense[agent] = _densify(times, xy, speeds, dt) + (not speeds.any(),)
+        start[agent] = (xy, poses, speeds)
+    dense = _continue_all(dense, dt, keep_driving, centerlines)
+    for agent, (t, pts, v, static) in dense.items():
+        xy, poses, speeds = start[agent]
         agents[agent] = {
             "id": encode(agent), 
             "static": bool(static),
